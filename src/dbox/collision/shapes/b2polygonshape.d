@@ -1,18 +1,3 @@
-module dbox.collision.shapes.b2polygonshape;
-
-import core.stdc.float_;
-import core.stdc.stdlib;
-import core.stdc.string;
-
-import std.conv;
-
-import dbox.common;
-import dbox.common.b2math;
-
-import dbox.common.b2math;
-import dbox.common;
-import dbox.common.b2blockallocator;
-
 /*
  * Copyright (c) 2006-2009 Erin Catto http://www.box2d.org
  *
@@ -30,11 +15,15 @@ import dbox.common.b2blockallocator;
  * misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
  */
+module dbox.collision.shapes.b2polygonshape;
 
-// #ifndef B2_POLYGON_SHAPE_H
-// #define B2_POLYGON_SHAPE_H
-import dbox.collision.b2collision;
-import dbox.collision.shapes.b2shape;
+import core.stdc.float_;
+import core.stdc.stdlib;
+import core.stdc.string;
+
+import dbox.common;
+import dbox.collision;
+import dbox.collision.shapes;
 
 /// A convex polygon. It is assumed that the interior of the polygon is to
 /// the left of each edge.
@@ -42,8 +31,7 @@ import dbox.collision.shapes.b2shape;
 /// In most cases you should not need many vertices for a convex polygon.
 class b2PolygonShape : b2Shape
 {
-    this();
-
+    ///
     this()
     {
         m_type   = e_polygon;
@@ -52,33 +40,7 @@ class b2PolygonShape : b2Shape
         m_centroid.SetZero();
     }
 
-    b2Vec2 GetVertex(int32 index) const
-    {
-        assert(0 <= index && index < m_count);
-        return m_vertices[index];
-    }
-
-    // #endif
-    /*
-     * Copyright (c) 2006-2009 Erin Catto http://www.box2d.org
-     *
-     * This software is provided 'as-is', without any express or implied
-     * warranty.  In no event will the authors be held liable for any damages
-     * arising from the use of this software.
-     * Permission is granted to anyone to use this software for any purpose,
-     * including commercial applications, and to alter it and redistribute it
-     * freely, subject to the following restrictions:
-     * 1. The origin of this software must not be misrepresented; you must not
-     * claim that you wrote the original software. If you use this software
-     * in a product, an acknowledgment in the product documentation would be
-     * appreciated but is not required.
-     * 2. Altered source versions must be plainly marked as such, and must not be
-     * misrepresented as being the original software.
-     * 3. This notice may not be removed or altered from any source distribution.
-     */
-
-    import dbox.collision.shapes.b2polygonshape;
-
+    /// Implement b2Shape.
     override b2Shape Clone(b2BlockAllocator* allocator) const
     {
         void* mem = allocator.Allocate(getSizeOf!b2PolygonShape);
@@ -87,89 +49,17 @@ class b2PolygonShape : b2Shape
         return clone;
     }
 
-    void SetAsBox(float32 hx, float32 hy)
-    {
-        m_count = 4;
-        m_vertices[0].Set(-hx, -hy);
-        m_vertices[1].Set(hx, -hy);
-        m_vertices[2].Set(hx, hy);
-        m_vertices[3].Set(-hx, hy);
-        m_normals[0].Set(0.0f, -1.0f);
-        m_normals[1].Set(1.0f, 0.0f);
-        m_normals[2].Set(0.0f, 1.0f);
-        m_normals[3].Set(-1.0f, 0.0f);
-        m_centroid.SetZero();
-    }
-
-    void SetAsBox(float32 hx, float32 hy, b2Vec2 center, float32 angle)
-    {
-        m_count = 4;
-        m_vertices[0].Set(-hx, -hy);
-        m_vertices[1].Set(hx, -hy);
-        m_vertices[2].Set(hx, hy);
-        m_vertices[3].Set(-hx, hy);
-        m_normals[0].Set(0.0f, -1.0f);
-        m_normals[1].Set(1.0f, 0.0f);
-        m_normals[2].Set(0.0f, 1.0f);
-        m_normals[3].Set(-1.0f, 0.0f);
-        m_centroid = center;
-
-        b2Transform xf;
-        xf.p = center;
-        xf.q.Set(angle);
-
-        // Transform vertices and normals.
-        for (int32 i = 0; i < m_count; ++i)
-        {
-            m_vertices[i] = b2Mul(xf, m_vertices[i]);
-            m_normals[i]  = b2Mul(xf.q, m_normals[i]);
-        }
-    }
-
+    /// @see b2Shape::GetChildCount
     override int32 GetChildCount() const
     {
         return 1;
     }
 
-    static b2Vec2 ComputeCentroid(const(b2Vec2)* vs, int32 count)
-    {
-        assert(count >= 3);
-
-        b2Vec2 c;
-        c.Set(0.0f, 0.0f);
-        float32 area = 0.0f;
-
-        // pRef is the reference point for forming triangles.
-        // It's location doesn't change the result (except for rounding error).
-        b2Vec2 pRef = b2Vec2(0.0f, 0.0f);
-
-        const float32 inv3 = 1.0f / 3.0f;
-
-        for (int32 i = 0; i < count; ++i)
-        {
-            // Triangle vertices.
-            b2Vec2 p1 = pRef;
-            b2Vec2 p2 = vs[i];
-            b2Vec2 p3 = i + 1 < count ? vs[i + 1] : vs[0];
-
-            b2Vec2 e1 = p2 - p1;
-            b2Vec2 e2 = p3 - p1;
-
-            float32 D = b2Cross(e1, e2);
-
-            float32 triangleArea = 0.5f * D;
-            area += triangleArea;
-
-            // Area weighted centroid
-            c += triangleArea * inv3 * (p1 + p2 + p3);
-        }
-
-        // Centroid
-        assert(area > b2_epsilon);
-        c *= 1.0f / area;
-        return c;
-    }
-
+    /// Create a convex hull from the given array of local points.
+    /// The count must be in the range [3, b2_maxPolygonVertices].
+    /// @warning the points may be re-ordered, even if they form a convex polygon
+    /// @warning collinear points are handled but not removed. Collinear points
+    /// may lead to poor stacking behavior.
     void Set(const(b2Vec2)* vertices, int32 count)
     {
         assert(3 <= count && count <= b2_maxPolygonVertices);
@@ -183,8 +73,8 @@ class b2PolygonShape : b2Shape
         int32 n = b2Min(count, b2_maxPolygonVertices);
 
         // Perform welding and copy vertices into local buffer.
-        b2Vec2 ps[b2_maxPolygonVertices];
-        int32  tempCount = 0;
+        b2Vec2[b2_maxPolygonVertices] ps;
+        int32 tempCount = 0;
 
         for (int32 i = 0; i < n; ++i)
         {
@@ -212,6 +102,7 @@ class b2PolygonShape : b2Shape
         if (n < 3)
         {
             // Polygon is degenerate.
+            SetAsBox(1.0f, 1.0f);
             assert(0);
         }
 
@@ -233,11 +124,11 @@ class b2PolygonShape : b2Shape
             }
         }
 
-        int32 hull[b2_maxPolygonVertices];
+        int32[b2_maxPolygonVertices] hull;
         int32 m  = 0;
         int32 ih = i0;
 
-        for (;; )
+        for (;;)
         {
             hull[m] = ih;
 
@@ -279,6 +170,7 @@ class b2PolygonShape : b2Shape
         if (m < 3)
         {
             // Polygon is degenerate.
+            SetAsBox(1.0f, 1.0f);
             assert(0);
         }
 
@@ -305,6 +197,54 @@ class b2PolygonShape : b2Shape
         m_centroid = ComputeCentroid(m_vertices.ptr, m);
     }
 
+    /// Build vertices to represent an axis-aligned box centered on the local origin.
+    /// @param hx the half-width.
+    /// @param hy the half-height.
+    void SetAsBox(float32 hx, float32 hy)
+    {
+        m_count = 4;
+        m_vertices[0].Set(-hx, -hy);
+        m_vertices[1].Set(hx, -hy);
+        m_vertices[2].Set(hx, hy);
+        m_vertices[3].Set(-hx, hy);
+        m_normals[0].Set(0.0f, -1.0f);
+        m_normals[1].Set(1.0f, 0.0f);
+        m_normals[2].Set(0.0f, 1.0f);
+        m_normals[3].Set(-1.0f, 0.0f);
+        m_centroid.SetZero();
+    }
+
+    /// Build vertices to represent an oriented box.
+    /// @param hx the half-width.
+    /// @param hy the half-height.
+    /// @param center the center of the box in local coordinates.
+    /// @param angle the rotation of the box in local coordinates.
+    void SetAsBox(float32 hx, float32 hy, b2Vec2 center, float32 angle)
+    {
+        m_count = 4;
+        m_vertices[0].Set(-hx, -hy);
+        m_vertices[1].Set(hx, -hy);
+        m_vertices[2].Set(hx, hy);
+        m_vertices[3].Set(-hx, hy);
+        m_normals[0].Set(0.0f, -1.0f);
+        m_normals[1].Set(1.0f, 0.0f);
+        m_normals[2].Set(0.0f, 1.0f);
+        m_normals[3].Set(-1.0f, 0.0f);
+        m_centroid = center;
+
+        b2Transform xf;
+        xf.p = center;
+        xf.q.Set(angle);
+
+        // Transform vertices and normals.
+        for (int32 i = 0; i < m_count; ++i)
+        {
+            m_vertices[i] = b2Mul(xf, m_vertices[i]);
+            m_normals[i]  = b2Mul(xf.q, m_normals[i]);
+        }
+    }
+
+    /// @see b2Shape::TestPoint
     override bool TestPoint(b2Transform xf, b2Vec2 p) const
     {
         b2Vec2 pLocal = b2MulT(xf.q, p - xf.p);
@@ -322,8 +262,9 @@ class b2PolygonShape : b2Shape
         return true;
     }
 
+    /// Implement b2Shape.
     override bool RayCast(b2RayCastOutput* output, b2RayCastInput input,
-                                 b2Transform xf, int32 childIndex) const
+                          b2Transform xf, int32 childIndex) const
     {
         B2_NOT_USED(childIndex);
 
@@ -394,6 +335,7 @@ class b2PolygonShape : b2Shape
         return false;
     }
 
+    /// @see b2Shape::ComputeAABB
     override void ComputeAABB(b2AABB* aabb, b2Transform xf, int32 childIndex) const
     {
         B2_NOT_USED(childIndex);
@@ -413,6 +355,7 @@ class b2PolygonShape : b2Shape
         aabb.upperBound = upper + r;
     }
 
+    /// @see b2Shape::ComputeMass
     override void ComputeMass(b2MassData* massData, float32 density) const
     {
         // Polygon mass, centroid, and inertia.
@@ -498,6 +441,21 @@ class b2PolygonShape : b2Shape
         massData.I += massData.mass * (b2Dot(massData.center, massData.center) - b2Dot(center, center));
     }
 
+    /// Get the vertex count.
+    int32 GetVertexCount() const
+    {
+        return m_count;
+    }
+
+    /// Get a vertex by index.
+    b2Vec2 GetVertex(int32 index) const
+    {
+        assert(0 <= index && index < m_count);
+        return m_vertices[index];
+    }
+
+    /// Validate convexity. This is a very time consuming operation.
+    /// @returns true if valid
     bool Validate() const
     {
         for (int32 i = 0; i < m_count; ++i)
@@ -527,14 +485,58 @@ class b2PolygonShape : b2Shape
         return true;
     }
 
-    /// Get the vertex count.
-    int32 GetVertexCount() const
+    static b2Vec2 ComputeCentroid(const(b2Vec2)* vs, int32 count)
     {
-        return m_count;
+        assert(count >= 3);
+
+        b2Vec2 c;
+        c.Set(0.0f, 0.0f);
+        float32 area = 0.0f;
+
+        // pRef is the reference point for forming triangles.
+        // It's location doesn't change the result (except for rounding error).
+        b2Vec2 pRef = b2Vec2(0.0f, 0.0f);
+
+        version (none)
+        {
+            // This code would put the reference point inside the polygon.
+            for (int32 i = 0; i < count; ++i)
+            {
+                pRef += vs[i];
+            }
+
+            pRef *= 1.0f / count;
+        }
+
+        const float32 inv3 = 1.0f / 3.0f;
+
+        for (int32 i = 0; i < count; ++i)
+        {
+            // Triangle vertices.
+            b2Vec2 p1 = pRef;
+            b2Vec2 p2 = vs[i];
+            b2Vec2 p3 = i + 1 < count ? vs[i + 1] : vs[0];
+
+            b2Vec2 e1 = p2 - p1;
+            b2Vec2 e2 = p3 - p1;
+
+            float32 D = b2Cross(e1, e2);
+
+            float32 triangleArea = 0.5f * D;
+            area += triangleArea;
+
+            // Area weighted centroid
+            c += triangleArea * inv3 * (p1 + p2 + p3);
+        }
+
+        // Centroid
+        assert(area > b2_epsilon);
+        c *= 1.0f / area;
+        return c;
     }
 
     b2Vec2 m_centroid;
-    b2Vec2 m_vertices[b2_maxPolygonVertices];
-    b2Vec2 m_normals[b2_maxPolygonVertices];
+    b2Vec2[b2_maxPolygonVertices] m_vertices;
+    b2Vec2[b2_maxPolygonVertices] m_normals;
     int32  m_count;
 }
