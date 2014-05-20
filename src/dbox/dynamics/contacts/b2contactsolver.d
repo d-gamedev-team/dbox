@@ -636,7 +636,7 @@ struct b2ContactSolver
                 const float32 k_errorTol = 1e-3f;
                 B2_NOT_USED(k_errorTol);
 
-                for (;; )
+                for (;;)
                 {
                     //
                     // Case 1: vn = 0
