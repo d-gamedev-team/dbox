@@ -1,14 +1,3 @@
-module dbox.collision.shapes.b2chainshape;
-
-import core.stdc.float_;
-import core.stdc.stdlib;
-import core.stdc.string;
-
-import std.conv;
-
-import dbox.common;
-import dbox.common.b2math;
-
 /*
  * Copyright (c) 2006-2010 Erin Catto http://www.box2d.org
  *
@@ -26,11 +15,13 @@ import dbox.common.b2math;
  * misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
  */
+module dbox.collision.shapes.b2chainshape;
 
-// #ifndef B2_CHAIN_SHAPE_H
-// #define B2_CHAIN_SHAPE_H
-import dbox.collision.b2collision;
-import dbox.collision.shapes.b2shape;
+import core.stdc.string;
+
+import dbox.common;
+import dbox.collision;
+import dbox.collision.shapes;
 
 /// A chain shape is a free form sequence of line segments.
 /// The chain has two-sided collision, so you can use inside and outside collision.
@@ -40,6 +31,7 @@ import dbox.collision.shapes.b2shape;
 /// WARNING: The chain will not collide properly if there are self-intersections.
 class b2ChainShape : b2Shape
 {
+    ///
     this()
     {
         m_type          = e_chain;
@@ -50,11 +42,13 @@ class b2ChainShape : b2Shape
         m_hasNextVertex = false;
     }
 
+    /// The destructor frees the vertices using b2Free.
     ~this()
     {
         Clear();
     }
 
+    /// Clear all data.
     void Clear()
     {
         b2Free(m_vertices);
@@ -62,6 +56,9 @@ class b2ChainShape : b2Shape
         m_count    = 0;
     }
 
+    /// Create a loop. This automatically adjusts connectivity.
+    /// @param vertices an array of vertices, these are copied
+    /// @param count the vertex count
     void CreateLoop(const(b2Vec2)* vertices, int32 count)
     {
         assert(m_vertices is null && m_count == 0);
@@ -86,6 +83,9 @@ class b2ChainShape : b2Shape
         m_hasNextVertex   = true;
     }
 
+    /// Create a chain with isolated end vertices.
+    /// @param vertices an array of vertices, these are copied
+    /// @param count the vertex count
     void CreateChain(const(b2Vec2)* vertices, int32 count)
     {
         assert(m_vertices is null && m_count == 0);
@@ -108,22 +108,27 @@ class b2ChainShape : b2Shape
         m_nextVertex.SetZero();
     }
 
+    /// Establish connectivity to a vertex that precedes the first vertex.
+    /// Don't call this for loops.
     void SetPrevVertex(b2Vec2 prevVertex)
     {
         m_prevVertex    = prevVertex;
         m_hasPrevVertex = true;
     }
 
+    /// Establish connectivity to a vertex that follows the last vertex.
+    /// Don't call this for loops.
     void SetNextVertex(b2Vec2 nextVertex)
     {
         m_nextVertex    = nextVertex;
         m_hasNextVertex = true;
     }
 
+    /// Implement b2Shape. Vertices are cloned using b2Alloc.
     override b2Shape Clone(b2BlockAllocator* allocator) const
     {
         void* mem = allocator.Allocate(getSizeOf!b2ChainShape);
-        b2ChainShape clone = emplace!b2ChainShape(mem[0 .. getSizeOf!b2ChainShape]);
+        b2ChainShape clone = emplace!b2ChainShape(mem);
         clone.CreateChain(m_vertices, m_count);
         clone.m_prevVertex    = m_prevVertex;
         clone.m_nextVertex    = m_nextVertex;
@@ -132,12 +137,14 @@ class b2ChainShape : b2Shape
         return clone;
     }
 
+    /// @see b2Shape::GetChildCount
     override int32 GetChildCount() const
     {
         // edge count = vertex count - 1
         return m_count - 1;
     }
 
+    /// Get a child edge.
     void GetChildEdge(b2EdgeShape edge, int32 index) const
     {
         assert(0 <= index && index < m_count - 1);
@@ -170,6 +177,8 @@ class b2ChainShape : b2Shape
         }
     }
 
+    /// This always return false.
+    /// @see b2Shape::TestPoint
     override bool TestPoint(b2Transform xf, b2Vec2 p) const
     {
         B2_NOT_USED(xf);
@@ -177,6 +186,7 @@ class b2ChainShape : b2Shape
         return false;
     }
 
+    /// Implement b2Shape.
     override bool RayCast(b2RayCastOutput* output, b2RayCastInput input,
                                b2Transform xf, int32 childIndex) const
     {
@@ -199,6 +209,7 @@ class b2ChainShape : b2Shape
         return edgeShape.RayCast(output, input, xf, 0);
     }
 
+    /// @see b2Shape::ComputeAABB
     override void ComputeAABB(b2AABB* aabb, b2Transform xf, int32 childIndex) const
     {
         assert(childIndex < m_count);
@@ -218,6 +229,8 @@ class b2ChainShape : b2Shape
         aabb.upperBound = b2Max(v1, v2);
     }
 
+    /// Chains have zero mass.
+    /// @see b2Shape::ComputeMass
     override void ComputeMass(b2MassData* massData, float32 density) const
     {
         B2_NOT_USED(density);
@@ -236,8 +249,3 @@ class b2ChainShape : b2Shape
     b2Vec2 m_prevVertex, m_nextVertex;
     bool m_hasPrevVertex, m_hasNextVertex;
 }
-
-import dbox.collision.shapes.b2chainshape;
-import dbox.collision.shapes.b2edgeshape;
-
-import core.stdc.string;
