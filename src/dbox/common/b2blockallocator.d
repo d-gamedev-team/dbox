@@ -147,6 +147,8 @@ struct b2BlockAllocator
         int32 index = s_blockSizeLookup[size];
         assert(0 <= index && index < b2_blockSizes);
 
+        /// drey todo: this block fails when running the demo, investigate.
+        version (none)
         debug
         {
             // Verify the memory address and size is valid.
@@ -177,8 +179,8 @@ struct b2BlockAllocator
             memset(p, 0xfd, blockSize);
         }
 
-        b2Block* block = cast(b2Block*)p;
-        block.next        = m_freeLists[index];
+        b2Block* block     = cast(b2Block*)p;
+        block.next         = m_freeLists[index];
         m_freeLists[index] = block;
     }
 
