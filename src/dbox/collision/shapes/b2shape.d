@@ -1,14 +1,3 @@
-module dbox.collision.shapes.b2shape;
-
-import core.stdc.float_;
-import core.stdc.stdlib;
-import core.stdc.string;
-
-import std.conv;
-
-import dbox.common;
-import dbox.common.b2math;
-
 /*
  * Copyright (c) 2006-2009 Erin Catto http://www.box2d.org
  *
@@ -26,15 +15,14 @@ import dbox.common.b2math;
  * misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
  */
+module dbox.collision.shapes.b2shape;
 
-// #ifndef B2_SHAPE_H
-// #define B2_SHAPE_H
-import dbox.collision.b2collision;
-import dbox.common.b2blockallocator;
-import dbox.common.b2math;
-import dbox.collision.b2collision;
+import core.stdc.float_;
+import core.stdc.stdlib;
+import core.stdc.string;
 
 import dbox.common;
+import dbox.collision;
 
 /// This holds the mass data computed for a shape.
 struct b2MassData
@@ -74,12 +62,10 @@ class b2Shape
     }
 
     /// Clone the concrete shape using the provided allocator.
-    /* virtual */ b2Shape Clone(b2BlockAllocator* allocator) const;
+    /* virtual */ abstract b2Shape Clone(b2BlockAllocator* allocator) const;
 
     /// Get the type of this shape. You can use this to down cast to the concrete shape.
     /// @return the shape type.
-    Type GetType() const;
-
     Type GetType() const
     {
         return m_type;
@@ -99,7 +85,7 @@ class b2Shape
     /// @param transform the transform to be applied to the shape.
     /// @param childIndex the child shape index
     /* virtual */ abstract bool RayCast(b2RayCastOutput* output, b2RayCastInput input,
-                         b2Transform transform, int32 childIndex) const;
+                                        b2Transform transform, int32 childIndex) const;
 
     /// Given a transform, compute the associated axis aligned bounding box for a child shape.
     /// @param aabb returns the axis aligned box.
@@ -116,5 +102,3 @@ class b2Shape
     Type m_type;
     float32 m_radius = 0;
 }
-
-// #endif
