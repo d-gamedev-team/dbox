@@ -1,14 +1,3 @@
-module dbox.collision.shapes.b2edgeshape;
-
-import core.stdc.float_;
-import core.stdc.stdlib;
-import core.stdc.string;
-
-import std.conv;
-
-import dbox.common;
-import dbox.common.b2math;
-
 /*
  * Copyright (c) 2006-2010 Erin Catto http://www.box2d.org
  *
@@ -26,17 +15,22 @@ import dbox.common.b2math;
  * misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
  */
+module dbox.collision.shapes.b2edgeshape;
 
-// #ifndef B2_EDGE_SHAPE_H
-// #define B2_EDGE_SHAPE_H
-import dbox.collision.b2collision;
-import dbox.collision.shapes.b2shape;
+import core.stdc.float_;
+import core.stdc.stdlib;
+import core.stdc.string;
+
+import dbox.common;
+import dbox.collision;
+import dbox.collision.shapes;
 
 /// A line segment (edge) shape. These can be connected in chains or loops
 /// to other edge shapes. The connectivity information is used to ensure
 /// correct contact normals.
 class b2EdgeShape : b2Shape
 {
+    ///
     this()
     {
         m_type       = e_edge;
@@ -49,28 +43,7 @@ class b2EdgeShape : b2Shape
         m_hasVertex3 = false;
     }
 
-    // #endif
-    /*
-     * Copyright (c) 2006-2010 Erin Catto http://www.box2d.org
-     *
-     * This software is provided 'as-is', without any express or implied
-     * warranty.  In no event will the authors be held liable for any damages
-     * arising from the use of this software.
-     * Permission is granted to anyone to use this software for any purpose,
-     * including commercial applications, and to alter it and redistribute it
-     * freely, subject to the following restrictions:
-     * 1. The origin of this software must not be misrepresented; you must not
-     * claim that you wrote the original software. If you use this software
-     * in a product, an acknowledgment in the product documentation would be
-     * appreciated but is not required.
-     * 2. Altered source versions must be plainly marked as such, and must not be
-     * misrepresented as being the original software.
-     * 3. This notice may not be removed or altered from any source distribution.
-     */
-
-    import dbox.collision.shapes.b2edgeshape;
-
-
+    /// Set this as an isolated edge.
     void Set(b2Vec2 v1, b2Vec2 v2)
     {
         m_vertex1    = v1;
@@ -79,19 +52,22 @@ class b2EdgeShape : b2Shape
         m_hasVertex3 = false;
     }
 
+    /// Implement b2Shape.
     override b2Shape Clone(b2BlockAllocator* allocator) const
     {
         void* mem = allocator.Allocate(getSizeOf!b2EdgeShape);
-        auto clone = emplace!b2EdgeShape(mem[0 .. getSizeOf!b2EdgeShape]);
+        auto clone = emplace!b2EdgeShape(mem);
         clone.tupleof = this.tupleof;
         return clone;
     }
 
+    /// @see b2Shape::GetChildCount
     override int32 GetChildCount() const
     {
         return 1;
     }
 
+    /// @see b2Shape::TestPoint
     override bool TestPoint(b2Transform xf, b2Vec2 p) const
     {
         B2_NOT_USED(xf);
@@ -103,8 +79,9 @@ class b2EdgeShape : b2Shape
     // v = v1 + s * e
     // p1 + t * d = v1 + s * e
     // s * e - t * d = p1 - v1
+    /// Implement b2Shape.
     override bool RayCast(b2RayCastOutput* output, b2RayCastInput input,
-                              b2Transform xf, int32 childIndex) const
+                          b2Transform xf, int32 childIndex) const
     {
         B2_NOT_USED(childIndex);
 
@@ -169,6 +146,7 @@ class b2EdgeShape : b2Shape
         return true;
     }
 
+    /// @see b2Shape::ComputeAABB
     override void ComputeAABB(b2AABB* aabb, b2Transform xf, int32 childIndex) const
     {
         B2_NOT_USED(childIndex);
@@ -184,6 +162,7 @@ class b2EdgeShape : b2Shape
         aabb.upperBound = upper + r;
     }
 
+    /// @see b2Shape::ComputeMass
     override void ComputeMass(b2MassData* massData, float32 density) const
     {
         B2_NOT_USED(density);
