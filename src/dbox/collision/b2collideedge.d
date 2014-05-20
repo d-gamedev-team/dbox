@@ -1,14 +1,3 @@
-module dbox.collision.b2collideedge;
-
-import core.stdc.float_;
-import core.stdc.stdlib;
-import core.stdc.string;
-
-import dbox.common;
-import dbox.common.b2math;
-import dbox.collision;
-import dbox.collision.shapes;
-
 /*
  * Copyright (c) 2007-2009 Erin Catto http://www.box2d.org
  *
@@ -26,11 +15,15 @@ import dbox.collision.shapes;
  * misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
  */
+module dbox.collision.b2collideedge;
 
-import dbox.collision.b2collision;
-import dbox.collision.shapes.b2circleshape;
-import dbox.collision.shapes.b2edgeshape;
-import dbox.collision.shapes.b2polygonshape;
+import core.stdc.float_;
+import core.stdc.stdlib;
+import core.stdc.string;
+
+import dbox.common;
+import dbox.collision;
+import dbox.collision.shapes;
 
 // Compute contact points for edge versus circle.
 // This accounts for edge connectivity.
@@ -187,8 +180,8 @@ struct b2EPAxis
 // This holds polygon B expressed in frame A.
 struct b2TempPolygon
 {
-    b2Vec2 vertices[b2_maxPolygonVertices];
-    b2Vec2 normals[b2_maxPolygonVertices];
+    b2Vec2[b2_maxPolygonVertices] vertices;
+    b2Vec2[b2_maxPolygonVertices] normals;
     int32 count;
 }
 
@@ -211,11 +204,6 @@ struct b2ReferenceFace
 // This class collides and edge and a polygon, taking into account edge adjacency.
 struct b2EPCollider
 {
-    void Collide(b2Manifold* manifold, const(b2EdgeShape) edgeA, b2Transform xfA,
-                 const(b2PolygonShape) polygonB, b2Transform xfB);
-    b2EPAxis ComputeEdgeSeparation();
-    b2EPAxis ComputePolygonSeparation();
-
     // Algorithm:
     // 1. Classify v1 and v2
     // 2. Classify polygon centroid as front or back
@@ -225,8 +213,9 @@ struct b2EPCollider
     // 6. Visit each separating axes, only accept axes within the range
     // 7. Return if _any_ axis indicates separation
     // 8. Clip
-    void Collide(b2Manifold* manifold, const(b2EdgeShape) edgeA, b2Transform xfA,
-                               const(b2PolygonShape) polygonB, b2Transform xfB)
+    void Collide(b2Manifold* manifold,
+                 const(b2EdgeShape) edgeA, b2Transform xfA,
+                 const(b2PolygonShape) polygonB, b2Transform xfB)
     {
         m_xf = b2MulT(xfA, xfB);
 
@@ -483,7 +472,7 @@ struct b2EPCollider
             primaryAxis = edgeAxis;
         }
 
-        b2ClipVertex ie[2];
+        b2ClipVertex[2] ie;
         b2ReferenceFace rf;
 
         if (primaryAxis.type == b2EPAxis.Type.e_edgeA)
@@ -566,8 +555,8 @@ struct b2EPCollider
         rf.sideOffset2 = b2Dot(rf.sideNormal2, rf.v2);
 
         // Clip incident edge against extruded edge1 side edges.
-        b2ClipVertex clipPoints1[2];
-        b2ClipVertex clipPoints2[2];
+        b2ClipVertex[2] clipPoints1;
+        b2ClipVertex[2] clipPoints2;
         int32 np;
 
         // Clip to box side 1
