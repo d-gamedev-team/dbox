@@ -1,14 +1,3 @@
-module dbox.collision.b2collidepolygon;
-
-import core.stdc.float_;
-import core.stdc.stdlib;
-import core.stdc.string;
-
-import dbox.common;
-import dbox.common.b2math;
-import dbox.collision;
-import dbox.collision.shapes;
-
 /*
  * Copyright (c) 2006-2009 Erin Catto http://www.box2d.org
  *
@@ -26,9 +15,15 @@ import dbox.collision.shapes;
  * misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
  */
+module dbox.collision.b2collidepolygon;
 
-import dbox.collision.b2collision;
-import dbox.collision.shapes.b2polygonshape;
+import core.stdc.float_;
+import core.stdc.stdlib;
+import core.stdc.string;
+
+import dbox.common;
+import dbox.collision;
+import dbox.collision.shapes;
 
 // Find the max separation between poly1 and poly2 using edge normals from poly1.
 static float32 b2FindMaxSeparation(int32* edgeIndex,
@@ -75,9 +70,9 @@ static float32 b2FindMaxSeparation(int32* edgeIndex,
     return maxSeparation;
 }
 
-void b2FindIncidentEdge(b2ClipVertex c[2],
-                               const(b2PolygonShape) poly1, b2Transform xf1, int32 edge1,
-                               const(b2PolygonShape) poly2, b2Transform xf2)
+void b2FindIncidentEdge(ref b2ClipVertex[2] c,
+                        const(b2PolygonShape) poly1, b2Transform xf1, int32 edge1,
+                        const(b2PolygonShape) poly2, b2Transform xf2)
 {
     const(b2Vec2)* normals1 = poly1.m_normals.ptr;
 
@@ -176,7 +171,7 @@ void b2CollidePolygons(b2Manifold* manifold,
         flip = 0;
     }
 
-    b2ClipVertex incidentEdge[2];
+    b2ClipVertex[2] incidentEdge;
     b2FindIncidentEdge(incidentEdge, poly1, xf1, edge1, poly2, xf2);
 
     int32 count1 = poly1.m_count;
