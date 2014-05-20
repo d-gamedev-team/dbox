@@ -190,7 +190,7 @@ struct b2ContactManager
 
     void FindNewContacts()
     {
-        m_broadPhase.UpdatePairs(&this);
+        m_broadPhase.UpdatePairs(this);
     }
 
     void AddPair(void* proxyUserDataA, void* proxyUserDataB)

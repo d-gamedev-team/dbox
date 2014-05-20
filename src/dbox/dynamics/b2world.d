@@ -1127,7 +1127,7 @@ struct b2World
         b2WorldQueryWrapper wrapper;
         wrapper.broadPhase = cast(b2BroadPhase*)&m_contactManager.m_broadPhase;
         wrapper.callback   = callback;
-        m_contactManager.m_broadPhase.Query(&wrapper, aabb);
+        m_contactManager.m_broadPhase.Query(wrapper, aabb);
     }
 
     struct b2WorldRayCastWrapper
@@ -1164,7 +1164,7 @@ struct b2World
         input.maxFraction = 1.0f;
         input.p1 = point1;
         input.p2 = point2;
-        m_contactManager.m_broadPhase.RayCast(&wrapper, input);
+        m_contactManager.m_broadPhase.RayCast(wrapper, input);
     }
 
     void DrawShape(b2Fixture* fixture, b2Transform xf, b2Color color)

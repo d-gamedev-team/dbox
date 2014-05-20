@@ -1,14 +1,3 @@
-module dbox.collision.b2broadphase;
-
-import core.stdc.float_;
-import core.stdc.stdlib;
-import core.stdc.string;
-
-import dbox.common;
-import dbox.common.b2math;
-import dbox.collision;
-import dbox.collision.shapes;
-
 /*
  * Copyright (c) 2006-2009 Erin Catto http://www.box2d.org
  *
@@ -26,14 +15,17 @@ import dbox.collision.shapes;
  * misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
  */
+module dbox.collision.b2broadphase;
 
-// #ifndef B2_BROAD_PHASE_H
-// #define B2_BROAD_PHASE_H
+import core.stdc.float_;
+import core.stdc.stdlib;
+import core.stdc.string;
+
+import std.algorithm;
 
 import dbox.common;
-import dbox.collision.b2collision;
-import dbox.collision.b2dynamictree;
-import std.algorithm;
+import dbox.collision;
+import dbox.collision.shapes;
 
 struct b2Pair
 {
@@ -46,12 +38,23 @@ struct b2Pair
 /// It is up to the client to consume the new pairs and to track subsequent overlap.
 struct b2BroadPhase
 {
+    enum
+    {
+        e_nullProxy = -1
+    }
+
+    /// This struct must be properly initialized with an explicit constructor.
     @disable this();
+
+    /// This struct cannot be copied.
     @disable this(this);
 
+    /// Explicit constructor.
     this(int)
     {
+        /// Tree must be explicitly initialized.
         m_tree = b2DynamicTree(1);
+
         m_proxyCount = 0;
 
         m_pairCapacity = 16;
@@ -63,16 +66,62 @@ struct b2BroadPhase
         m_moveBuffer   = cast(int32*)b2Alloc(m_moveCapacity * getSizeOf!int32);
     }
 
-    enum
+    ///
+    ~this()
     {
-        e_nullProxy = -1
+        b2Free(m_moveBuffer);
+        b2Free(m_pairBuffer);
     }
 
+    /// Create a proxy with an initial AABB. Pairs are not reported until
+    /// UpdatePairs is called.
+    int32 CreateProxy(b2AABB aabb, void* userData)
+    {
+        int32 proxyId = m_tree.CreateProxy(aabb, userData);
+        ++m_proxyCount;
+        BufferMove(proxyId);
+        return proxyId;
+    }
+
+    /// Destroy a proxy. It is up to the client to remove any pairs.
+    void DestroyProxy(int32 proxyId)
+    {
+        UnBufferMove(proxyId);
+        --m_proxyCount;
+        m_tree.DestroyProxy(proxyId);
+    }
+
+    /// Call MoveProxy as many times as you like, then when you are done
+    /// call UpdatePairs to finalized the proxy pairs (for your time step).
+    void MoveProxy(int32 proxyId, b2AABB aabb, b2Vec2 displacement)
+    {
+        bool buffer = m_tree.MoveProxy(proxyId, aabb, displacement);
+
+        if (buffer)
+        {
+            BufferMove(proxyId);
+        }
+    }
+
+    /// Call to trigger a re-processing of it's pairs on the next call to UpdatePairs.
+    void TouchProxy(int32 proxyId)
+    {
+        BufferMove(proxyId);
+    }
+
+    /// Get the fat AABB for a proxy.
+    b2AABB GetFatAABB(int32 proxyId) const
+    {
+        return m_tree.GetFatAABB(proxyId);
+    }
+
+    /// Get user data from a proxy. Returns null if the id is invalid.
     void* GetUserData(int32 proxyId) const
     {
         return m_tree.GetUserData(proxyId);
     }
 
+    /// Test overlap of fat AABBs.
     bool TestOverlap(int32 proxyIdA, int32 proxyIdB) const
     {
         b2AABB aabbA = m_tree.GetFatAABB(proxyIdA);
@@ -80,35 +129,14 @@ struct b2BroadPhase
         return b2TestOverlap(aabbA, aabbB);
     }
 
-    b2AABB GetFatAABB(int32 proxyId) const
-    {
-        return m_tree.GetFatAABB(proxyId);
-    }
-
+    /// Get the number of proxies.
     int32 GetProxyCount() const
     {
         return m_proxyCount;
     }
 
-    /// Get the height of the embedded tree.
-    int32 GetTreeHeight() const
-    {
-        return m_tree.GetHeight();
-    }
-
-    /// Get the balance of the embedded tree.
-    int32 GetTreeBalance() const
-    {
-        return m_tree.GetMaxBalance();
-    }
-
-    /// Get the quality metric of the embedded tree.
-    float32 GetTreeQuality() const
-    {
-        return m_tree.GetAreaRatio();
-    }
-
-    void UpdatePairs(T)(T callback)
+    /// Update the pairs. This results in pair callbacks. This can only add pairs.
+    void UpdatePairs(T)(ref T callback)
     {
         // Reset pair buffer
         m_pairCount = 0;
@@ -135,8 +163,6 @@ struct b2BroadPhase
         m_moveCount = 0;
 
         // Sort the pair buffer to expose duplicates.
-        // todo
-
         sort!b2PairLessThan(m_pairBuffer[0 .. m_pairCount]);
 
         // Send the pairs back to the client.
@@ -168,7 +194,9 @@ struct b2BroadPhase
         // m_tree.Rebalance(4);
     }
 
-    void Query(T)(T callback, b2AABB aabb) const
+    /// Query an AABB for overlapping proxies. The callback class
+    /// is called for each proxy that overlaps the supplied AABB.
+    void Query(T)(ref T callback, b2AABB aabb) const
     {
         m_tree.Query(callback, aabb);
     }
@@ -180,9 +208,27 @@ struct b2BroadPhase
     /// number of proxies in the tree.
     /// @param input the ray-cast input data. The ray extends from p1 to p1 + maxFraction * (p2 - p1).
     /// @param callback a callback class that is called for each proxy that is hit by the ray.
-    void RayCast(T)(T callback, b2RayCastInput input) const
+    void RayCast(T)(ref T callback, b2RayCastInput input) const
     {
         m_tree.RayCast(callback, input);
+    }
+
+    /// Get the height of the embedded tree.
+    int32 GetTreeHeight() const
+    {
+        return m_tree.GetHeight();
+    }
+
+    /// Get the balance of the embedded tree.
+    int32 GetTreeBalance() const
+    {
+        return m_tree.GetMaxBalance();
+    }
+
+    /// Get the quality metric of the embedded tree.
+    float32 GetTreeQuality() const
+    {
+        return m_tree.GetAreaRatio();
     }
 
     /// Shift the world origin. Useful for large worlds.
@@ -193,41 +239,7 @@ struct b2BroadPhase
         m_tree.ShiftOrigin(newOrigin);
     }
 
-    ~this()
-    {
-        b2Free(m_moveBuffer);
-        b2Free(m_pairBuffer);
-    }
-
-    int32 CreateProxy(b2AABB aabb, void* userData)
-    {
-        int32 proxyId = m_tree.CreateProxy(aabb, userData);
-        ++m_proxyCount;
-        BufferMove(proxyId);
-        return proxyId;
-    }
-
-    void DestroyProxy(int32 proxyId)
-    {
-        UnBufferMove(proxyId);
-        --m_proxyCount;
-        m_tree.DestroyProxy(proxyId);
-    }
-
-    void MoveProxy(int32 proxyId, b2AABB aabb, b2Vec2 displacement)
-    {
-        bool buffer = m_tree.MoveProxy(proxyId, aabb, displacement);
-
-        if (buffer)
-        {
-            BufferMove(proxyId);
-        }
-    }
-
-    void TouchProxy(int32 proxyId)
-    {
-        BufferMove(proxyId);
-    }
+package:
 
     void BufferMove(int32 proxyId)
     {
@@ -281,26 +293,33 @@ struct b2BroadPhase
         return true;
     }
 
-/* private */
-
     b2DynamicTree m_tree;
 
     int32 m_proxyCount;
 
+    int32* m_moveBuffer;
     int32 m_moveCapacity = 16;
     int32 m_moveCount;
 
+    b2Pair* m_pairBuffer;
     int32 m_pairCapacity = 16;
     int32 m_pairCount;
 
     int32 m_queryProxyId;
-
-    b2Pair* m_pairBuffer;
-    int32* m_moveBuffer;
 }
 
 /// This is used to sort pairs.
 bool b2PairLessThan(b2Pair pair1, b2Pair pair2)
 {
-    return pair1.proxyIdA < pair2.proxyIdA;
+    if (pair1.proxyIdA < pair2.proxyIdA)
+    {
+        return true;
+    }
+
+    if (pair1.proxyIdA == pair2.proxyIdA)
+    {
+        return pair1.proxyIdB < pair2.proxyIdB;
+    }
+
+    return false;
 }
