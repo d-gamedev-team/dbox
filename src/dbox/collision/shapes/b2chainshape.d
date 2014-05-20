@@ -19,6 +19,8 @@ module dbox.collision.shapes.b2chainshape;
 
 import core.stdc.string;
 
+import std.typecons;
+
 import dbox.common;
 import dbox.collision;
 import dbox.collision.shapes;
@@ -188,11 +190,10 @@ class b2ChainShape : b2Shape
 
     /// Implement b2Shape.
     override bool RayCast(b2RayCastOutput* output, b2RayCastInput input,
-                               b2Transform xf, int32 childIndex) const
+                          b2Transform xf, int32 childIndex) const
     {
         assert(childIndex < m_count);
 
-        import std.typecons;
         auto edgeShape = scoped!b2EdgeShape();
 
         int32 i1 = childIndex;
