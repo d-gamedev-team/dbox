@@ -1,14 +1,3 @@
-module dbox.collision.b2collidecircle;
-
-import core.stdc.float_;
-import core.stdc.stdlib;
-import core.stdc.string;
-
-import dbox.common;
-import dbox.common.b2math;
-import dbox.collision;
-import dbox.collision.shapes;
-
 /*
  * Copyright (c) 2007-2009 Erin Catto http://www.box2d.org
  *
@@ -26,10 +15,15 @@ import dbox.collision.shapes;
  * misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
  */
+module dbox.collision.b2collidecircle;
 
-import dbox.collision.b2collision;
-import dbox.collision.shapes.b2circleshape;
-import dbox.collision.shapes.b2polygonshape;
+import core.stdc.float_;
+import core.stdc.stdlib;
+import core.stdc.string;
+
+import dbox.common;
+import dbox.collision;
+import dbox.collision.shapes;
 
 void b2CollideCircles(
     b2Manifold* manifold,
