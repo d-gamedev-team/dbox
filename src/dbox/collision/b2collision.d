@@ -1,12 +1,3 @@
-module dbox.collision.b2collision;
-
-import core.stdc.stdlib;
-import core.stdc.string;
-import core.stdc.float_;
-
-import dbox.common;
-import dbox.collision.shapes;
-
 /*
  * Copyright (c) 2006-2009 Erin Catto http://www.box2d.org
  *
@@ -24,19 +15,22 @@ import dbox.collision.shapes;
  * misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
  */
+module dbox.collision.b2collision;
 
-// #ifndef B2_COLLISION_H
-// #define B2_COLLISION_H
-
-import dbox.collision.shapes.b2polygonshape;
-import dbox.common.b2math;
-import dbox.common;
 import core.stdc.limits;
+import core.stdc.float_;
+import core.stdc.stdlib;
+import core.stdc.string;
+
+import dbox.common;
+import dbox.collision;
+import dbox.collision.shapes;
 
 /// @file
 /// Structures and functions used for computing contact points, distance
 /// queries, and TOI queries.
 
+//
 const uint8 b2_nullFeature = UCHAR_MAX;
 
 /// The features that intersect to form the contact point
@@ -128,11 +122,7 @@ struct b2WorldManifold
     /// that generated the manifold.
     void Initialize(const(b2Manifold)* manifold,
                     b2Transform xfA, float32 radiusA,
-                    b2Transform xfB, float32 radiusB);
-
-    void Initialize(const(b2Manifold)* manifold,
-                                     b2Transform xfA, float32 radiusA,
-                                     b2Transform xfB, float32 radiusB)
+                    b2Transform xfB, float32 radiusB)
     {
         if (manifold.pointCount == 0)
         {
@@ -196,13 +186,13 @@ struct b2WorldManifold
             break;
 
             default:
-                assert(0);
+                break;
         }
     }
 
     b2Vec2 normal;                                      ///< world vector pointing from A to B
     b2Vec2[b2_maxManifoldPoints] points;                ///< world contact point (point of intersection)
-    float32[b2_maxManifoldPoints] separations;          ///< a negative value indicates overlap, in meters
+    float32[b2_maxManifoldPoints] separations = 0;      ///< a negative value indicates overlap, in meters
 }
 
 /// This is used for determining the state of contact points.
@@ -221,8 +211,51 @@ alias b2_removeState = b2PointState.b2_removeState;
 
 /// Compute the point states given two manifolds. The states pertain to the transition from manifold1
 /// to manifold2. So state1 is either persist or remove while state2 is either add or persist.
-void b2GetPointStates(b2PointState state1[b2_maxManifoldPoints], b2PointState state2[b2_maxManifoldPoints],
-                      const(b2Manifold)* manifold1, const(b2Manifold)* manifold2);
+void b2GetPointStates(ref b2PointState[b2_maxManifoldPoints] state1,
+                      ref b2PointState[b2_maxManifoldPoints] state2,
+                      const(b2Manifold)* manifold1,
+                      const(b2Manifold)* manifold2)
+{
+    for (int32 i = 0; i < b2_maxManifoldPoints; ++i)
+    {
+        state1[i] = b2_nullState;
+        state2[i] = b2_nullState;
+    }
+
+    // Detect persists and removes.
+    for (int32 i = 0; i < manifold1.pointCount; ++i)
+    {
+        b2ContactID id = manifold1.points[i].id;
+
+        state1[i] = b2_removeState;
+
+        for (int32 j = 0; j < manifold2.pointCount; ++j)
+        {
+            if (manifold2.points[j].id.key == id.key)
+            {
+                state1[i] = b2_persistState;
+                break;
+            }
+        }
+    }
+
+    // Detect persists and adds.
+    for (int32 i = 0; i < manifold2.pointCount; ++i)
+    {
+        b2ContactID id = manifold2.points[i].id;
+
+        state2[i] = b2_addState;
+
+        for (int32 j = 0; j < manifold1.pointCount; ++j)
+        {
+            if (manifold1.points[j].id.key == id.key)
+            {
+                state2[i] = b2_persistState;
+                break;
+            }
+        }
+    }
+}
 
 /// Used for computing contact manifolds.
 struct b2ClipVertex
@@ -250,7 +283,58 @@ struct b2RayCastOutput
 struct b2AABB
 {
     /// Verify that the bounds are sorted.
-    bool IsValid() const;
+    bool IsValid() const
+    {
+        b2Vec2 d   = upperBound - lowerBound;
+        bool valid = d.x >= 0.0f && d.y >= 0.0f;
+        valid = valid && lowerBound.IsValid() && upperBound.IsValid();
+        return valid;
+    }
+
+    /// Get the center of the AABB.
+    b2Vec2 GetCenter() const
+    {
+        return 0.5f * (lowerBound + upperBound);
+    }
+
+    /// Get the extents of the AABB (half-widths).
+    b2Vec2 GetExtents() const
+    {
+        return 0.5f * (upperBound - lowerBound);
+    }
+
+    /// Get the perimeter length
+    float32 GetPerimeter() const
+    {
+        float32 wx = upperBound.x - lowerBound.x;
+        float32 wy = upperBound.y - lowerBound.y;
+        return 2.0f * (wx + wy);
+    }
+
+    /// Combine an AABB into this one.
+    void Combine(b2AABB aabb)
+    {
+        lowerBound = b2Min(lowerBound, aabb.lowerBound);
+        upperBound = b2Max(upperBound, aabb.upperBound);
+    }
+
+    /// Combine two AABBs into this one.
+    void Combine(b2AABB aabb1, b2AABB aabb2)
+    {
+        lowerBound = b2Min(aabb1.lowerBound, aabb2.lowerBound);
+        upperBound = b2Max(aabb1.upperBound, aabb2.upperBound);
+    }
+
+    /// Does this aabb contain the provided AABB.
+    bool Contains(b2AABB aabb) const
+    {
+        bool result = true;
+        result = result && lowerBound.x <= aabb.lowerBound.x;
+        result = result && lowerBound.y <= aabb.lowerBound.y;
+        result = result && aabb.upperBound.x <= upperBound.x;
+        result = result && aabb.upperBound.y <= upperBound.y;
+        return result;
+    }
 
     // From Real-time Collision Detection, p179.
     bool RayCast(b2RayCastOutput* output, b2RayCastInput input) const
@@ -320,129 +404,13 @@ struct b2AABB
         return true;
     }
 
-    bool IsValid() const
-    {
-        b2Vec2 d   = upperBound - lowerBound;
-        bool valid = d.x >= 0.0f && d.y >= 0.0f;
-        valid = valid && lowerBound.IsValid() && upperBound.IsValid();
-        return valid;
-    }
-
-    /// Get the center of the AABB.
-    b2Vec2 GetCenter() const
-    {
-        return 0.5f * (lowerBound + upperBound);
-    }
-
-    /// Get the extents of the AABB (half-widths).
-    b2Vec2 GetExtents() const
-    {
-        return 0.5f * (upperBound - lowerBound);
-    }
-
-    /// Get the perimeter length
-    float32 GetPerimeter() const
-    {
-        float32 wx = upperBound.x - lowerBound.x;
-        float32 wy = upperBound.y - lowerBound.y;
-        return 2.0f * (wx + wy);
-    }
-
-    /// Combine an AABB into this one.
-    void Combine(b2AABB aabb)
-    {
-        lowerBound = b2Min(lowerBound, aabb.lowerBound);
-        upperBound = b2Max(upperBound, aabb.upperBound);
-    }
-
-    /// Combine two AABBs into this one.
-    void Combine(b2AABB aabb1, b2AABB aabb2)
-    {
-        lowerBound = b2Min(aabb1.lowerBound, aabb2.lowerBound);
-        upperBound = b2Max(aabb1.upperBound, aabb2.upperBound);
-    }
-
-    /// Does this aabb contain the provided AABB.
-    bool Contains(b2AABB aabb) const
-    {
-        bool result = true;
-        result = result && lowerBound.x <= aabb.lowerBound.x;
-        result = result && lowerBound.y <= aabb.lowerBound.y;
-        result = result && aabb.upperBound.x <= upperBound.x;
-        result = result && aabb.upperBound.y <= upperBound.y;
-        return result;
-    }
-
-    bool RayCast(b2RayCastOutput* output, b2RayCastInput input) const;
-
     b2Vec2 lowerBound;          ///< the lower vertex
     b2Vec2 upperBound;          ///< the upper vertex
 }
 
-bool b2TestOverlap(b2AABB a, b2AABB b)
-{
-    b2Vec2 d1, d2;
-    d1 = b.lowerBound - a.upperBound;
-    d2 = a.lowerBound - b.upperBound;
-
-    if (d1.x > 0.0f || d1.y > 0.0f)
-        return false;
-
-    if (d2.x > 0.0f || d2.y > 0.0f)
-        return false;
-
-    return true;
-}
-
-import dbox.collision.b2collision;
-import dbox.collision.b2distance;
-
-void b2GetPointStates(b2PointState state1[b2_maxManifoldPoints], b2PointState state2[b2_maxManifoldPoints],
-                      const(b2Manifold)* manifold1, const(b2Manifold)* manifold2)
-{
-    for (int32 i = 0; i < b2_maxManifoldPoints; ++i)
-    {
-        state1[i] = b2_nullState;
-        state2[i] = b2_nullState;
-    }
-
-    // Detect persists and removes.
-    for (int32 i = 0; i < manifold1.pointCount; ++i)
-    {
-        b2ContactID id = manifold1.points[i].id;
-
-        state1[i] = b2_removeState;
-
-        for (int32 j = 0; j < manifold2.pointCount; ++j)
-        {
-            if (manifold2.points[j].id.key == id.key)
-            {
-                state1[i] = b2_persistState;
-                break;
-            }
-        }
-    }
-
-    // Detect persists and adds.
-    for (int32 i = 0; i < manifold2.pointCount; ++i)
-    {
-        b2ContactID id = manifold2.points[i].id;
-
-        state2[i] = b2_addState;
-
-        for (int32 j = 0; j < manifold1.pointCount; ++j)
-        {
-            if (manifold1.points[j].id.key == id.key)
-            {
-                state2[i] = b2_persistState;
-                break;
-            }
-        }
-    }
-}
-
 // Sutherland-Hodgman clipping.
-int32 b2ClipSegmentToLine(b2ClipVertex vOut[2], const(b2ClipVertex)[2] vIn,
+/// Clipping for contact manifolds.
+int32 b2ClipSegmentToLine(ref b2ClipVertex[2] vOut, ref const(b2ClipVertex)[2] vIn,
                           b2Vec2 normal, float32 offset, int32 vertexIndexA)
 {
     // Start with no output points
@@ -477,6 +445,7 @@ int32 b2ClipSegmentToLine(b2ClipVertex vOut[2], const(b2ClipVertex)[2] vIn,
     return numOut;
 }
 
+/// Determine if two generic shapes overlap.
 bool b2TestOverlap(const(b2Shape) shapeA, int32 indexA,
                    const(b2Shape) shapeB, int32 indexB,
                    b2Transform xfA, b2Transform xfB)
@@ -496,4 +465,19 @@ bool b2TestOverlap(const(b2Shape) shapeA, int32 indexA,
     b2Distance(&output, &cache, &input);
 
     return output.distance < 10.0f * b2_epsilon;
+}
+
+bool b2TestOverlap(b2AABB a, b2AABB b)
+{
+    b2Vec2 d1, d2;
+    d1 = b.lowerBound - a.upperBound;
+    d2 = a.lowerBound - b.upperBound;
+
+    if (d1.x > 0.0f || d1.y > 0.0f)
+        return false;
+
+    if (d2.x > 0.0f || d2.y > 0.0f)
+        return false;
+
+    return true;
 }

@@ -25,6 +25,7 @@ import dbox.common;
 import dbox.collision;
 import dbox.collision.shapes;
 
+/// Compute the collision manifold between two circles.
 void b2CollideCircles(
     b2Manifold* manifold,
     const(b2CircleShape) circleA, b2Transform xfA,
@@ -54,6 +55,7 @@ void b2CollideCircles(
     manifold.points[0].id.key     = 0;
 }
 
+/// Compute the collision manifold between a polygon and a circle.
 void b2CollidePolygonAndCircle(
     b2Manifold* manifold,
     const(b2PolygonShape) polygonA, b2Transform xfA,

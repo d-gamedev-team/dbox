@@ -122,8 +122,8 @@ void b2FindIncidentEdge(ref b2ClipVertex[2] c,
 // Choose reference edge as min(minA, minB)
 // Find incident edge
 // Clip
-
 // The normal points from 1 to 2
+/// Compute the collision manifold between two polygons.
 void b2CollidePolygons(b2Manifold* manifold,
                        const(b2PolygonShape) polyA, b2Transform xfA,
                        const(b2PolygonShape) polyB, b2Transform xfB)

@@ -27,6 +27,7 @@ import dbox.collision.shapes;
 
 // Compute contact points for edge versus circle.
 // This accounts for edge connectivity.
+/// Compute the collision manifold between an edge and a circle.
 void b2CollideEdgeAndCircle(b2Manifold* manifold,
                             const(b2EdgeShape) edgeA, b2Transform xfA,
                             const(b2CircleShape) circleB, b2Transform xfB)
@@ -713,6 +714,7 @@ struct b2EPCollider
     bool m_front;
 }
 
+/// Compute the collision manifold between an edge and a circle.
 void b2CollideEdgeAndPolygon(b2Manifold* manifold,
                              const(b2EdgeShape) edgeA, b2Transform xfA,
                              const(b2PolygonShape) polygonB, b2Transform xfB)
