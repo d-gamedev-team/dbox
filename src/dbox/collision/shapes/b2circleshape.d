@@ -1,14 +1,3 @@
-module dbox.collision.shapes.b2circleshape;
-
-import core.stdc.float_;
-import core.stdc.stdlib;
-import core.stdc.string;
-
-import std.conv;
-
-import dbox.common;
-import dbox.common.b2math;
-
 /*
  * Copyright (c) 2006-2009 Erin Catto http://www.box2d.org
  *
@@ -26,20 +15,17 @@ import dbox.common.b2math;
  * misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
  */
+module dbox.collision.shapes.b2circleshape;
 
-// #ifndef B2_CIRCLE_SHAPE_H
-// #define B2_CIRCLE_SHAPE_H
-
-import dbox.collision.b2collision;
-import dbox.collision.shapes.b2shape;
-
-import dbox.common.b2math;
 import dbox.common;
-import dbox.common.b2blockallocator;
+
+import dbox.collision;
+import dbox.collision.shapes;
 
 /// A circle shape.
 class b2CircleShape : b2Shape
 {
+    ///
     this()
     {
         m_type   = e_circle;
@@ -47,38 +33,22 @@ class b2CircleShape : b2Shape
         m_p.SetZero();
     }
 
-    int32 GetSupport(b2Vec2 d) const
-    {
-        B2_NOT_USED(d);
-        return 0;
-    }
-
-    b2Vec2 GetSupportVertex(b2Vec2 d) const
-    {
-        B2_NOT_USED(d);
-        return m_p;
-    }
-
-    b2Vec2 GetVertex(int32 index) const
-    {
-        B2_NOT_USED(index);
-        assert(index == 0);
-        return m_p;
-    }
-
+    /// Implement b2Shape.
     override b2Shape Clone(b2BlockAllocator* allocator) const
     {
         void* mem = allocator.Allocate(getSizeOf!b2CircleShape);
-        b2CircleShape clone = emplace!b2CircleShape(mem[0 .. getSizeOf!b2CircleShape]);
+        b2CircleShape clone = emplace!b2CircleShape(mem);
         clone.tupleof = this.tupleof;
         return clone;
     }
 
+    /// @see b2Shape::GetChildCount
     override int32 GetChildCount() const
     {
         return 1;
     }
 
+    /// Implement b2Shape.
     override bool TestPoint(b2Transform transform, b2Vec2 p) const
     {
         b2Vec2 center = transform.p + b2Mul(transform.q, m_p);
@@ -90,8 +60,9 @@ class b2CircleShape : b2Shape
     // From Section 3.1.2
     // x = s + a * r
     // norm(x) = radius
+    /// Implement b2Shape.
     override bool RayCast(b2RayCastOutput* output, b2RayCastInput input,
-                                b2Transform transform, int32 childIndex) const
+                          b2Transform transform, int32 childIndex) const
     {
         B2_NOT_USED(childIndex);
 
@@ -101,7 +72,7 @@ class b2CircleShape : b2Shape
 
         // Solve quadratic equation.
         b2Vec2  r     = input.p2 - input.p1;
-        float32 c     =  b2Dot(s, r);
+        float32 c     = b2Dot(s, r);
         float32 rr    = b2Dot(r, r);
         float32 sigma = c * c - rr * b;
 
@@ -127,6 +98,7 @@ class b2CircleShape : b2Shape
         return false;
     }
 
+    /// @see b2Shape::ComputeAABB
     override void ComputeAABB(b2AABB* aabb, b2Transform transform, int32 childIndex) const
     {
         B2_NOT_USED(childIndex);
@@ -136,6 +108,7 @@ class b2CircleShape : b2Shape
         aabb.upperBound.Set(p.x + m_radius, p.y + m_radius);
     }
 
+    /// @see b2Shape::ComputeMass
     override void ComputeMass(b2MassData* massData, float32 density) const
     {
         massData.mass   = density * b2_pi * m_radius * m_radius;
@@ -145,10 +118,32 @@ class b2CircleShape : b2Shape
         massData.I = massData.mass * (0.5f * m_radius * m_radius + b2Dot(m_p, m_p));
     }
 
+    /// Get the supporting vertex index in the given direction.
+    int32 GetSupport(b2Vec2 d) const
+    {
+        B2_NOT_USED(d);
+        return 0;
+    }
+
+    /// Get the supporting vertex in the given direction.
+    b2Vec2 GetSupportVertex(b2Vec2 d) const
+    {
+        B2_NOT_USED(d);
+        return m_p;
+    }
+
     /// Get the vertex count.
     int32 GetVertexCount() const
     {
         return 1;
+    }
+
+    /// Get a vertex by index. Used by b2Distance.
+    b2Vec2 GetVertex(int32 index) const
+    {
+        B2_NOT_USED(index);
+        assert(index == 0);
+        return m_p;
     }
 
     /// Position
