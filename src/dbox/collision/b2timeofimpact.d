@@ -94,9 +94,9 @@ struct b2SeparationFunction
 
     // TODO_ERIN might not need to return the separation
 
-    float32 Initialize(const b2SimplexCache* cache,
-                       const b2DistanceProxy* proxyA, b2Sweep sweepA,
-                       const b2DistanceProxy* proxyB, b2Sweep sweepB,
+    float32 Initialize(const(b2SimplexCache)* cache,
+                       const(b2DistanceProxy)* proxyA, b2Sweep sweepA,
+                       const(b2DistanceProxy)* proxyB, b2Sweep sweepB,
                        float32 t1)
     {
         m_proxyA = cast(b2DistanceProxy*)proxyA;
@@ -311,8 +311,8 @@ void b2TimeOfImpact(b2TOIOutput* output, const(b2TOIInput)* input)
     output.state = b2TOIOutput.e_unknown;
     output.t     = input.tMax;
 
-    const b2DistanceProxy* proxyA = &input.proxyA;
-    const b2DistanceProxy* proxyB = &input.proxyB;
+    const(b2DistanceProxy)* proxyA = &input.proxyA;
+    const(b2DistanceProxy)* proxyB = &input.proxyB;
 
     b2Sweep sweepA = input.sweepA;
     b2Sweep sweepB = input.sweepB;

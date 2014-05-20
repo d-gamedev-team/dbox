@@ -156,7 +156,7 @@ struct b2BroadPhase
             b2AABB fatAABB = m_tree.GetFatAABB(m_queryProxyId);
 
             // Query tree, create pairs and add them pair buffer.
-            m_tree.Query(&this, fatAABB);
+            m_tree.Query(this, fatAABB);
         }
 
         // Reset move buffer
