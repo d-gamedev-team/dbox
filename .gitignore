@@ -30,3 +30,5 @@ src/translate.d
 *.sln
 *.suo
 todo.md
+*.pdb
+*.exe_cv
