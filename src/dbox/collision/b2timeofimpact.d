@@ -1,14 +1,3 @@
-module dbox.collision.b2timeofimpact;
-
-import core.stdc.float_;
-import core.stdc.stdlib;
-import core.stdc.string;
-
-import dbox.common;
-import dbox.common.b2math;
-import dbox.collision;
-import dbox.collision.shapes;
-
 /*
  * Copyright (c) 2006-2009 Erin Catto http://www.box2d.org
  *
@@ -26,12 +15,15 @@ import dbox.collision.shapes;
  * misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
  */
+module dbox.collision.b2timeofimpact;
 
-// #ifndef B2_TIME_OF_IMPACT_H
-// #define B2_TIME_OF_IMPACT_H
+import core.stdc.float_;
+import core.stdc.stdlib;
+import core.stdc.string;
 
-import dbox.common.b2math;
-import dbox.collision.b2distance;
+import dbox.common;
+import dbox.collision;
+import dbox.collision.shapes;
 
 /// Input parameters for b2TimeOfImpact
 struct b2TOIInput
@@ -65,18 +57,253 @@ struct b2TOIOutput
     float32 t = 0;
 }
 
-import dbox.collision.b2collision;
-import dbox.collision.b2distance;
-import dbox.collision.b2timeofimpact;
-import dbox.collision.shapes.b2circleshape;
-import dbox.collision.shapes.b2polygonshape;
-import dbox.common.b2timer;
+// CCD via the local separating axis method. This seeks progression
+// by computing the largest time at which separation is maintained.
+/// Compute the upper bound on time before two shapes penetrate. Time is represented as
+/// a fraction between [0,tMax]. This uses a swept separating axis and may miss some intermediate,
+/// non-tunneling collision. If you change the time interval, you should call this function
+/// again.
+/// Note: use b2Distance to compute the contact point and normal at the time of impact.
+void b2TimeOfImpact(b2TOIOutput* output, const(b2TOIInput)* input)
+{
+    auto timer = b2Timer();
 
-import core.stdc.stdio;
+    ++b2_toiCalls;
 
-float32 b2_toiTime = 0, b2_toiMaxTime = 0;
-int32 b2_toiCalls, b2_toiIters, b2_toiMaxIters;
-int32 b2_toiRootIters, b2_toiMaxRootIters;
+    output.state = b2TOIOutput.e_unknown;
+    output.t     = input.tMax;
+
+    const(b2DistanceProxy)* proxyA = &input.proxyA;
+    const(b2DistanceProxy)* proxyB = &input.proxyB;
+
+    b2Sweep sweepA = input.sweepA;
+    b2Sweep sweepB = input.sweepB;
+
+    // Large rotations can make the root finder fail, so we normalize the
+    // sweep angles.
+    sweepA.Normalize();
+    sweepB.Normalize();
+
+    float32 tMax = input.tMax;
+
+    float32 totalRadius = proxyA.m_radius + proxyB.m_radius;
+    float32 target      = b2Max(b2_linearSlop, totalRadius - 3.0f * b2_linearSlop);
+    float32 tolerance   = 0.25f * b2_linearSlop;
+    assert(target > tolerance);
+
+    float32 t1 = 0.0f;
+    const int32 k_maxIterations = 20;           // TODO_ERIN b2Settings
+    int32 iter = 0;
+
+    // Prepare input for distance query.
+    b2SimplexCache cache;
+    cache.count = 0;
+    b2DistanceInput distanceInput;
+    distanceInput.proxyA   = input.proxyA;
+    distanceInput.proxyB   = input.proxyB;
+    distanceInput.useRadii = false;
+
+    // The outer loop progressively attempts to compute new separating axes.
+    // This loop terminates when an axis is repeated (no progress is made).
+    for (;;)
+    {
+        b2Transform xfA, xfB;
+        sweepA.GetTransform(&xfA, t1);
+        sweepB.GetTransform(&xfB, t1);
+
+        // Get the distance between shapes. We can also use the results
+        // to get a separating axis.
+        distanceInput.transformA = xfA;
+        distanceInput.transformB = xfB;
+        b2DistanceOutput distanceOutput;
+        b2Distance(&distanceOutput, &cache, &distanceInput);
+
+        // If the shapes are overlapped, we give up on continuous collision.
+        if (distanceOutput.distance <= 0.0f)
+        {
+            // Failure!
+            output.state = b2TOIOutput.e_overlapped;
+            output.t     = 0.0f;
+            break;
+        }
+
+        if (distanceOutput.distance < target + tolerance)
+        {
+            // Victory!
+            output.state = b2TOIOutput.e_touching;
+            output.t     = t1;
+            break;
+        }
+
+        // Initialize the separating axis.
+        b2SeparationFunction fcn;
+        fcn.Initialize(&cache, proxyA, sweepA, proxyB, sweepB, t1);
+
+        version (none)
+        {
+            // Dump the curve seen by the root finder
+            const int32 N = 100;
+            float32 dx    = 1.0f / N;
+            float32 xs[N + 1];
+            float32 fs[N + 1];
+
+            float32 x = 0.0f;
+
+            for (int32 i = 0; i <= N; ++i)
+            {
+                sweepA.GetTransform(&xfA, x);
+                sweepB.GetTransform(&xfB, x);
+                float32 f = fcn.Evaluate(xfA, xfB) - target;
+
+                printf("%g %g\n", x, f);
+
+                xs[i] = x;
+                fs[i] = f;
+
+                x += dx;
+            }
+        }
+
+        // Compute the TOI on the separating axis. We do this by successively
+        // resolving the deepest point. This loop is bounded by the number of vertices.
+        bool done          = false;
+        float32 t2         = tMax;
+        int32 pushBackIter = 0;
+
+        for (;;)
+        {
+            // Find the deepest point at t2. Store the witness point indices.
+            int32 indexA, indexB;
+            float32 s2 = fcn.FindMinSeparation(&indexA, &indexB, t2);
+
+            // Is the final configuration separated?
+            if (s2 > target + tolerance)
+            {
+                // Victory!
+                output.state = b2TOIOutput.e_separated;
+                output.t     = tMax;
+                done = true;
+                break;
+            }
+
+            // Has the separation reached tolerance?
+            if (s2 > target - tolerance)
+            {
+                // Advance the sweeps
+                t1 = t2;
+                break;
+            }
+
+            // Compute the initial separation of the witness points.
+            float32 s1 = fcn.Evaluate(indexA, indexB, t1);
+
+            // Check for initial overlap. This might happen if the root finder
+            // runs out of iterations.
+            if (s1 < target - tolerance)
+            {
+                output.state = b2TOIOutput.e_failed;
+                output.t     = t1;
+                done = true;
+                break;
+            }
+
+            // Check for touching
+            if (s1 <= target + tolerance)
+            {
+                // Victory! t1 should hold the TOI (could be 0.0).
+                output.state = b2TOIOutput.e_touching;
+                output.t     = t1;
+                done = true;
+                break;
+            }
+
+            // Compute 1D root of: f(x) - target = 0
+            int32 rootIterCount = 0;
+            float32 a1 = t1, a2 = t2;
+
+            for (;;)
+            {
+                // Use a mix of the secant rule and bisection.
+                float32 t = 0;
+
+                if (rootIterCount & 1)
+                {
+                    // Secant rule to improve convergence.
+                    t = a1 + (target - s1) * (a2 - a1) / (s2 - s1);
+                }
+                else
+                {
+                    // Bisection to guarantee progress.
+                    t = 0.5f * (a1 + a2);
+                }
+
+                ++rootIterCount;
+                ++b2_toiRootIters;
+
+                float32 s = fcn.Evaluate(indexA, indexB, t);
+
+                if (b2Abs(s - target) < tolerance)
+                {
+                    // t2 holds a tentative value for t1
+                    t2 = t;
+                    break;
+                }
+
+                // Ensure we continue to bracket the root.
+                if (s > target)
+                {
+                    a1 = t;
+                    s1 = s;
+                }
+                else
+                {
+                    a2 = t;
+                    s2 = s;
+                }
+
+                if (rootIterCount == 50)
+                {
+                    break;
+                }
+            }
+
+            b2_toiMaxRootIters = b2Max(b2_toiMaxRootIters, rootIterCount);
+
+            ++pushBackIter;
+
+            if (pushBackIter == b2_maxPolygonVertices)
+            {
+                break;
+            }
+        }
+
+        ++iter;
+        ++b2_toiIters;
+
+        if (done)
+        {
+            break;
+        }
+
+        if (iter == k_maxIterations)
+        {
+            // Root finder got stuck. Semi-victory.
+            output.state = b2TOIOutput.e_failed;
+            output.t     = t1;
+            break;
+        }
+    }
+
+    b2_toiMaxIters = b2Max(b2_toiMaxIters, iter);
+
+    float32 time = timer.GetMilliseconds();
+    b2_toiMaxTime = b2Max(b2_toiMaxTime, time);
+    b2_toiTime   += time;
+}
+
+private __gshared float32 b2_toiTime = 0, b2_toiMaxTime = 0;
+private __gshared int32 b2_toiCalls, b2_toiIters, b2_toiMaxIters;
+private __gshared int32 b2_toiRootIters, b2_toiMaxRootIters;
 
 //
 struct b2SeparationFunction
@@ -99,8 +326,8 @@ struct b2SeparationFunction
                        const(b2DistanceProxy)* proxyB, b2Sweep sweepB,
                        float32 t1)
     {
-        m_proxyA = cast(b2DistanceProxy*)proxyA;
-        m_proxyB = cast(b2DistanceProxy*)proxyB;
+        m_proxyA = proxyA;
+        m_proxyB = proxyB;
         int32 count = cache.count;
         assert(0 < count && count < 3);
 
@@ -238,6 +465,8 @@ struct b2SeparationFunction
             }
 
             default:
+                *indexA = -1;
+                *indexB = -1;
                 assert(0);
         }
     }
@@ -292,224 +521,10 @@ struct b2SeparationFunction
         }
     }
 
-    /* const */ b2DistanceProxy* m_proxyA;
-    /* const */ b2DistanceProxy* m_proxyB;
+    const(b2DistanceProxy)* m_proxyA;
+    const(b2DistanceProxy)* m_proxyB;
     b2Sweep m_sweepA, m_sweepB;
     Type m_type;
     b2Vec2 m_localPoint;
     b2Vec2 m_axis;
-}
-
-// CCD via the local separating axis method. This seeks progression
-// by computing the largest time at which separation is maintained.
-void b2TimeOfImpact(b2TOIOutput* output, const(b2TOIInput)* input)
-{
-    auto timer = b2Timer();
-
-    ++b2_toiCalls;
-
-    output.state = b2TOIOutput.e_unknown;
-    output.t     = input.tMax;
-
-    const(b2DistanceProxy)* proxyA = &input.proxyA;
-    const(b2DistanceProxy)* proxyB = &input.proxyB;
-
-    b2Sweep sweepA = input.sweepA;
-    b2Sweep sweepB = input.sweepB;
-
-    // Large rotations can make the root finder fail, so we normalize the
-    // sweep angles.
-    sweepA.Normalize();
-    sweepB.Normalize();
-
-    float32 tMax = input.tMax;
-
-    float32 totalRadius = proxyA.m_radius + proxyB.m_radius;
-    float32 target      = b2Max(b2_linearSlop, totalRadius - 3.0f * b2_linearSlop);
-    float32 tolerance   = 0.25f * b2_linearSlop;
-    assert(target > tolerance);
-
-    float32 t1 = 0.0f;
-    const int32 k_maxIterations = 20;           // TODO_ERIN b2Settings
-    int32 iter = 0;
-
-    // Prepare input for distance query.
-    b2SimplexCache cache;
-    cache.count = 0;
-    b2DistanceInput distanceInput;
-    distanceInput.proxyA   = input.proxyA;
-    distanceInput.proxyB   = input.proxyB;
-    distanceInput.useRadii = false;
-
-    // The outer loop progressively attempts to compute new separating axes.
-    // This loop terminates when an axis is repeated (no progress is made).
-    for (;; )
-    {
-        b2Transform xfA, xfB;
-        sweepA.GetTransform(&xfA, t1);
-        sweepB.GetTransform(&xfB, t1);
-
-        // Get the distance between shapes. We can also use the results
-        // to get a separating axis.
-        distanceInput.transformA = xfA;
-        distanceInput.transformB = xfB;
-        b2DistanceOutput distanceOutput;
-        b2Distance(&distanceOutput, &cache, &distanceInput);
-
-        // If the shapes are overlapped, we give up on continuous collision.
-        if (distanceOutput.distance <= 0.0f)
-        {
-            // Failure!
-            output.state = b2TOIOutput.e_overlapped;
-            output.t     = 0.0f;
-            break;
-        }
-
-        if (distanceOutput.distance < target + tolerance)
-        {
-            // Victory!
-            output.state = b2TOIOutput.e_touching;
-            output.t     = t1;
-            break;
-        }
-
-        // Initialize the separating axis.
-        b2SeparationFunction fcn;
-        fcn.Initialize(&cache, proxyA, sweepA, proxyB, sweepB, t1);
-
-        // Compute the TOI on the separating axis. We do this by successively
-        // resolving the deepest point. This loop is bounded by the number of vertices.
-        bool done          = false;
-        float32 t2         = tMax;
-        int32 pushBackIter = 0;
-
-        for (;; )
-        {
-            // Find the deepest point at t2. Store the witness point indices.
-            int32 indexA, indexB;
-            float32 s2 = fcn.FindMinSeparation(&indexA, &indexB, t2);
-
-            // Is the final configuration separated?
-            if (s2 > target + tolerance)
-            {
-                // Victory!
-                output.state = b2TOIOutput.e_separated;
-                output.t     = tMax;
-                done = true;
-                break;
-            }
-
-            // Has the separation reached tolerance?
-            if (s2 > target - tolerance)
-            {
-                // Advance the sweeps
-                t1 = t2;
-                break;
-            }
-
-            // Compute the initial separation of the witness points.
-            float32 s1 = fcn.Evaluate(indexA, indexB, t1);
-
-            // Check for initial overlap. This might happen if the root finder
-            // runs out of iterations.
-            if (s1 < target - tolerance)
-            {
-                output.state = b2TOIOutput.e_failed;
-                output.t     = t1;
-                done = true;
-                break;
-            }
-
-            // Check for touching
-            if (s1 <= target + tolerance)
-            {
-                // Victory! t1 should hold the TOI (could be 0.0).
-                output.state = b2TOIOutput.e_touching;
-                output.t     = t1;
-                done = true;
-                break;
-            }
-
-            // Compute 1D root of: f(x) - target = 0
-            int32 rootIterCount = 0;
-            float32 a1 = t1, a2 = t2;
-
-            for (;; )
-            {
-                // Use a mix of the secant rule and bisection.
-                float32 t = 0;
-
-                if (rootIterCount & 1)
-                {
-                    // Secant rule to improve convergence.
-                    t = a1 + (target - s1) * (a2 - a1) / (s2 - s1);
-                }
-                else
-                {
-                    // Bisection to guarantee progress.
-                    t = 0.5f * (a1 + a2);
-                }
-
-                ++rootIterCount;
-                ++b2_toiRootIters;
-
-                float32 s = fcn.Evaluate(indexA, indexB, t);
-
-                if (b2Abs(s - target) < tolerance)
-                {
-                    // t2 holds a tentative value for t1
-                    t2 = t;
-                    break;
-                }
-
-                // Ensure we continue to bracket the root.
-                if (s > target)
-                {
-                    a1 = t;
-                    s1 = s;
-                }
-                else
-                {
-                    a2 = t;
-                    s2 = s;
-                }
-
-                if (rootIterCount == 50)
-                {
-                    break;
-                }
-            }
-
-            b2_toiMaxRootIters = b2Max(b2_toiMaxRootIters, rootIterCount);
-
-            ++pushBackIter;
-
-            if (pushBackIter == b2_maxPolygonVertices)
-            {
-                break;
-            }
-        }
-
-        ++iter;
-        ++b2_toiIters;
-
-        if (done)
-        {
-            break;
-        }
-
-        if (iter == k_maxIterations)
-        {
-            // Root finder got stuck. Semi-victory.
-            output.state = b2TOIOutput.e_failed;
-            output.t     = t1;
-            break;
-        }
-    }
-
-    b2_toiMaxIters = b2Max(b2_toiMaxIters, iter);
-
-    float32 time = timer.GetMilliseconds();
-    b2_toiMaxTime = b2Max(b2_toiMaxTime, time);
-    b2_toiTime   += time;
 }
