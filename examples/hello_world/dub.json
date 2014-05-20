@@ -1,0 +1,36 @@
+{
+    "name": "hello_world",
+
+    "description": "hello_world",
+
+    "authors": [
+        "Erin Catto",
+        "Andrej Mitrovic"
+    ],
+
+    "homepage": "https://github.com/d-gamedev-team/dbox",
+
+    "copyright": "Copyright (c) 2006-2009 Erin Catto http://www.box2d.org",
+
+    "license": "zlib",
+
+    "buildOptions": ["debugInfo"],
+
+    "buildRequirements": ["silenceDeprecations"],
+
+    "targetName" : "hello_world",
+
+    "targetPath" : "../../bin",
+
+    "targetType": "executable",
+
+    "sourceFiles": ["hello_world.d"],
+
+    "mainSourceFile": "hello_world.d",
+
+    "dependencies": {
+        "dbox": {"path": "../../", "version": "~master"},
+        "glfw-drey": ">=0.0.2",
+        "glwtf-drey": ">=0.0.1",
+    },
+}
