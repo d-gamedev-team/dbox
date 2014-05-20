@@ -1,13 +1,25 @@
+/*
+ * Copyright (c) 2006-2009 Erin Catto http://www.box2d.org
+ *
+ * This software is provided 'as-is', without any express or implied
+ * warranty.  In no event will the authors be held liable for any damages
+ * arising from the use of this software.
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ * 1. The origin of this software must not be misrepresented; you must not
+ * claim that you wrote the original software. If you use this software
+ * in a product, an acknowledgment in the product documentation would be
+ * appreciated but is not required.
+ * 2. Altered source versions must be plainly marked as such, and must not be
+ * misrepresented as being the original software.
+ * 3. This notice may not be removed or altered from any source distribution.
+ */
 module dbox.common.b2blockallocator;
 
 import core.stdc.float_;
-import core.stdc.stdlib;
-import core.stdc.string;
-
-import dbox.common;
-import dbox.common.b2math;
-
 import core.stdc.limits;
+import core.stdc.stdlib;
 import core.stdc.string;
 
 import dbox.common;
@@ -22,9 +34,13 @@ enum b2_chunkArrayIncrement = 128;
 /// See: http://www.codeproject.com/useritems/Small_Block_Allocator.asp
 struct b2BlockAllocator
 {
+    /// This struct must be properly initialized with an explicit constructor.
     @disable this();
+
+    /// This struct cannot be copied.
     @disable this(this);
 
+    /// Explicit constructor.
     this(int)
     {
         assert(b2_blockSizes < UCHAR_MAX);
@@ -34,11 +50,10 @@ struct b2BlockAllocator
         m_chunks     = cast(b2Chunk*)b2Alloc(m_chunkSpace * getSizeOf!b2Chunk);
 
         memset(m_chunks, 0, m_chunkSpace * getSizeOf!b2Chunk);
-        m_freeLists[] = null;
+        memset(m_freeLists.ptr, 0, m_freeLists.sizeof);
     }
 
-    b2Chunk* m_chunks;
-
+    ///
     ~this()
     {
         for (int32 i = 0; i < m_chunkCount; ++i)
@@ -86,6 +101,11 @@ struct b2BlockAllocator
             b2Chunk* chunk = m_chunks + m_chunkCount;
             chunk.blocks = cast(b2Block*)b2Alloc(b2_chunkSize);
 
+            debug
+            {
+                memset(chunk.blocks, 0xcd, b2_chunkSize);
+            }
+
             int32 blockSize = s_blockSizes[index];
             chunk.blockSize = blockSize;
             int32 blockCount = b2_chunkSize / blockSize;
@@ -127,6 +147,36 @@ struct b2BlockAllocator
         int32 index = s_blockSizeLookup[size];
         assert(0 <= index && index < b2_blockSizes);
 
+        debug
+        {
+            // Verify the memory address and size is valid.
+            int32 blockSize = s_blockSizes[index];
+            bool  found     = false;
+
+            for (int32 i = 0; i < m_chunkCount; ++i)
+            {
+                b2Chunk* chunk = m_chunks + i;
+
+                if (chunk.blockSize != blockSize)
+                {
+                    assert(cast(int8*)p + blockSize <= cast(int8*)chunk.blocks ||
+                           cast(int8*)chunk.blocks + b2_chunkSize <= cast(int8*)p);
+                }
+                else
+                {
+                    if (cast(int8*)chunk.blocks <= cast(int8*)p &&
+                        cast(int8*)p + blockSize <= cast(int8*)chunk.blocks + b2_chunkSize)
+                    {
+                        found = true;
+                    }
+                }
+            }
+
+            assert(found);
+
+            memset(p, 0xfd, blockSize);
+        }
+
         b2Block* block = cast(b2Block*)p;
         block.next        = m_freeLists[index];
         m_freeLists[index] = block;
@@ -141,14 +191,14 @@ struct b2BlockAllocator
 
         m_chunkCount = 0;
         memset(m_chunks, 0, m_chunkSpace * getSizeOf!b2Chunk);
-
-        m_freeLists[] = null;
+        memset(m_freeLists.ptr, 0, m_freeLists.sizeof);
     }
 
-/* private */
+private:
 
+    b2Chunk* m_chunks;
     int32 m_chunkCount;
-    int32 m_chunkSpace = b2_chunkArrayIncrement;
+    int32 m_chunkSpace;
 
     b2Block*[b2_blockSizes] m_freeLists;
 
@@ -170,9 +220,9 @@ struct b2BlockAllocator
         640,        // 13
     ];
 
-    static uint8[b2_maxBlockSize + 1] s_blockSizeLookup = initMe();
+    static immutable uint8[b2_maxBlockSize + 1] s_blockSizeLookup = init_s_blockSizeLookup();
 
-    private static uint8[b2_maxBlockSize + 1] initMe()
+    private static uint8[b2_maxBlockSize + 1] init_s_blockSizeLookup()
     {
         uint8[b2_maxBlockSize + 1] res;
 
