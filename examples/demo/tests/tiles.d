@@ -21,6 +21,7 @@ module tests.tiles;
 import core.stdc.math;
 
 import std.string;
+import std.typecons;
 
 import dbox;
 
@@ -58,7 +59,7 @@ class Tiles : Test
 
                 for (int32 i = 0; i < N; ++i)
                 {
-                    b2PolygonShape shape = new b2PolygonShape;
+                    auto shape = scoped!b2PolygonShape();
                     shape.SetAsBox(a, a, position, 0.0f);
                     ground.CreateFixture(shape, 0.0f);
                     ++m_fixtureCount;
@@ -71,7 +72,7 @@ class Tiles : Test
 
         {
             float32 a = 0.5f;
-            b2PolygonShape shape = new b2PolygonShape;
+            auto shape = scoped!b2PolygonShape();
             shape.SetAsBox(a, a);
 
             b2Vec2 x = b2Vec2(-7.0f, 0.75f);
@@ -137,7 +138,7 @@ class Tiles : Test
 
     static Test Create()
     {
-        return new Tiles;
+        return new typeof(this);
     }
 
     int32 m_fixtureCount;

@@ -24,7 +24,7 @@ import framework.test;
 //~ import tests.applyforce;
 //~ import tests.basicslidercrank;
 //~ import tests.bodytypes;
-//~ import tests.breakable;
+import tests.breakable;
 //~ import tests.bridge;
 //~ import tests.bullettest;
 //~ import tests.cantilever;
@@ -37,7 +37,7 @@ import framework.test;
 //~ import tests.compoundshapes;
 //~ import tests.confined;
 //~ import tests.convexhull;
-//~ import tests.conveyorbelt;
+import tests.conveyorbelt;
 //~ import tests.distancetest;
 //~ import tests.dominos;
 //~ import tests.dumpshell;
@@ -45,7 +45,7 @@ import framework.test;
 //~ import tests.edgeshapes;
 //~ import tests.edgetest;
 //~ import tests.gears;
-//~ import tests.heavyonlight;
+import tests.heavyonlight;
 //~ import tests.heavyonlighttwo;
 //~ import tests.mobile;
 //~ import tests.mobilebalanced;
@@ -70,62 +70,62 @@ import tests.tiles;
 //~ import tests.tumbler;
 //~ import tests.varyingfriction;
 //~ import tests.varyingrestitution;
-//~ import tests.verticalstack;
+import tests.verticalstack;
 //~ import tests.web;
 
 TestEntry[] g_testEntries =
 [
     TestEntry("Tiles", &Tiles.Create),
-    //~ TestEntry("Heavy on Light", HeavyOnLight.Create),
-    //~ TestEntry("Heavy on Light Two", HeavyOnLightTwo.Create),
-    //~ TestEntry("Vertical Stack", VerticalStack.Create),
-    //~ TestEntry("Basic Slider Crank", BasicSliderCrank.Create),
-    //~ TestEntry("Slider Crank", SliderCrank.Create),
-    //~ TestEntry("Sphere Stack", SphereStack.Create),
-    //~ TestEntry("Convex Hull", ConvexHull.Create),
-    //~ TestEntry("Tumbler", Tumbler.Create),
-    //~ TestEntry("Ray-Cast", RayCast.Create),
-    //~ TestEntry("Dump Shell", DumpShell.Create),
-    //~ TestEntry("Apply Force", ApplyForce.Create),
-    //~ TestEntry("Continuous Test", ContinuousTest.Create),
-    //~ TestEntry("Time of Impact", TimeOfImpact.Create),
-    //~ TestEntry("Motor Joint", MotorJoint.Create),
-    //~ TestEntry("One-Sided Platform", OneSidedPlatform.Create),
-    //~ TestEntry("Mobile", Mobile.Create),
-    //~ TestEntry("MobileBalanced", MobileBalanced.Create),
-    //~ TestEntry("Conveyor Belt", ConveyorBelt.Create),
-    //~ TestEntry("Gears", Gears.Create),
-    //~ TestEntry("Varying Restitution", VaryingRestitution.Create),
-    //~ TestEntry("Cantilever", Cantilever.Create),
-    //~ TestEntry("Character Collision", CharacterCollision.Create),
-    //~ TestEntry("Edge Test", EdgeTest.Create),
-    //~ TestEntry("Body Types", BodyTypes.Create),
-    //~ TestEntry("Shape Editing", ShapeEditing.Create),
-    //~ TestEntry("Car", Car.Create),
-    //~ TestEntry("Prismatic", Prismatic.Create),
-    //~ TestEntry("Revolute", Revolute.Create),
-    //~ TestEntry("Pulleys", Pulleys.Create),
-    //~ TestEntry("Polygon Shapes", PolyShapes.Create),
-    //~ TestEntry("Web", Web.Create),
-    //~ TestEntry("RopeJoint", RopeJoint.Create),
-    //~ TestEntry("Pinball", Pinball.Create),
-    //~ TestEntry("Bullet Test", BulletTest.Create),
-    //~ TestEntry("Confined", Confined.Create),
-    //~ TestEntry("Pyramid", Pyramid.Create),
-    //~ TestEntry("Theo Jansen's Walker", TheoJansen.Create),
-    //~ TestEntry("Edge Shapes", EdgeShapes.Create),
-    //~ TestEntry("PolyCollision", PolyCollision.Create),
-    //~ TestEntry("Bridge", Bridge.Create),
-    //~ TestEntry("Breakable", Breakable.Create),
-    //~ TestEntry("Chain", Chain.Create),
-    //~ TestEntry("Collision Filtering", CollisionFiltering.Create),
-    //~ TestEntry("Collision Processing", CollisionProcessing.Create),
-    //~ TestEntry("Compound Shapes", CompoundShapes.Create),
-    //~ TestEntry("Distance Test", DistanceTest.Create),
-    //~ TestEntry("Dominos", Dominos.Create),
-    //~ TestEntry("Dynamic Tree", DynamicTreeTest.Create),
-    //~ TestEntry("Sensor Test", SensorTest.Create),
-    //~ TestEntry("Varying Friction", VaryingFriction.Create),
-    //~ TestEntry("Add Pair Stress Test", AddPair.Create),
+    TestEntry("Heavy on Light", &HeavyOnLight.Create),
+    //~ TestEntry("Heavy on Light Two", &HeavyOnLightTwo.Create),
+    TestEntry("Vertical Stack", &VerticalStack.Create),
+    //~ TestEntry("Basic Slider Crank", &BasicSliderCrank.Create),
+    //~ TestEntry("Slider Crank", &SliderCrank.Create),
+    //~ TestEntry("Sphere Stack", &SphereStack.Create),
+    //~ TestEntry("Convex Hull", &ConvexHull.Create),
+    //~ TestEntry("Tumbler", &Tumbler.Create),
+    //~ TestEntry("Ray-Cast", &RayCast.Create),
+    //~ TestEntry("Dump Shell", &DumpShell.Create),
+    //~ TestEntry("Apply Force", &ApplyForce.Create),
+    //~ TestEntry("Continuous Test", &ContinuousTest.Create),
+    //~ TestEntry("Time of Impact", &TimeOfImpact.Create),
+    //~ TestEntry("Motor Joint", &MotorJoint.Create),
+    //~ TestEntry("One-Sided Platform", &OneSidedPlatform.Create),
+    //~ TestEntry("Mobile", &Mobile.Create),
+    //~ TestEntry("MobileBalanced", &MobileBalanced.Create),
+    TestEntry("Conveyor Belt", &ConveyorBelt.Create),
+    //~ TestEntry("Gears", &Gears.Create),
+    //~ TestEntry("Varying Restitution", &VaryingRestitution.Create),
+    //~ TestEntry("Cantilever", &Cantilever.Create),
+    //~ TestEntry("Character Collision", &CharacterCollision.Create),
+    //~ TestEntry("Edge Test", &EdgeTest.Create),
+    //~ TestEntry("Body Types", &BodyTypes.Create),
+    //~ TestEntry("Shape Editing", &ShapeEditing.Create),
+    //~ TestEntry("Car", &Car.Create),
+    //~ TestEntry("Prismatic", &Prismatic.Create),
+    //~ TestEntry("Revolute", &Revolute.Create),
+    //~ TestEntry("Pulleys", &Pulleys.Create),
+    //~ TestEntry("Polygon Shapes", &PolyShapes.Create),
+    //~ TestEntry("Web", &Web.Create),
+    //~ TestEntry("RopeJoint", &RopeJoint.Create),
+    //~ TestEntry("Pinball", &Pinball.Create),
+    //~ TestEntry("Bullet Test", &BulletTest.Create),
+    //~ TestEntry("Confined", &Confined.Create),
+    //~ TestEntry("Pyramid", &Pyramid.Create),
+    //~ TestEntry("Theo Jansen's Walker", &TheoJansen.Create),
+    //~ TestEntry("Edge Shapes", &EdgeShapes.Create),
+    //~ TestEntry("PolyCollision", &PolyCollision.Create),
+    //~ TestEntry("Bridge", &Bridge.Create),
+    TestEntry("Breakable", &Breakable.Create),
+    //~ TestEntry("Chain", &Chain.Create),
+    //~ TestEntry("Collision Filtering", &CollisionFiltering.Create),
+    //~ TestEntry("Collision Processing", &CollisionProcessing.Create),
+    //~ TestEntry("Compound Shapes", &CompoundShapes.Create),
+    //~ TestEntry("Distance Test", &DistanceTest.Create),
+    //~ TestEntry("Dominos", &Dominos.Create),
+    //~ TestEntry("Dynamic Tree", &DynamicTreeTest.Create),
+    //~ TestEntry("Sensor Test", &SensorTest.Create),
+    //~ TestEntry("Varying Friction", &VaryingFriction.Create),
+    //~ TestEntry("Add Pair Stress Test", &AddPair.Create),
     TestEntry(null, null),
 ];
