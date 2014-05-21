@@ -325,11 +325,5 @@ struct b2ContactManager
     b2BlockAllocator* m_allocator;
 }
 
-import dbox.dynamics.b2contactmanager;
-import dbox.dynamics.b2body;
-import dbox.dynamics.b2fixture;
-import dbox.dynamics.b2worldcallbacks;
-import dbox.dynamics.contacts.b2contact;
-
 __gshared b2ContactFilter b2_defaultFilter;
 __gshared b2ContactListener b2_defaultListener;

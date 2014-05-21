@@ -35,7 +35,6 @@ import dbox.dynamics.joints;
 import dbox.common.b2math;
 import dbox.common.b2blockallocator;
 import dbox.common.b2stackallocator;
-import dbox.dynamics.b2contactmanager;
 import dbox.dynamics.b2worldcallbacks;
 import dbox.dynamics.b2timestep;
 
