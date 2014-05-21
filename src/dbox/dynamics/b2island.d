@@ -1,14 +1,3 @@
-module dbox.dynamics.b2island;
-
-import core.stdc.float_;
-import core.stdc.stdlib;
-import core.stdc.string;
-
-import dbox.common;
-import dbox.collision;
-import dbox.dynamics.contacts;
-import dbox.dynamics.joints;
-
 /*
  * Copyright (c) 2006-2009 Erin Catto http://www.box2d.org
  *
@@ -26,23 +15,27 @@ import dbox.dynamics.joints;
  * misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
  */
+module dbox.dynamics.b2island;
 
-// #ifndef B2_ISLAND_H
-// #define B2_ISLAND_H
+import core.stdc.float_;
+import core.stdc.stdlib;
+import core.stdc.string;
 
-import dbox.common.b2math;
+import dbox.collision;
+import dbox.collision.shapes;
+import dbox.common;
 import dbox.dynamics;
 import dbox.dynamics.contacts;
+import dbox.dynamics.joints;
 
 /// This is an internal class.
 struct b2Island
 {
-    this(
-        int32 bodyCapacity,
-        int32 contactCapacity,
-        int32 jointCapacity,
-        b2StackAllocator* allocator,
-        b2ContactListener listener)
+    this(int32 bodyCapacity,
+         int32 contactCapacity,
+         int32 jointCapacity,
+         b2StackAllocator* allocator,
+         b2ContactListener listener)
     {
         m_bodyCapacity    = bodyCapacity;
         m_contactCapacity = contactCapacity;
@@ -70,6 +63,13 @@ struct b2Island
         m_allocator.Free(cast(void*)m_joints);
         m_allocator.Free(cast(void*)m_contacts);
         m_allocator.Free(cast(void*)m_bodies);
+    }
+
+    void Clear()
+    {
+        m_bodyCount    = 0;
+        m_contactCount = 0;
+        m_jointCount   = 0;
     }
 
     void Solve(b2Profile* profile, b2TimeStep step, b2Vec2 gravity, bool allowSleep)
@@ -314,6 +314,40 @@ struct b2Island
             }
         }
 
+        version (none)
+        {
+            // Is the new position really safe?
+            for (int32 i = 0; i < m_contactCount; ++i)
+            {
+                b2Contact* c  = &m_contacts[i];
+                b2Fixture* fA = c.GetFixtureA();
+                b2Fixture* fB = c.GetFixtureB();
+
+                b2Body* bA = fA.GetBody();
+                b2Body* bB = fB.GetBody();
+
+                int32 indexA = c.GetChildIndexA();
+                int32 indexB = c.GetChildIndexB();
+
+                b2DistanceInput input;
+                input.proxyA.Set(fA.GetShape(), indexA);
+                input.proxyB.Set(fB.GetShape(), indexB);
+                input.transformA = bA.GetTransform();
+                input.transformB = bB.GetTransform();
+                input.useRadii   = false;
+
+                b2DistanceOutput output;
+                b2SimplexCache cache;
+                cache.count = 0;
+                b2Distance(&output, &cache, &input);
+
+                if (output.distance == 0 || cache.count == 3)
+                {
+                    cache.count += 0;
+                }
+            }
+        }
+
         // Leap of faith to new safe state.
         m_bodies[toiIndexA].m_sweep.c0 = m_positions[toiIndexA].c;
         m_bodies[toiIndexA].m_sweep.a0 = m_positions[toiIndexA].a;
@@ -381,6 +415,26 @@ struct b2Island
         Report(contactSolver.m_velocityConstraints);
     }
 
+    void Add(b2Body* body_)
+    {
+        assert(m_bodyCount < m_bodyCapacity);
+        body_.m_islandIndex   = m_bodyCount;
+        m_bodies[m_bodyCount] = body_;
+        ++m_bodyCount;
+    }
+
+    void Add(b2Contact contact)
+    {
+        assert(m_contactCount < m_contactCapacity);
+        m_contacts[m_contactCount++] = contact;
+    }
+
+    void Add(b2Joint joint)
+    {
+        assert(m_jointCount < m_jointCapacity);
+        m_joints[m_jointCount++] = joint;
+    }
+
     void Report(const(b2ContactVelocityConstraint)* constraints)
     {
         if (m_listener is null)
@@ -407,42 +461,6 @@ struct b2Island
         }
     }
 
-    this(int32 bodyCapacity, int32 contactCapacity, int32 jointCapacity,
-             b2StackAllocator* allocator, b2ContactListener listener);
-
-    void Clear()
-    {
-        m_bodyCount    = 0;
-        m_contactCount = 0;
-        m_jointCount   = 0;
-    }
-
-    void Solve(b2Profile* profile, b2TimeStep step, b2Vec2 gravity, bool allowSleep);
-
-    void SolveTOI(b2TimeStep subStep, int32 toiIndexA, int32 toiIndexB);
-
-    void Add(b2Body* body_)
-    {
-        assert(m_bodyCount < m_bodyCapacity);
-        body_.m_islandIndex   = m_bodyCount;
-        m_bodies[m_bodyCount] = body_;
-        ++m_bodyCount;
-    }
-
-    void Add(b2Contact contact)
-    {
-        assert(m_contactCount < m_contactCapacity);
-        m_contacts[m_contactCount++] = contact;
-    }
-
-    void Add(b2Joint joint)
-    {
-        assert(m_jointCount < m_jointCapacity);
-        m_joints[m_jointCount++] = joint;
-    }
-
-    void Report(const(b2ContactVelocityConstraint)* constraints);
-
     b2StackAllocator* m_allocator;
     b2ContactListener m_listener;
 
@@ -461,36 +479,6 @@ struct b2Island
     int32 m_contactCapacity;
     int32 m_jointCapacity;
 }
-
-// #endif
-/*
- * Copyright (c) 2006-2011 Erin Catto http://www.box2d.org
- *
- * This software is provided 'as-is', without any express or implied
- * warranty.  In no event will the authors be held liable for any damages
- * arising from the use of this software.
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
- * 1. The origin of this software must not be misrepresented; you must not
- * claim that you wrote the original software. If you use this software
- * in a product, an acknowledgment in the product documentation would be
- * appreciated but is not required.
- * 2. Altered source versions must be plainly marked as such, and must not be
- * misrepresented as being the original software.
- * 3. This notice may not be removed or altered from any source distribution.
- */
-
-import dbox.collision.b2distance;
-import dbox.dynamics.b2island;
-import dbox.dynamics.b2body;
-import dbox.dynamics.b2fixture;
-import dbox.dynamics.b2world;
-import dbox.dynamics.contacts.b2contact;
-import dbox.dynamics.contacts.b2contactsolver;
-import dbox.dynamics.joints.b2joint;
-import dbox.common.b2stackallocator;
-import dbox.common.b2timer;
 
 /*
    Position Correction Notes
