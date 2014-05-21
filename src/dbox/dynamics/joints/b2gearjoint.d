@@ -97,11 +97,11 @@ class b2GearJoint : b2Joint
         // TODO_ERIN there might be some problem with the joint edges in b2Joint.
 
         m_bodyC = m_joint1.GetBodyA();
-        m_body_A = m_joint1.GetBodyB();
+        m_bodyA = m_joint1.GetBodyB();
 
         // Get geometry of joint1
-        b2Transform xfA = m_body_A.m_xf;
-        float32 aA      = m_body_A.m_sweep.a;
+        b2Transform xfA = m_bodyA.m_xf;
+        float32 aA      = m_bodyA.m_sweep.a;
         b2Transform xfC = m_bodyC.m_xf;
         float32 aC      = m_bodyC.m_sweep.a;
 
@@ -129,11 +129,11 @@ class b2GearJoint : b2Joint
         }
 
         m_bodyD = m_joint2.GetBodyA();
-        m_body_B = m_joint2.GetBodyB();
+        m_bodyB = m_joint2.GetBodyB();
 
         // Get geometry of joint2
-        b2Transform xfB = m_body_B.m_xf;
-        float32 aB      = m_body_B.m_sweep.a;
+        b2Transform xfB = m_bodyB.m_xf;
+        float32 aB      = m_bodyB.m_sweep.a;
         b2Transform xfD = m_bodyD.m_xf;
         float32 aD      = m_bodyD.m_sweep.a;
 
@@ -170,13 +170,13 @@ class b2GearJoint : b2Joint
     ///
     override b2Vec2 GetAnchorA() const
     {
-        return m_body_A.GetWorldPoint(m_localAnchorA);
+        return m_bodyA.GetWorldPoint(m_localAnchorA);
     }
 
     ///
     override b2Vec2 GetAnchorB() const
     {
-        return m_body_B.GetWorldPoint(m_localAnchorB);
+        return m_bodyB.GetWorldPoint(m_localAnchorB);
     }
 
     ///
@@ -221,8 +221,8 @@ class b2GearJoint : b2Joint
     /// Dump joint to dmLog
     override void Dump()
     {
-        int32 indexA = m_body_A.m_islandIndex;
-        int32 indexB = m_body_B.m_islandIndex;
+        int32 indexA = m_bodyA.m_islandIndex;
+        int32 indexB = m_bodyB.m_islandIndex;
 
         int32 index1 = m_joint1.m_index;
         int32 index2 = m_joint2.m_index;
@@ -244,20 +244,20 @@ public:
 
     override void InitVelocityConstraints(b2SolverData data)
     {
-        m_indexA = m_body_A.m_islandIndex;
-        m_indexB = m_body_B.m_islandIndex;
+        m_indexA = m_bodyA.m_islandIndex;
+        m_indexB = m_bodyB.m_islandIndex;
         m_indexC = m_bodyC.m_islandIndex;
         m_indexD = m_bodyD.m_islandIndex;
-        m_lcA    = m_body_A.m_sweep.localCenter;
-        m_lcB    = m_body_B.m_sweep.localCenter;
+        m_lcA    = m_bodyA.m_sweep.localCenter;
+        m_lcB    = m_bodyB.m_sweep.localCenter;
         m_lcC    = m_bodyC.m_sweep.localCenter;
         m_lcD    = m_bodyD.m_sweep.localCenter;
-        m_mA     = m_body_A.m_invMass;
-        m_mB     = m_body_B.m_invMass;
+        m_mA     = m_bodyA.m_invMass;
+        m_mB     = m_bodyB.m_invMass;
         m_mC     = m_bodyC.m_invMass;
         m_mD     = m_bodyD.m_invMass;
-        m_iA     = m_body_A.m_invI;
-        m_iB     = m_body_B.m_invI;
+        m_iA     = m_bodyA.m_invI;
+        m_iB     = m_bodyB.m_invI;
         m_iC     = m_bodyC.m_invI;
         m_iD     = m_bodyD.m_invI;
 

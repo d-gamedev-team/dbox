@@ -142,14 +142,14 @@ class b2WheelJoint : b2Joint
 
     override void InitVelocityConstraints(b2SolverData data)
     {
-        m_indexA       = m_body_A.m_islandIndex;
-        m_indexB       = m_body_B.m_islandIndex;
-        m_localCenterA = m_body_A.m_sweep.localCenter;
-        m_localCenterB = m_body_B.m_sweep.localCenter;
-        m_invMassA     = m_body_A.m_invMass;
-        m_invMassB     = m_body_B.m_invMass;
-        m_invIA        = m_body_A.m_invI;
-        m_invIB        = m_body_B.m_invI;
+        m_indexA       = m_bodyA.m_islandIndex;
+        m_indexB       = m_bodyB.m_islandIndex;
+        m_localCenterA = m_bodyA.m_sweep.localCenter;
+        m_localCenterB = m_bodyB.m_sweep.localCenter;
+        m_invMassA     = m_bodyA.m_invMass;
+        m_invMassB     = m_bodyB.m_invMass;
+        m_invIA        = m_bodyA.m_invI;
+        m_invIB        = m_bodyB.m_invI;
 
         float32 mA = m_invMassA, mB = m_invMassB;
         float32 iA = m_invIA, iB = m_invIB;
@@ -399,12 +399,12 @@ class b2WheelJoint : b2Joint
 
     override b2Vec2 GetAnchorA() const
     {
-        return m_body_A.GetWorldPoint(m_localAnchorA);
+        return m_bodyA.GetWorldPoint(m_localAnchorA);
     }
 
     override b2Vec2 GetAnchorB() const
     {
-        return m_body_B.GetWorldPoint(m_localAnchorB);
+        return m_bodyB.GetWorldPoint(m_localAnchorB);
     }
 
     override b2Vec2 GetReactionForce(float32 inv_dt) const
@@ -419,8 +419,8 @@ class b2WheelJoint : b2Joint
 
     float32 GetJointTranslation() const
     {
-        b2Body* bA = cast(b2Body*)m_body_A;
-        b2Body* bB = cast(b2Body*)m_body_B;
+        b2Body* bA = cast(b2Body*)m_bodyA;
+        b2Body* bB = cast(b2Body*)m_bodyB;
 
         b2Vec2 pA   = bA.GetWorldPoint(m_localAnchorA);
         b2Vec2 pB   = bB.GetWorldPoint(m_localAnchorB);
@@ -433,8 +433,8 @@ class b2WheelJoint : b2Joint
 
     float32 GetJointSpeed() const
     {
-        float32 wA = m_body_A.m_angularVelocity;
-        float32 wB = m_body_B.m_angularVelocity;
+        float32 wA = m_bodyA.m_angularVelocity;
+        float32 wB = m_bodyB.m_angularVelocity;
         return wB - wA;
     }
 
@@ -445,22 +445,22 @@ class b2WheelJoint : b2Joint
 
     void EnableMotor(bool flag)
     {
-        m_body_A.SetAwake(true);
-        m_body_B.SetAwake(true);
+        m_bodyA.SetAwake(true);
+        m_bodyB.SetAwake(true);
         m_enableMotor = flag;
     }
 
     void SetMotorSpeed(float32 speed)
     {
-        m_body_A.SetAwake(true);
-        m_body_B.SetAwake(true);
+        m_bodyA.SetAwake(true);
+        m_bodyB.SetAwake(true);
         m_motorSpeed = speed;
     }
 
     void SetMaxMotorTorque(float32 torque)
     {
-        m_body_A.SetAwake(true);
-        m_body_B.SetAwake(true);
+        m_bodyA.SetAwake(true);
+        m_bodyB.SetAwake(true);
         m_maxMotorTorque = torque;
     }
 
@@ -471,8 +471,8 @@ class b2WheelJoint : b2Joint
 
     override void Dump()
     {
-        int32 indexA = m_body_A.m_islandIndex;
-        int32 indexB = m_body_B.m_islandIndex;
+        int32 indexA = m_bodyA.m_islandIndex;
+        int32 indexB = m_bodyB.m_islandIndex;
 
         b2Log("  b2WheelJointDef jd;\n");
         b2Log("  jd.body_A = bodies[%d];\n", indexA);

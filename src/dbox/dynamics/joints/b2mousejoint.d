@@ -78,7 +78,7 @@ class b2MouseJoint : b2Joint
         assert(b2IsValid(def.dampingRatio) && def.dampingRatio >= 0.0f);
 
         m_targetA      = def.target;
-        m_localAnchorB = b2MulT(m_body_B.GetTransform(), m_targetA);
+        m_localAnchorB = b2MulT(m_bodyB.GetTransform(), m_targetA);
 
         m_maxForce = def.maxForce;
         m_impulse.SetZero();
@@ -92,9 +92,9 @@ class b2MouseJoint : b2Joint
 
     void SetTarget(b2Vec2 target)
     {
-        if (m_body_B.IsAwake() == false)
+        if (m_bodyB.IsAwake() == false)
         {
-            m_body_B.SetAwake(true);
+            m_bodyB.SetAwake(true);
         }
         m_targetA = target;
     }
@@ -136,10 +136,10 @@ class b2MouseJoint : b2Joint
 
     override void InitVelocityConstraints(b2SolverData data)
     {
-        m_indexB       = m_body_B.m_islandIndex;
-        m_localCenterB = m_body_B.m_sweep.localCenter;
-        m_invMassB     = m_body_B.m_invMass;
-        m_invIB        = m_body_B.m_invI;
+        m_indexB       = m_bodyB.m_islandIndex;
+        m_localCenterB = m_bodyB.m_sweep.localCenter;
+        m_invMassB     = m_bodyB.m_invMass;
+        m_invIB        = m_bodyB.m_invI;
 
         b2Vec2  cB = data.positions[m_indexB].c;
         float32 aB = data.positions[m_indexB].a;
@@ -148,7 +148,7 @@ class b2MouseJoint : b2Joint
 
         b2Rot qB = b2Rot(aB);
 
-        float32 mass = m_body_B.GetMass();
+        float32 mass = m_bodyB.GetMass();
 
         // Frequency
         float32 omega = 2.0f * b2_pi * m_frequencyHz;
@@ -246,7 +246,7 @@ class b2MouseJoint : b2Joint
 
     override b2Vec2 GetAnchorB() const
     {
-        return m_body_B.GetWorldPoint(m_localAnchorB);
+        return m_bodyB.GetWorldPoint(m_localAnchorB);
     }
 
     override b2Vec2 GetReactionForce(float32 inv_dt) const

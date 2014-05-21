@@ -217,22 +217,22 @@ struct b2World
 
         // Connect to the bodies' doubly linked lists.
         j.m_edgeA.joint = j;
-        j.m_edgeA.other = j.m_body_B;
+        j.m_edgeA.other = j.m_bodyB;
         j.m_edgeA.prev  = null;
-        j.m_edgeA.next  = j.m_body_A.m_jointList;
+        j.m_edgeA.next  = j.m_bodyA.m_jointList;
 
-        if (j.m_body_A.m_jointList)
-            j.m_body_A.m_jointList.prev = &j.m_edgeA;
-        j.m_body_A.m_jointList = &j.m_edgeA;
+        if (j.m_bodyA.m_jointList)
+            j.m_bodyA.m_jointList.prev = &j.m_edgeA;
+        j.m_bodyA.m_jointList = &j.m_edgeA;
 
         j.m_edgeB.joint = j;
-        j.m_edgeB.other = j.m_body_A;
+        j.m_edgeB.other = j.m_bodyA;
         j.m_edgeB.prev  = null;
-        j.m_edgeB.next  = j.m_body_B.m_jointList;
+        j.m_edgeB.next  = j.m_bodyB.m_jointList;
 
-        if (j.m_body_B.m_jointList)
-            j.m_body_B.m_jointList.prev = &j.m_edgeB;
-        j.m_body_B.m_jointList = &j.m_edgeB;
+        if (j.m_bodyB.m_jointList)
+            j.m_bodyB.m_jointList.prev = &j.m_edgeB;
+        j.m_bodyB.m_jointList = &j.m_edgeB;
 
         b2Body* body_A = cast(b2Body*)def.body_A;
         b2Body* body_B = cast(b2Body*)def.body_B;
@@ -290,8 +290,8 @@ struct b2World
         }
 
         // Disconnect from island graph.
-        b2Body* body_A = j.m_body_A;
-        b2Body* body_B = j.m_body_B;
+        b2Body* body_A = j.m_bodyA;
+        b2Body* body_B = j.m_bodyB;
 
         // Wake up connected bodies.
         body_A.SetAwake(true);

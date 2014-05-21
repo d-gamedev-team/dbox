@@ -136,14 +136,14 @@ class b2PrismaticJoint : b2Joint
 
     override void InitVelocityConstraints(b2SolverData data)
     {
-        m_indexA       = m_body_A.m_islandIndex;
-        m_indexB       = m_body_B.m_islandIndex;
-        m_localCenterA = m_body_A.m_sweep.localCenter;
-        m_localCenterB = m_body_B.m_sweep.localCenter;
-        m_invMassA     = m_body_A.m_invMass;
-        m_invMassB     = m_body_B.m_invMass;
-        m_invIA        = m_body_A.m_invI;
-        m_invIB        = m_body_B.m_invI;
+        m_indexA       = m_bodyA.m_islandIndex;
+        m_indexB       = m_bodyB.m_islandIndex;
+        m_localCenterA = m_bodyA.m_sweep.localCenter;
+        m_localCenterB = m_bodyB.m_sweep.localCenter;
+        m_invMassA     = m_bodyA.m_invMass;
+        m_invMassB     = m_bodyB.m_invMass;
+        m_invIA        = m_bodyA.m_invI;
+        m_invIB        = m_bodyB.m_invI;
 
         b2Vec2  cA = data.positions[m_indexA].c;
         float32 aA = data.positions[m_indexA].a;
@@ -506,12 +506,12 @@ class b2PrismaticJoint : b2Joint
 
     override b2Vec2 GetAnchorA() const
     {
-        return m_body_A.GetWorldPoint(m_localAnchorA);
+        return m_bodyA.GetWorldPoint(m_localAnchorA);
     }
 
     override b2Vec2 GetAnchorB() const
     {
-        return m_body_B.GetWorldPoint(m_localAnchorB);
+        return m_bodyB.GetWorldPoint(m_localAnchorB);
     }
 
     override b2Vec2 GetReactionForce(float32 inv_dt) const
@@ -526,10 +526,10 @@ class b2PrismaticJoint : b2Joint
 
     float32 GetJointTranslation() const
     {
-        b2Vec2 pA   = m_body_A.GetWorldPoint(m_localAnchorA);
-        b2Vec2 pB   = m_body_B.GetWorldPoint(m_localAnchorB);
+        b2Vec2 pA   = m_bodyA.GetWorldPoint(m_localAnchorA);
+        b2Vec2 pB   = m_bodyB.GetWorldPoint(m_localAnchorB);
         b2Vec2 d    = pB - pA;
-        b2Vec2 axis = m_body_A.GetWorldVector(m_localXAxisA);
+        b2Vec2 axis = m_bodyA.GetWorldVector(m_localXAxisA);
 
         float32 translation = b2Dot(d, axis);
         return translation;
@@ -537,8 +537,8 @@ class b2PrismaticJoint : b2Joint
 
     float32 GetJointSpeed() const
     {
-        b2Body* bA = cast(b2Body*)m_body_A;
-        b2Body* bB = cast(b2Body*)m_body_B;
+        b2Body* bA = cast(b2Body*)m_bodyA;
+        b2Body* bB = cast(b2Body*)m_bodyB;
 
         b2Vec2 rA   = b2Mul(bA.m_xf.q, m_localAnchorA - bA.m_sweep.localCenter);
         b2Vec2 rB   = b2Mul(bB.m_xf.q, m_localAnchorB - bB.m_sweep.localCenter);
@@ -565,8 +565,8 @@ class b2PrismaticJoint : b2Joint
     {
         if (flag != m_enableLimit)
         {
-            m_body_A.SetAwake(true);
-            m_body_B.SetAwake(true);
+            m_bodyA.SetAwake(true);
+            m_bodyB.SetAwake(true);
             m_enableLimit = flag;
             m_impulse.z   = 0.0f;
         }
@@ -588,8 +588,8 @@ class b2PrismaticJoint : b2Joint
 
         if (lower != m_lowerTranslation || upper != m_upperTranslation)
         {
-            m_body_A.SetAwake(true);
-            m_body_B.SetAwake(true);
+            m_bodyA.SetAwake(true);
+            m_bodyB.SetAwake(true);
             m_lowerTranslation = lower;
             m_upperTranslation = upper;
             m_impulse.z        = 0.0f;
@@ -603,22 +603,22 @@ class b2PrismaticJoint : b2Joint
 
     void EnableMotor(bool flag)
     {
-        m_body_A.SetAwake(true);
-        m_body_B.SetAwake(true);
+        m_bodyA.SetAwake(true);
+        m_bodyB.SetAwake(true);
         m_enableMotor = flag;
     }
 
     void SetMotorSpeed(float32 speed)
     {
-        m_body_A.SetAwake(true);
-        m_body_B.SetAwake(true);
+        m_bodyA.SetAwake(true);
+        m_bodyB.SetAwake(true);
         m_motorSpeed = speed;
     }
 
     void SetMaxMotorForce(float32 force)
     {
-        m_body_A.SetAwake(true);
-        m_body_B.SetAwake(true);
+        m_bodyA.SetAwake(true);
+        m_bodyB.SetAwake(true);
         m_maxMotorForce = force;
     }
 
@@ -629,8 +629,8 @@ class b2PrismaticJoint : b2Joint
 
     override void Dump()
     {
-        int32 indexA = m_body_A.m_islandIndex;
-        int32 indexB = m_body_B.m_islandIndex;
+        int32 indexA = m_bodyA.m_islandIndex;
+        int32 indexB = m_bodyB.m_islandIndex;
 
         b2Log("  b2PrismaticJointDef jd;\n");
         b2Log("  jd.body_A = bodies[%d];\n", indexA);

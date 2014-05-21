@@ -134,14 +134,14 @@ class b2RevoluteJoint : b2Joint
 
     override void InitVelocityConstraints(b2SolverData data)
     {
-        m_indexA       = m_body_A.m_islandIndex;
-        m_indexB       = m_body_B.m_islandIndex;
-        m_localCenterA = m_body_A.m_sweep.localCenter;
-        m_localCenterB = m_body_B.m_sweep.localCenter;
-        m_invMassA     = m_body_A.m_invMass;
-        m_invMassB     = m_body_B.m_invMass;
-        m_invIA        = m_body_A.m_invI;
-        m_invIB        = m_body_B.m_invI;
+        m_indexA       = m_bodyA.m_islandIndex;
+        m_indexB       = m_bodyB.m_islandIndex;
+        m_localCenterA = m_bodyA.m_sweep.localCenter;
+        m_localCenterB = m_bodyB.m_sweep.localCenter;
+        m_invMassA     = m_bodyA.m_invMass;
+        m_invMassB     = m_bodyB.m_invMass;
+        m_invIA        = m_bodyA.m_invI;
+        m_invIB        = m_bodyB.m_invI;
 
         float32 aA = data.positions[m_indexA].a;
         b2Vec2  vA = data.velocities[m_indexA].v;
@@ -453,12 +453,12 @@ class b2RevoluteJoint : b2Joint
 
     override b2Vec2 GetAnchorA() const
     {
-        return m_body_A.GetWorldPoint(m_localAnchorA);
+        return m_bodyA.GetWorldPoint(m_localAnchorA);
     }
 
     override b2Vec2 GetAnchorB() const
     {
-        return m_body_B.GetWorldPoint(m_localAnchorB);
+        return m_bodyB.GetWorldPoint(m_localAnchorB);
     }
 
     override b2Vec2 GetReactionForce(float32 inv_dt) const
@@ -474,15 +474,15 @@ class b2RevoluteJoint : b2Joint
 
     float32 GetJointAngle() const
     {
-        b2Body* bA = cast(b2Body*)m_body_A;
-        b2Body* bB = cast(b2Body*)m_body_B;
+        b2Body* bA = cast(b2Body*)m_bodyA;
+        b2Body* bB = cast(b2Body*)m_bodyB;
         return bB.m_sweep.a - bA.m_sweep.a - m_referenceAngle;
     }
 
     float32 GetJointSpeed() const
     {
-        b2Body* bA = cast(b2Body*)m_body_A;
-        b2Body* bB = cast(b2Body*)m_body_B;
+        b2Body* bA = cast(b2Body*)m_bodyA;
+        b2Body* bB = cast(b2Body*)m_bodyB;
         return bB.m_angularVelocity - bA.m_angularVelocity;
     }
 
@@ -493,8 +493,8 @@ class b2RevoluteJoint : b2Joint
 
     void EnableMotor(bool flag)
     {
-        m_body_A.SetAwake(true);
-        m_body_B.SetAwake(true);
+        m_bodyA.SetAwake(true);
+        m_bodyB.SetAwake(true);
         m_enableMotor = flag;
     }
 
@@ -505,15 +505,15 @@ class b2RevoluteJoint : b2Joint
 
     void SetMotorSpeed(float32 speed)
     {
-        m_body_A.SetAwake(true);
-        m_body_B.SetAwake(true);
+        m_bodyA.SetAwake(true);
+        m_bodyB.SetAwake(true);
         m_motorSpeed = speed;
     }
 
     void SetMaxMotorTorque(float32 torque)
     {
-        m_body_A.SetAwake(true);
-        m_body_B.SetAwake(true);
+        m_bodyA.SetAwake(true);
+        m_bodyB.SetAwake(true);
         m_maxMotorTorque = torque;
     }
 
@@ -526,8 +526,8 @@ class b2RevoluteJoint : b2Joint
     {
         if (flag != m_enableLimit)
         {
-            m_body_A.SetAwake(true);
-            m_body_B.SetAwake(true);
+            m_bodyA.SetAwake(true);
+            m_bodyB.SetAwake(true);
             m_enableLimit = flag;
             m_impulse.z   = 0.0f;
         }
@@ -549,8 +549,8 @@ class b2RevoluteJoint : b2Joint
 
         if (lower != m_lowerAngle || upper != m_upperAngle)
         {
-            m_body_A.SetAwake(true);
-            m_body_B.SetAwake(true);
+            m_bodyA.SetAwake(true);
+            m_bodyB.SetAwake(true);
             m_impulse.z  = 0.0f;
             m_lowerAngle = lower;
             m_upperAngle = upper;
@@ -559,8 +559,8 @@ class b2RevoluteJoint : b2Joint
 
     override void Dump()
     {
-        int32 indexA = m_body_A.m_islandIndex;
-        int32 indexB = m_body_B.m_islandIndex;
+        int32 indexA = m_bodyA.m_islandIndex;
+        int32 indexB = m_bodyB.m_islandIndex;
 
         b2Log("  b2RevoluteJointDef jd;\n");
         b2Log("  jd.body_A = bodies[%d];\n", indexA);

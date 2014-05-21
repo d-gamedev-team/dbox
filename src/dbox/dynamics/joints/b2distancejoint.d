@@ -111,13 +111,13 @@ class b2DistanceJoint : b2Joint
     ///
     override b2Vec2 GetAnchorA() const
     {
-        return m_body_A.GetWorldPoint(m_localAnchorA);
+        return m_bodyA.GetWorldPoint(m_localAnchorA);
     }
 
     ///
     override b2Vec2 GetAnchorB() const
     {
-        return m_body_B.GetWorldPoint(m_localAnchorB);
+        return m_bodyB.GetWorldPoint(m_localAnchorB);
     }
 
     /// Get the reaction force given the inverse time step.
@@ -188,8 +188,8 @@ class b2DistanceJoint : b2Joint
 
     override void Dump()
     {
-        int32 indexA = m_body_A.m_islandIndex;
-        int32 indexB = m_body_B.m_islandIndex;
+        int32 indexA = m_bodyA.m_islandIndex;
+        int32 indexB = m_bodyB.m_islandIndex;
 
         b2Log("  b2DistanceJointDef jd;\n");
         b2Log("  jd.body_A = bodies[%d];\n", indexA);
@@ -210,14 +210,14 @@ public:
 
     override void InitVelocityConstraints(b2SolverData data)
     {
-        m_indexA       = m_body_A.m_islandIndex;
-        m_indexB       = m_body_B.m_islandIndex;
-        m_localCenterA = m_body_A.m_sweep.localCenter;
-        m_localCenterB = m_body_B.m_sweep.localCenter;
-        m_invMassA     = m_body_A.m_invMass;
-        m_invMassB     = m_body_B.m_invMass;
-        m_invIA        = m_body_A.m_invI;
-        m_invIB        = m_body_B.m_invI;
+        m_indexA       = m_bodyA.m_islandIndex;
+        m_indexB       = m_bodyB.m_islandIndex;
+        m_localCenterA = m_bodyA.m_sweep.localCenter;
+        m_localCenterB = m_bodyB.m_sweep.localCenter;
+        m_invMassA     = m_bodyA.m_invMass;
+        m_invMassB     = m_bodyB.m_invMass;
+        m_invIA        = m_bodyA.m_invI;
+        m_invIB        = m_bodyB.m_invI;
 
         b2Vec2  cA = data.positions[m_indexA].c;
         float32 aA = data.positions[m_indexA].a;
