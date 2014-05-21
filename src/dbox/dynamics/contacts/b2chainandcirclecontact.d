@@ -21,9 +21,9 @@ import core.stdc.float_;
 import core.stdc.stdlib;
 import core.stdc.string;
 
-import dbox.common;
 import dbox.collision;
 import dbox.collision.shapes;
+import dbox.common;
 import dbox.dynamics;
 import dbox.dynamics.contacts;
 
