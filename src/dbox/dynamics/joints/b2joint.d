@@ -150,77 +150,77 @@ class b2Joint
             case e_distanceJoint:
             {
                 void* mem = allocator.Allocate(getSizeOf!b2DistanceJoint);
-                joint = emplace!b2DistanceJoint(mem, cast(const(b2DistanceJointDef))(def));
+                joint = b2emplace!b2DistanceJoint(mem, cast(const(b2DistanceJointDef))(def));
             }
             break;
 
             case e_mouseJoint:
             {
                 void* mem = allocator.Allocate(getSizeOf!b2MouseJoint);
-                joint = emplace!b2MouseJoint(mem, cast(const(b2MouseJointDef))(def));
+                joint = b2emplace!b2MouseJoint(mem, cast(const(b2MouseJointDef))(def));
             }
             break;
 
             case e_prismaticJoint:
             {
                 void* mem = allocator.Allocate(getSizeOf!b2PrismaticJoint);
-                joint = emplace!b2PrismaticJoint(mem, cast(const(b2PrismaticJointDef))(def));
+                joint = b2emplace!b2PrismaticJoint(mem, cast(const(b2PrismaticJointDef))(def));
             }
             break;
 
             case e_revoluteJoint:
             {
                 void* mem = allocator.Allocate(getSizeOf!b2RevoluteJoint);
-                joint = emplace!b2RevoluteJoint(mem, cast(const(b2RevoluteJointDef))(def));
+                joint = b2emplace!b2RevoluteJoint(mem, cast(const(b2RevoluteJointDef))(def));
             }
             break;
 
             case e_pulleyJoint:
             {
                 void* mem = allocator.Allocate(getSizeOf!b2PulleyJoint);
-                joint = emplace!b2PulleyJoint(mem, cast(const(b2PulleyJointDef))(def));
+                joint = b2emplace!b2PulleyJoint(mem, cast(const(b2PulleyJointDef))(def));
             }
             break;
 
             case e_gearJoint:
             {
                 void* mem = allocator.Allocate(getSizeOf!b2GearJoint);
-                joint = emplace!b2GearJoint(mem, cast(const(b2GearJointDef))(def));
+                joint = b2emplace!b2GearJoint(mem, cast(const(b2GearJointDef))(def));
             }
             break;
 
             case e_wheelJoint:
             {
                 void* mem = allocator.Allocate(getSizeOf!b2WheelJoint);
-                joint = emplace!b2WheelJoint(mem, cast(const(b2WheelJointDef))(def));
+                joint = b2emplace!b2WheelJoint(mem, cast(const(b2WheelJointDef))(def));
             }
             break;
 
             case e_weldJoint:
             {
                 void* mem = allocator.Allocate(getSizeOf!b2WeldJoint);
-                joint = emplace!b2WeldJoint(mem, cast(const(b2WeldJointDef))(def));
+                joint = b2emplace!b2WeldJoint(mem, cast(const(b2WeldJointDef))(def));
             }
             break;
 
             case e_frictionJoint:
             {
                 void* mem = allocator.Allocate(getSizeOf!b2FrictionJoint);
-                joint = emplace!b2FrictionJoint(mem, cast(const(b2FrictionJointDef))(def));
+                joint = b2emplace!b2FrictionJoint(mem, cast(const(b2FrictionJointDef))(def));
             }
             break;
 
             case e_ropeJoint:
             {
                 void* mem = allocator.Allocate(getSizeOf!b2RopeJoint);
-                joint = emplace!b2RopeJoint(mem, cast(const(b2RopeJointDef))(def));
+                joint = b2emplace!b2RopeJoint(mem, cast(const(b2RopeJointDef))(def));
             }
             break;
 
             case e_motorJoint:
             {
                 void* mem = allocator.Allocate(getSizeOf!b2MotorJoint);
-                joint = emplace!b2MotorJoint(mem, cast(const(b2MotorJointDef))(def));
+                joint = b2emplace!b2MotorJoint(mem, cast(const(b2MotorJointDef))(def));
             }
             break;
 

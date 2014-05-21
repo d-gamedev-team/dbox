@@ -130,7 +130,7 @@ class b2ChainShape : b2Shape
     override b2Shape Clone(b2BlockAllocator* allocator) const
     {
         void* mem = allocator.Allocate(getSizeOf!b2ChainShape);
-        b2ChainShape clone = emplace!b2ChainShape(mem);
+        b2ChainShape clone = b2emplace!b2ChainShape(mem);
         clone.CreateChain(m_vertices, m_count);
         clone.m_prevVertex    = m_prevVertex;
         clone.m_nextVertex    = m_nextVertex;

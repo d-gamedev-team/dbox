@@ -220,7 +220,7 @@ struct b2World
         }
 
         void* mem = m_blockAllocator.Allocate(getSizeOf!b2Body);
-        b2Body* b = emplace!b2Body(mem, def, &this);
+        b2Body* b = b2emplace!b2Body(mem, def, &this);
 
         // Add to world doubly linked list.
         b.m_prev = null;

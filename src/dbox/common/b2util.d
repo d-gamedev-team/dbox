@@ -19,34 +19,41 @@ module dbox.common.b2util;
 
 import std.conv;
 
+/// Generic .sizeof alternative which works with both class and non-class types,
+/// which makes allocating the proper amount of memory for type instances safer.
 template getSizeOf(T) if (is(T == class))
 {
     enum getSizeOf = __traits(classInstanceSize, T);
 }
 
+/// ditto.
 template getSizeOf(T) if (!is(T == class))
 {
     enum getSizeOf = T.sizeof;
 }
 
-T emplace(T)(void* chunk) if (is(T == class))
+/// Emplace alternative which works with void* rather than void[].
+T b2emplace(T)(void* chunk) if (is(T == class))
 {
-    return std.conv.emplace!T(chunk[0 .. getSizeOf!T]);
+    return emplace!T(chunk[0 .. getSizeOf!T]);
 }
 
-T* emplace(T)(void* chunk) if (!is(T == class))
+/// ditto
+T* b2emplace(T)(void* chunk) if (!is(T == class))
 {
-    return std.conv.emplace!T(chunk[0 .. getSizeOf!T]);
+    return emplace!T(chunk[0 .. getSizeOf!T]);
 }
 
-T emplace(T, Args...)(void* chunk, Args args) if (is(T == class))
+/// ditto
+T b2emplace(T, Args...)(void* chunk, Args args) if (is(T == class))
 {
-    return std.conv.emplace!T(chunk[0 .. getSizeOf!T], args);
+    return emplace!T(chunk[0 .. getSizeOf!T], args);
 }
 
-T* emplace(T, Args...)(void* chunk, Args args) if (!is(T == class))
+/// ditto
+T* b2emplace(T, Args...)(void* chunk, Args args) if (!is(T == class))
 {
-    return std.conv.emplace!T(chunk[0 .. getSizeOf!T], args);
+    return emplace!T(chunk[0 .. getSizeOf!T], args);
 }
 
 /**

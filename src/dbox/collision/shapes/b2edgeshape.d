@@ -56,7 +56,7 @@ class b2EdgeShape : b2Shape
     override b2Shape Clone(b2BlockAllocator* allocator) const
     {
         void* mem = allocator.Allocate(getSizeOf!b2EdgeShape);
-        auto clone = emplace!b2EdgeShape(mem);
+        auto clone = b2emplace!b2EdgeShape(mem);
         clone.tupleof = this.tupleof;
         return clone;
     }

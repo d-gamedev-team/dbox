@@ -276,7 +276,7 @@ struct b2Body
         b2BlockAllocator* allocator = &m_world.m_blockAllocator;
 
         void* mem = allocator.Allocate(getSizeOf!b2Fixture);
-        b2Fixture* fixture = emplace!b2Fixture(mem);
+        b2Fixture* fixture = b2emplace!b2Fixture(mem);
         fixture.Create(allocator, &this, def);
 
         if (m_flags & e_activeFlag)
