@@ -1,14 +1,5 @@
-module dbox.dynamics.joints.b2wheeljoint;
-
-import core.stdc.stdlib;
-import core.stdc.string;
-import core.stdc.float_;
-
-import dbox.common;
-import dbox.dynamics;
-
 /*
- * Copyright (c) 2006-2011 Erin Catto http://www.box2d.org
+ * Copyright (c) 2006-2012 Erin Catto http://www.box2d.org
  *
  * This software is provided 'as-is', without any express or implied
  * warranty.  In no event will the authors be held liable for any damages
@@ -24,11 +15,15 @@ import dbox.dynamics;
  * misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
  */
+module dbox.dynamics.joints.b2wheeljoint;
 
-// #ifndef B2_WHEEL_JOINT_H
-// #define B2_WHEEL_JOINT_H
+import core.stdc.float_;
+import core.stdc.stdlib;
+import core.stdc.string;
 
-import dbox.dynamics.joints.b2joint;
+import dbox.common;
+import dbox.dynamics;
+import dbox.dynamics.joints;
 
 /// Wheel joint definition. This requires defining a line of
 /// motion using an axis and an anchor point. The definition uses local
@@ -38,6 +33,7 @@ import dbox.dynamics.joints.b2joint;
 /// anchors and a local axis helps when saving and loading a game.
 class b2WheelJointDef : b2JointDef
 {
+    ///
     this()
     {
         type = e_wheelJoint;
@@ -50,9 +46,6 @@ class b2WheelJointDef : b2JointDef
         frequencyHz    = 2.0f;
         dampingRatio   = 0.7f;
     }
-
-    /// Initialize the bodies, anchors, axis, and reference angle using the world
-    /// anchor and world axis.
 
     // Linear constraint (point-to-line)
     // d = pB - pA = xB + rB - xA - rA
@@ -70,6 +63,8 @@ class b2WheelJointDef : b2JointDef
     // Cdot = wB - wA
     // J = [0 0 -1 0 0 1]
 
+    /// Initialize the bodies, anchors, axis, and reference angle using the world
+    /// anchor and world axis.
     void Initialize(b2Body* bA, b2Body* bB, b2Vec2 anchor, b2Vec2 axis)
     {
         bodyA        = bA;
@@ -111,6 +106,7 @@ class b2WheelJointDef : b2JointDef
 /// This joint is designed for vehicle suspensions.
 class b2WheelJoint : b2Joint
 {
+    ///
     this(const(b2WheelJointDef) def)
     {
         super(def);
@@ -139,6 +135,169 @@ class b2WheelJoint : b2Joint
         m_ax.SetZero();
         m_ay.SetZero();
     }
+
+    ///
+    override b2Vec2 GetAnchorA() const
+    {
+        return m_bodyA.GetWorldPoint(m_localAnchorA);
+    }
+
+    ///
+    override b2Vec2 GetAnchorB() const
+    {
+        return m_bodyB.GetWorldPoint(m_localAnchorB);
+    }
+
+    ///
+    override b2Vec2 GetReactionForce(float32 inv_dt) const
+    {
+        return inv_dt * (m_impulse * m_ay + m_springImpulse * m_ax);
+    }
+
+    ///
+    override float32 GetReactionTorque(float32 inv_dt) const
+    {
+        return inv_dt * m_motorImpulse;
+    }
+
+    /// The local anchor point relative to bodyA's origin.
+    b2Vec2 GetLocalAnchorA() const
+    {
+        return m_localAnchorA;
+    }
+
+    /// The local anchor point relative to bodyB's origin.
+    b2Vec2 GetLocalAnchorB() const
+    {
+        return m_localAnchorB;
+    }
+
+    /// The local joint axis relative to bodyA.
+    b2Vec2 GetLocalAxisA() const
+    {
+        return m_localXAxisA;
+    }
+
+    /// Get the current joint translation, usually in meters.
+    float32 GetJointTranslation() const
+    {
+        b2Body* bA = cast(b2Body*)m_bodyA;
+        b2Body* bB = cast(b2Body*)m_bodyB;
+
+        b2Vec2 pA   = bA.GetWorldPoint(m_localAnchorA);
+        b2Vec2 pB   = bB.GetWorldPoint(m_localAnchorB);
+        b2Vec2 d    = pB - pA;
+        b2Vec2 axis = bA.GetWorldVector(m_localXAxisA);
+
+        float32 translation = b2Dot(d, axis);
+        return translation;
+    }
+
+    /// Get the current joint translation speed, usually in meters per second.
+    float32 GetJointSpeed() const
+    {
+        float32 wA = m_bodyA.m_angularVelocity;
+        float32 wB = m_bodyB.m_angularVelocity;
+        return wB - wA;
+    }
+
+    /// Is the joint motor enabled?
+    bool IsMotorEnabled() const
+    {
+        return m_enableMotor;
+    }
+
+    /// Enable/disable the joint motor.
+    void EnableMotor(bool flag)
+    {
+        m_bodyA.SetAwake(true);
+        m_bodyB.SetAwake(true);
+        m_enableMotor = flag;
+    }
+
+    /// Get the motor speed, usually in radians per second.
+    float32 GetMotorSpeed() const
+    {
+        return m_motorSpeed;
+    }
+
+    /// Set the motor speed, usually in radians per second.
+    void SetMotorSpeed(float32 speed)
+    {
+        m_bodyA.SetAwake(true);
+        m_bodyB.SetAwake(true);
+        m_motorSpeed = speed;
+    }
+
+    /// Get the current motor torque given the inverse time step, usually in N-m.
+    float32 GetMotorTorque(float32 inv_dt) const
+    {
+        return inv_dt * m_motorImpulse;
+    }
+
+    /// Get/set the maximum motor force, usually in N-m.
+    float32 GetMaxMotorTorque() const
+    {
+        return m_maxMotorTorque;
+    }
+
+    /// ditto
+    void SetMaxMotorTorque(float32 torque)
+    {
+        m_bodyA.SetAwake(true);
+        m_bodyB.SetAwake(true);
+        m_maxMotorTorque = torque;
+    }
+
+    /// Get/set the spring frequency in hertz. Setting the frequency to zero disables the spring.
+    float32 GetSpringFrequencyHz() const
+    {
+        return m_frequencyHz;
+    }
+
+    /// ditto
+    void SetSpringFrequencyHz(float32 hz)
+    {
+        m_frequencyHz = hz;
+    }
+
+    /// Get/set the spring damping ratio
+    float32 GetSpringDampingRatio() const
+    {
+        return m_dampingRatio;
+    }
+
+    /// ditto
+    void SetSpringDampingRatio(float32 ratio)
+    {
+        m_dampingRatio = ratio;
+    }
+
+    /// Dump to b2Log
+    override void Dump()
+    {
+        int32 indexA = m_bodyA.m_islandIndex;
+        int32 indexB = m_bodyB.m_islandIndex;
+
+        b2Log("  b2WheelJointDef jd;\n");
+        b2Log("  jd.bodyA = bodies[%d];\n", indexA);
+        b2Log("  jd.bodyB = bodies[%d];\n", indexB);
+        b2Log("  jd.collideConnected = bool(%d);\n", m_collideConnected);
+        b2Log("  jd.localAnchorA.Set(%.15lef, %.15lef);\n", m_localAnchorA.x, m_localAnchorA.y);
+        b2Log("  jd.localAnchorB.Set(%.15lef, %.15lef);\n", m_localAnchorB.x, m_localAnchorB.y);
+        b2Log("  jd.localAxisA.Set(%.15lef, %.15lef);\n", m_localXAxisA.x, m_localXAxisA.y);
+        b2Log("  jd.enableMotor = bool(%d);\n", m_enableMotor);
+        b2Log("  jd.motorSpeed = %.15lef;\n", m_motorSpeed);
+        b2Log("  jd.maxMotorTorque = %.15lef;\n", m_maxMotorTorque);
+        b2Log("  jd.frequencyHz = %.15lef;\n", m_frequencyHz);
+        b2Log("  jd.dampingRatio = %.15lef;\n", m_dampingRatio);
+        b2Log("  joints[%d] = m_world.CreateJoint(&jd);\n", m_index);
+    }
+
+// note: this should be package but D's access implementation is lacking.
+// do not use in user code.
+/* package: */
+public:
 
     override void InitVelocityConstraints(b2SolverData data)
     {
@@ -397,146 +556,6 @@ class b2WheelJoint : b2Joint
         return b2Abs(C) <= b2_linearSlop;
     }
 
-    override b2Vec2 GetAnchorA() const
-    {
-        return m_bodyA.GetWorldPoint(m_localAnchorA);
-    }
-
-    override b2Vec2 GetAnchorB() const
-    {
-        return m_bodyB.GetWorldPoint(m_localAnchorB);
-    }
-
-    override b2Vec2 GetReactionForce(float32 inv_dt) const
-    {
-        return inv_dt * (m_impulse * m_ay + m_springImpulse * m_ax);
-    }
-
-    override float32 GetReactionTorque(float32 inv_dt) const
-    {
-        return inv_dt * m_motorImpulse;
-    }
-
-    float32 GetJointTranslation() const
-    {
-        b2Body* bA = cast(b2Body*)m_bodyA;
-        b2Body* bB = cast(b2Body*)m_bodyB;
-
-        b2Vec2 pA   = bA.GetWorldPoint(m_localAnchorA);
-        b2Vec2 pB   = bB.GetWorldPoint(m_localAnchorB);
-        b2Vec2 d    = pB - pA;
-        b2Vec2 axis = bA.GetWorldVector(m_localXAxisA);
-
-        float32 translation = b2Dot(d, axis);
-        return translation;
-    }
-
-    float32 GetJointSpeed() const
-    {
-        float32 wA = m_bodyA.m_angularVelocity;
-        float32 wB = m_bodyB.m_angularVelocity;
-        return wB - wA;
-    }
-
-    bool IsMotorEnabled() const
-    {
-        return m_enableMotor;
-    }
-
-    void EnableMotor(bool flag)
-    {
-        m_bodyA.SetAwake(true);
-        m_bodyB.SetAwake(true);
-        m_enableMotor = flag;
-    }
-
-    void SetMotorSpeed(float32 speed)
-    {
-        m_bodyA.SetAwake(true);
-        m_bodyB.SetAwake(true);
-        m_motorSpeed = speed;
-    }
-
-    void SetMaxMotorTorque(float32 torque)
-    {
-        m_bodyA.SetAwake(true);
-        m_bodyB.SetAwake(true);
-        m_maxMotorTorque = torque;
-    }
-
-    float32 GetMotorTorque(float32 inv_dt) const
-    {
-        return inv_dt * m_motorImpulse;
-    }
-
-    override void Dump()
-    {
-        int32 indexA = m_bodyA.m_islandIndex;
-        int32 indexB = m_bodyB.m_islandIndex;
-
-        b2Log("  b2WheelJointDef jd;\n");
-        b2Log("  jd.bodyA = bodies[%d];\n", indexA);
-        b2Log("  jd.bodyB = bodies[%d];\n", indexB);
-        b2Log("  jd.collideConnected = bool(%d);\n", m_collideConnected);
-        b2Log("  jd.localAnchorA.Set(%.15lef, %.15lef);\n", m_localAnchorA.x, m_localAnchorA.y);
-        b2Log("  jd.localAnchorB.Set(%.15lef, %.15lef);\n", m_localAnchorB.x, m_localAnchorB.y);
-        b2Log("  jd.localAxisA.Set(%.15lef, %.15lef);\n", m_localXAxisA.x, m_localXAxisA.y);
-        b2Log("  jd.enableMotor = bool(%d);\n", m_enableMotor);
-        b2Log("  jd.motorSpeed = %.15lef;\n", m_motorSpeed);
-        b2Log("  jd.maxMotorTorque = %.15lef;\n", m_maxMotorTorque);
-        b2Log("  jd.frequencyHz = %.15lef;\n", m_frequencyHz);
-        b2Log("  jd.dampingRatio = %.15lef;\n", m_dampingRatio);
-        b2Log("  joints[%d] = m_world.CreateJoint(&jd);\n", m_index);
-    }
-
-    float32 GetMotorSpeed() const
-    {
-        return m_motorSpeed;
-    }
-
-    float32 GetMaxMotorTorque() const
-    {
-        return m_maxMotorTorque;
-    }
-
-    void SetSpringFrequencyHz(float32 hz)
-    {
-        m_frequencyHz = hz;
-    }
-
-    float32 GetSpringFrequencyHz() const
-    {
-        return m_frequencyHz;
-    }
-
-    void SetSpringDampingRatio(float32 ratio)
-    {
-        m_dampingRatio = ratio;
-    }
-
-    float32 GetSpringDampingRatio() const
-    {
-        return m_dampingRatio;
-    }
-
-    /// The local anchor point relative to bodyA's origin.
-    b2Vec2 GetLocalAnchorA() const
-    {
-        return m_localAnchorA;
-    }
-
-    /// The local anchor point relative to bodyB's origin.
-    b2Vec2 GetLocalAnchorB() const
-    {
-        return m_localAnchorB;
-    }
-
-    /// The local joint axis relative to bodyA.
-    b2Vec2 GetLocalAxisA() const
-    {
-        return m_localXAxisA;
-    }
-
     float32 m_frequencyHz = 0;
     float32 m_dampingRatio = 0;
 
@@ -575,7 +594,3 @@ class b2WheelJoint : b2Joint
     float32 m_bias = 0;
     float32 m_gamma = 0;
 }
-
-import dbox.dynamics.joints.b2wheeljoint;
-import dbox.dynamics.b2body;
-import dbox.dynamics.b2timestep;

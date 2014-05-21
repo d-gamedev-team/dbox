@@ -170,11 +170,6 @@ class b2WeldJoint : b2Joint
         m_dampingRatio = ratio;
     }
 
-// note: this should be package but D's access implementation is lacking.
-// do not use in user code.
-/* package: */
-public:
-
     /// Dump to b2Log
     override void Dump()
     {
@@ -192,6 +187,11 @@ public:
         b2Log("  jd.dampingRatio = %.15lef;\n", m_dampingRatio);
         b2Log("  joints[%d] = m_world.CreateJoint(&jd);\n", m_index);
     }
+
+// note: this should be package but D's access implementation is lacking.
+// do not use in user code.
+/* package: */
+public:
 
     override void InitVelocityConstraints(b2SolverData data)
     {
