@@ -1,14 +1,5 @@
-module dbox.dynamics.joints.b2prismaticjoint;
-
-import core.stdc.float_;
-import core.stdc.stdlib;
-import core.stdc.string;
-
-import dbox.common;
-import dbox.dynamics;
-
 /*
- * Copyright (c) 2006-2011 Erin Catto http://www.box2d.org
+ * Copyright (c) 2006-2012 Erin Catto http://www.box2d.org
  *
  * This software is provided 'as-is', without any express or implied
  * warranty.  In no event will the authors be held liable for any damages
@@ -24,11 +15,15 @@ import dbox.dynamics;
  * misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
  */
+module dbox.dynamics.joints.b2prismaticjoint;
 
-// #ifndef B2_PRISMATIC_JOINT_H
-// #define B2_PRISMATIC_JOINT_H
+import core.stdc.float_;
+import core.stdc.stdlib;
+import core.stdc.string;
 
-import dbox.dynamics.joints.b2joint;
+import dbox.common;
+import dbox.dynamics;
+import dbox.dynamics.joints;
 
 /// Prismatic joint definition. This requires defining a line of
 /// motion using an axis and an anchor point. The definition uses local
@@ -38,6 +33,7 @@ import dbox.dynamics.joints.b2joint;
 /// anchors and a local axis helps when saving and loading a game.
 class b2PrismaticJointDef : b2JointDef
 {
+    ///
     this()
     {
         type = e_prismaticJoint;
@@ -52,6 +48,72 @@ class b2PrismaticJointDef : b2JointDef
         maxMotorForce    = 0.0f;
         motorSpeed       = 0.0f;
     }
+
+    // Linear constraint (point-to-line)
+    // d = p2 - p1 = x2 + r2 - x1 - r1
+    // C = dot(perp, d)
+    // Cdot = dot(d, cross(w1, perp)) + dot(perp, v2 + cross(w2, r2) - v1 - cross(w1, r1))
+    // = -dot(perp, v1) - dot(cross(d + r1, perp), w1) + dot(perp, v2) + dot(cross(r2, perp), v2)
+    // J = [-perp, -cross(d + r1, perp), perp, cross(r2,perp)]
+    //
+    // Angular constraint
+    // C = a2 - a1 + a_initial
+    // Cdot = w2 - w1
+    // J = [0 0 -1 0 0 1]
+    //
+    // K = J * invM * JT
+    //
+    // J = [-a -s1 a s2]
+    // [0  -1  0  1]
+    // a = perp
+    // s1 = cross(d + r1, a) = cross(p2 - x1, a)
+    // s2 = cross(r2, a) = cross(p2 - x2, a)
+
+    // Motor/Limit linear constraint
+    // C = dot(ax1, d)
+    // Cdot = = -dot(ax1, v1) - dot(cross(d + r1, ax1), w1) + dot(ax1, v2) + dot(cross(r2, ax1), v2)
+    // J = [-ax1 -cross(d+r1,ax1) ax1 cross(r2,ax1)]
+
+    // Block Solver
+    // We develop a block solver that includes the joint limit. This makes the limit stiff (inelastic) even
+    // when the mass has poor distribution (leading to large torques about the joint anchor points).
+    //
+    // The Jacobian has 3 rows:
+    // J = [-uT -s1 uT s2] // linear
+    // [0   -1   0  1] // angular
+    // [-vT -a1 vT a2] // limit
+    //
+    // u = perp
+    // v = axis
+    // s1 = cross(d + r1, u), s2 = cross(r2, u)
+    // a1 = cross(d + r1, v), a2 = cross(r2, v)
+
+    // M * (v2 - v1) = JT * df
+    // J * v2 = bias
+    //
+    // v2 = v1 + invM * JT * df
+    // J * (v1 + invM * JT * df) = bias
+    // K * df = bias - J * v1 = -Cdot
+    // K = J * invM * JT
+    // Cdot = J * v1 - bias
+    //
+    // Now solve for f2.
+    // df = f2 - f1
+    // K * (f2 - f1) = -Cdot
+    // f2 = invK * (-Cdot) + f1
+    //
+    // Clamp accumulated limit impulse.
+    // lower: f2(3) = max(f2(3), 0)
+    // upper: f2(3) = min(f2(3), 0)
+    //
+    // Solve for correct f2(1:2)
+    // K(1:2, 1:2) * f2(1:2) = -Cdot(1:2) - K(1:2,3) * f2(3) + K(1:2,1:3) * f1
+    // = -Cdot(1:2) - K(1:2,3) * f2(3) + K(1:2,1:2) * f1(1:2) + K(1:2,3) * f1(3)
+    // K(1:2, 1:2) * f2(1:2) = -Cdot(1:2) - K(1:2,3) * (f2(3) - f1(3)) + K(1:2,1:2) * f1(1:2)
+    // f2(1:2) = invK(1:2,1:2) * (-Cdot(1:2) - K(1:2,3) * (f2(3) - f1(3))) + f1(1:2)
+    //
+    // Now compute impulse to be applied:
+    // df = f2 - f1
 
     /// Initialize the bodies, anchors, axis, and reference angle using the world
     /// anchor and unit world axis.
@@ -102,12 +164,7 @@ class b2PrismaticJointDef : b2JointDef
 /// drive the motion or to model joint friction.
 class b2PrismaticJoint : b2Joint
 {
-
-    float32 GetMotorSpeed() const
-    {
-        return m_motorSpeed;
-    }
-
+    ///
     this(const(b2PrismaticJointDef) def)
     {
         super(def);
@@ -133,6 +190,203 @@ class b2PrismaticJoint : b2Joint
         m_axis.SetZero();
         m_perp.SetZero();
     }
+
+    ///
+    override b2Vec2 GetAnchorA() const
+    {
+        return m_bodyA.GetWorldPoint(m_localAnchorA);
+    }
+
+    ///
+    override b2Vec2 GetAnchorB() const
+    {
+        return m_bodyB.GetWorldPoint(m_localAnchorB);
+    }
+
+    ///
+    override b2Vec2 GetReactionForce(float32 inv_dt) const
+    {
+        return inv_dt * (m_impulse.x * m_perp + (m_motorImpulse + m_impulse.z) * m_axis);
+    }
+
+    ///
+    override float32 GetReactionTorque(float32 inv_dt) const
+    {
+        return inv_dt * m_impulse.y;
+    }
+
+    /// The local anchor point relative to bodyA's origin.
+    b2Vec2 GetLocalAnchorA() const
+    {
+        return m_localAnchorA;
+    }
+
+    /// The local anchor point relative to bodyB's origin.
+    b2Vec2 GetLocalAnchorB() const
+    {
+        return m_localAnchorB;
+    }
+
+    /// The local joint axis relative to bodyA.
+    b2Vec2 GetLocalAxisA() const
+    {
+        return m_localXAxisA;
+    }
+
+    /// Get the reference angle.
+    float32 GetReferenceAngle() const
+    {
+        return m_referenceAngle;
+    }
+
+    /// Get the current joint translation, usually in meters.
+    float32 GetJointTranslation() const
+    {
+        b2Vec2 pA   = m_bodyA.GetWorldPoint(m_localAnchorA);
+        b2Vec2 pB   = m_bodyB.GetWorldPoint(m_localAnchorB);
+        b2Vec2 d    = pB - pA;
+        b2Vec2 axis = m_bodyA.GetWorldVector(m_localXAxisA);
+
+        float32 translation = b2Dot(d, axis);
+        return translation;
+    }
+
+    /// Get the current joint translation speed, usually in meters per second.
+    float32 GetJointSpeed() const
+    {
+        b2Body* bA = cast(b2Body*)m_bodyA;
+        b2Body* bB = cast(b2Body*)m_bodyB;
+
+        b2Vec2 rA   = b2Mul(bA.m_xf.q, m_localAnchorA - bA.m_sweep.localCenter);
+        b2Vec2 rB   = b2Mul(bB.m_xf.q, m_localAnchorB - bB.m_sweep.localCenter);
+        b2Vec2 p1   = bA.m_sweep.c + rA;
+        b2Vec2 p2   = bB.m_sweep.c + rB;
+        b2Vec2 d    = p2 - p1;
+        b2Vec2 axis = b2Mul(bA.m_xf.q, m_localXAxisA);
+
+        b2Vec2  vA = bA.m_linearVelocity;
+        b2Vec2  vB = bB.m_linearVelocity;
+        float32 wA = bA.m_angularVelocity;
+        float32 wB = bB.m_angularVelocity;
+
+        float32 speed = b2Dot(d, b2Cross(wA, axis)) + b2Dot(axis, vB + b2Cross(wB, rB) - vA - b2Cross(wA, rA));
+        return speed;
+    }
+
+    /// Is the joint limit enabled?
+    bool IsLimitEnabled() const
+    {
+        return m_enableLimit;
+    }
+
+    /// Enable/disable the joint limit.
+    void EnableLimit(bool flag)
+    {
+        if (flag != m_enableLimit)
+        {
+            m_bodyA.SetAwake(true);
+            m_bodyB.SetAwake(true);
+            m_enableLimit = flag;
+            m_impulse.z   = 0.0f;
+        }
+    }
+
+    /// Get the lower joint limit, usually in meters.
+    float32 GetLowerLimit() const
+    {
+        return m_lowerTranslation;
+    }
+
+    /// Get the upper joint limit, usually in meters.
+    float32 GetUpperLimit() const
+    {
+        return m_upperTranslation;
+    }
+
+    /// Set the joint limits, usually in meters.
+    void SetLimits(float32 lower, float32 upper)
+    {
+        assert(lower <= upper);
+
+        if (lower != m_lowerTranslation || upper != m_upperTranslation)
+        {
+            m_bodyA.SetAwake(true);
+            m_bodyB.SetAwake(true);
+            m_lowerTranslation = lower;
+            m_upperTranslation = upper;
+            m_impulse.z        = 0.0f;
+        }
+    }
+
+    /// Is the joint motor enabled?
+    bool IsMotorEnabled() const
+    {
+        return m_enableMotor;
+    }
+
+    /// Enable/disable the joint motor.
+    void EnableMotor(bool flag)
+    {
+        m_bodyA.SetAwake(true);
+        m_bodyB.SetAwake(true);
+        m_enableMotor = flag;
+    }
+
+    /// Get the motor speed, usually in meters per second.
+    float32 GetMotorSpeed() const
+    {
+        return m_motorSpeed;
+    }
+
+    /// Set the motor speed, usually in meters per second.
+    void SetMotorSpeed(float32 speed)
+    {
+        m_bodyA.SetAwake(true);
+        m_bodyB.SetAwake(true);
+        m_motorSpeed = speed;
+    }
+
+    /// Get/set the maximum motor force, usually in N.
+    float32 GetMotorForce(float32 inv_dt) const
+    {
+        return inv_dt * m_motorImpulse;
+    }
+
+    /// ditto
+    void SetMaxMotorForce(float32 force)
+    {
+        m_bodyA.SetAwake(true);
+        m_bodyB.SetAwake(true);
+        m_maxMotorForce = force;
+    }
+
+    /// Dump to b2Log
+    override void Dump()
+    {
+        int32 indexA = m_bodyA.m_islandIndex;
+        int32 indexB = m_bodyB.m_islandIndex;
+
+        b2Log("  b2PrismaticJointDef jd;\n");
+        b2Log("  jd.bodyA = bodies[%d];\n", indexA);
+        b2Log("  jd.bodyB = bodies[%d];\n", indexB);
+        b2Log("  jd.collideConnected = bool(%d);\n", m_collideConnected);
+        b2Log("  jd.localAnchorA.Set(%.15lef, %.15lef);\n", m_localAnchorA.x, m_localAnchorA.y);
+        b2Log("  jd.localAnchorB.Set(%.15lef, %.15lef);\n", m_localAnchorB.x, m_localAnchorB.y);
+        b2Log("  jd.localAxisA.Set(%.15lef, %.15lef);\n", m_localXAxisA.x, m_localXAxisA.y);
+        b2Log("  jd.referenceAngle = %.15lef;\n", m_referenceAngle);
+        b2Log("  jd.enableLimit = bool(%d);\n", m_enableLimit);
+        b2Log("  jd.lowerTranslation = %.15lef;\n", m_lowerTranslation);
+        b2Log("  jd.upperTranslation = %.15lef;\n", m_upperTranslation);
+        b2Log("  jd.enableMotor = bool(%d);\n", m_enableMotor);
+        b2Log("  jd.motorSpeed = %.15lef;\n", m_motorSpeed);
+        b2Log("  jd.maxMotorForce = %.15lef;\n", m_maxMotorForce);
+        b2Log("  joints[%d] = m_world.CreateJoint(&jd);\n", m_index);
+    }
+
+// note: this should be package but D's access implementation is lacking.
+// do not use in user code.
+/* package: */
+public:
 
     override void InitVelocityConstraints(b2SolverData data)
     {
@@ -504,220 +758,6 @@ class b2PrismaticJoint : b2Joint
         return linearError <= b2_linearSlop && angularError <= b2_angularSlop;
     }
 
-    override b2Vec2 GetAnchorA() const
-    {
-        return m_bodyA.GetWorldPoint(m_localAnchorA);
-    }
-
-    override b2Vec2 GetAnchorB() const
-    {
-        return m_bodyB.GetWorldPoint(m_localAnchorB);
-    }
-
-    override b2Vec2 GetReactionForce(float32 inv_dt) const
-    {
-        return inv_dt * (m_impulse.x * m_perp + (m_motorImpulse + m_impulse.z) * m_axis);
-    }
-
-    override float32 GetReactionTorque(float32 inv_dt) const
-    {
-        return inv_dt * m_impulse.y;
-    }
-
-    float32 GetJointTranslation() const
-    {
-        b2Vec2 pA   = m_bodyA.GetWorldPoint(m_localAnchorA);
-        b2Vec2 pB   = m_bodyB.GetWorldPoint(m_localAnchorB);
-        b2Vec2 d    = pB - pA;
-        b2Vec2 axis = m_bodyA.GetWorldVector(m_localXAxisA);
-
-        float32 translation = b2Dot(d, axis);
-        return translation;
-    }
-
-    float32 GetJointSpeed() const
-    {
-        b2Body* bA = cast(b2Body*)m_bodyA;
-        b2Body* bB = cast(b2Body*)m_bodyB;
-
-        b2Vec2 rA   = b2Mul(bA.m_xf.q, m_localAnchorA - bA.m_sweep.localCenter);
-        b2Vec2 rB   = b2Mul(bB.m_xf.q, m_localAnchorB - bB.m_sweep.localCenter);
-        b2Vec2 p1   = bA.m_sweep.c + rA;
-        b2Vec2 p2   = bB.m_sweep.c + rB;
-        b2Vec2 d    = p2 - p1;
-        b2Vec2 axis = b2Mul(bA.m_xf.q, m_localXAxisA);
-
-        b2Vec2  vA = bA.m_linearVelocity;
-        b2Vec2  vB = bB.m_linearVelocity;
-        float32 wA = bA.m_angularVelocity;
-        float32 wB = bB.m_angularVelocity;
-
-        float32 speed = b2Dot(d, b2Cross(wA, axis)) + b2Dot(axis, vB + b2Cross(wB, rB) - vA - b2Cross(wA, rA));
-        return speed;
-    }
-
-    bool IsLimitEnabled() const
-    {
-        return m_enableLimit;
-    }
-
-    void EnableLimit(bool flag)
-    {
-        if (flag != m_enableLimit)
-        {
-            m_bodyA.SetAwake(true);
-            m_bodyB.SetAwake(true);
-            m_enableLimit = flag;
-            m_impulse.z   = 0.0f;
-        }
-    }
-
-    float32 GetLowerLimit() const
-    {
-        return m_lowerTranslation;
-    }
-
-    float32 GetUpperLimit() const
-    {
-        return m_upperTranslation;
-    }
-
-    void SetLimits(float32 lower, float32 upper)
-    {
-        assert(lower <= upper);
-
-        if (lower != m_lowerTranslation || upper != m_upperTranslation)
-        {
-            m_bodyA.SetAwake(true);
-            m_bodyB.SetAwake(true);
-            m_lowerTranslation = lower;
-            m_upperTranslation = upper;
-            m_impulse.z        = 0.0f;
-        }
-    }
-
-    bool IsMotorEnabled() const
-    {
-        return m_enableMotor;
-    }
-
-    void EnableMotor(bool flag)
-    {
-        m_bodyA.SetAwake(true);
-        m_bodyB.SetAwake(true);
-        m_enableMotor = flag;
-    }
-
-    void SetMotorSpeed(float32 speed)
-    {
-        m_bodyA.SetAwake(true);
-        m_bodyB.SetAwake(true);
-        m_motorSpeed = speed;
-    }
-
-    void SetMaxMotorForce(float32 force)
-    {
-        m_bodyA.SetAwake(true);
-        m_bodyB.SetAwake(true);
-        m_maxMotorForce = force;
-    }
-
-    float32 GetMotorForce(float32 inv_dt) const
-    {
-        return inv_dt * m_motorImpulse;
-    }
-
-    override void Dump()
-    {
-        int32 indexA = m_bodyA.m_islandIndex;
-        int32 indexB = m_bodyB.m_islandIndex;
-
-        b2Log("  b2PrismaticJointDef jd;\n");
-        b2Log("  jd.bodyA = bodies[%d];\n", indexA);
-        b2Log("  jd.bodyB = bodies[%d];\n", indexB);
-        b2Log("  jd.collideConnected = bool(%d);\n", m_collideConnected);
-        b2Log("  jd.localAnchorA.Set(%.15lef, %.15lef);\n", m_localAnchorA.x, m_localAnchorA.y);
-        b2Log("  jd.localAnchorB.Set(%.15lef, %.15lef);\n", m_localAnchorB.x, m_localAnchorB.y);
-        b2Log("  jd.localAxisA.Set(%.15lef, %.15lef);\n", m_localXAxisA.x, m_localXAxisA.y);
-        b2Log("  jd.referenceAngle = %.15lef;\n", m_referenceAngle);
-        b2Log("  jd.enableLimit = bool(%d);\n", m_enableLimit);
-        b2Log("  jd.lowerTranslation = %.15lef;\n", m_lowerTranslation);
-        b2Log("  jd.upperTranslation = %.15lef;\n", m_upperTranslation);
-        b2Log("  jd.enableMotor = bool(%d);\n", m_enableMotor);
-        b2Log("  jd.motorSpeed = %.15lef;\n", m_motorSpeed);
-        b2Log("  jd.maxMotorForce = %.15lef;\n", m_maxMotorForce);
-        b2Log("  joints[%d] = m_world.CreateJoint(&jd);\n", m_index);
-    }
-
-    /// The local anchor point relative to bodyA's origin.
-    b2Vec2 GetLocalAnchorA() const
-    {
-        return m_localAnchorA;
-    }
-
-    /// The local anchor point relative to bodyB's origin.
-    b2Vec2 GetLocalAnchorB() const
-    {
-        return m_localAnchorB;
-    }
-
-    /// The local joint axis relative to bodyA.
-    b2Vec2 GetLocalAxisA() const
-    {
-        return m_localXAxisA;
-    }
-
-    /// Get the reference angle.
-    float32 GetReferenceAngle() const
-    {
-        return m_referenceAngle;
-    }
-
-    /// Get the current joint translation, usually in meters.
-    float32 GetJointTranslation() const;
-
-    /// Get the current joint translation speed, usually in meters per second.
-    float32 GetJointSpeed() const;
-
-    /// Is the joint limit enabled?
-    bool IsLimitEnabled() const;
-
-    /// Enable/disable the joint limit.
-    void EnableLimit(bool flag);
-
-    /// Get the lower joint limit, usually in meters.
-    float32 GetLowerLimit() const;
-
-    /// Get the upper joint limit, usually in meters.
-    float32 GetUpperLimit() const;
-
-    /// Set the joint limits, usually in meters.
-    void SetLimits(float32 lower, float32 upper);
-
-    /// Is the joint motor enabled?
-    bool IsMotorEnabled() const;
-
-    /// Enable/disable the joint motor.
-    void EnableMotor(bool flag);
-
-    /// Set the motor speed, usually in meters per second.
-    void SetMotorSpeed(float32 speed);
-
-    /// Get the motor speed, usually in meters per second.
-    float32 GetMotorSpeed() const;
-
-    /// Set the maximum motor force, usually in N.
-    void SetMaxMotorForce(float32 force);
-    float32 GetMaxMotorForce() const
-    {
-        return m_maxMotorForce;
-    }
-
-    /// Get the current motor force given the inverse time step, usually in N.
-    float32 GetMotorForce(float32 inv_dt) const;
-
-
-
     // Solver shared
     b2Vec2  m_localAnchorA;
     b2Vec2  m_localAnchorB;
@@ -749,92 +789,3 @@ class b2PrismaticJoint : b2Joint
     b2Mat33 m_K;
     float32 m_motorMass = 0;
 }
-
-// #endif
-/*
- * Copyright (c) 2006-2011 Erin Catto http://www.box2d.org
- *
- * This software is provided 'as-is', without any express or implied
- * warranty.  In no event will the authors be held liable for any damages
- * arising from the use of this software.
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
- * 1. The origin of this software must not be misrepresented; you must not
- * claim that you wrote the original software. If you use this software
- * in a product, an acknowledgment in the product documentation would be
- * appreciated but is not required.
- * 2. Altered source versions must be plainly marked as such, and must not be
- * misrepresented as being the original software.
- * 3. This notice may not be removed or altered from any source distribution.
- */
-
-import dbox.dynamics.joints.b2prismaticjoint;
-import dbox.dynamics.b2body;
-import dbox.dynamics.b2timestep;
-
-// Linear constraint (point-to-line)
-// d = p2 - p1 = x2 + r2 - x1 - r1
-// C = dot(perp, d)
-// Cdot = dot(d, cross(w1, perp)) + dot(perp, v2 + cross(w2, r2) - v1 - cross(w1, r1))
-// = -dot(perp, v1) - dot(cross(d + r1, perp), w1) + dot(perp, v2) + dot(cross(r2, perp), v2)
-// J = [-perp, -cross(d + r1, perp), perp, cross(r2,perp)]
-//
-// Angular constraint
-// C = a2 - a1 + a_initial
-// Cdot = w2 - w1
-// J = [0 0 -1 0 0 1]
-//
-// K = J * invM * JT
-//
-// J = [-a -s1 a s2]
-// [0  -1  0  1]
-// a = perp
-// s1 = cross(d + r1, a) = cross(p2 - x1, a)
-// s2 = cross(r2, a) = cross(p2 - x2, a)
-
-// Motor/Limit linear constraint
-// C = dot(ax1, d)
-// Cdot = = -dot(ax1, v1) - dot(cross(d + r1, ax1), w1) + dot(ax1, v2) + dot(cross(r2, ax1), v2)
-// J = [-ax1 -cross(d+r1,ax1) ax1 cross(r2,ax1)]
-
-// Block Solver
-// We develop a block solver that includes the joint limit. This makes the limit stiff (inelastic) even
-// when the mass has poor distribution (leading to large torques about the joint anchor points).
-//
-// The Jacobian has 3 rows:
-// J = [-uT -s1 uT s2] // linear
-// [0   -1   0  1] // angular
-// [-vT -a1 vT a2] // limit
-//
-// u = perp
-// v = axis
-// s1 = cross(d + r1, u), s2 = cross(r2, u)
-// a1 = cross(d + r1, v), a2 = cross(r2, v)
-
-// M * (v2 - v1) = JT * df
-// J * v2 = bias
-//
-// v2 = v1 + invM * JT * df
-// J * (v1 + invM * JT * df) = bias
-// K * df = bias - J * v1 = -Cdot
-// K = J * invM * JT
-// Cdot = J * v1 - bias
-//
-// Now solve for f2.
-// df = f2 - f1
-// K * (f2 - f1) = -Cdot
-// f2 = invK * (-Cdot) + f1
-//
-// Clamp accumulated limit impulse.
-// lower: f2(3) = max(f2(3), 0)
-// upper: f2(3) = min(f2(3), 0)
-//
-// Solve for correct f2(1:2)
-// K(1:2, 1:2) * f2(1:2) = -Cdot(1:2) - K(1:2,3) * f2(3) + K(1:2,1:3) * f1
-// = -Cdot(1:2) - K(1:2,3) * f2(3) + K(1:2,1:2) * f1(1:2) + K(1:2,3) * f1(3)
-// K(1:2, 1:2) * f2(1:2) = -Cdot(1:2) - K(1:2,3) * (f2(3) - f1(3)) + K(1:2,1:2) * f1(1:2)
-// f2(1:2) = invK(1:2,1:2) * (-Cdot(1:2) - K(1:2,3) * (f2(3) - f1(3))) + f1(1:2)
-//
-// Now compute impulse to be applied:
-// df = f2 - f1
