@@ -1,12 +1,3 @@
-module dbox.dynamics.joints.b2gearjoint;
-
-import core.stdc.float_;
-import core.stdc.stdlib;
-import core.stdc.string;
-
-import dbox.common;
-import dbox.dynamics;
-
 /*
  * Copyright (c) 2006-2011 Erin Catto http://www.box2d.org
  *
@@ -24,16 +15,21 @@ import dbox.dynamics;
  * misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
  */
+module dbox.dynamics.joints.b2gearjoint;
 
-// #ifndef B2_GEAR_JOINT_H
-// #define B2_GEAR_JOINT_H
+import core.stdc.float_;
+import core.stdc.stdlib;
+import core.stdc.string;
 
-import dbox.dynamics.joints.b2joint;
+import dbox.common;
+import dbox.dynamics;
+import dbox.dynamics.joints;
 
 /// Gear joint definition. This definition requires two existing
 /// revolute or prismatic joints (any combination will work).
 class b2GearJointDef : b2JointDef
 {
+    ///
     this()
     {
         type   = e_gearJoint;
@@ -64,22 +60,26 @@ class b2GearJointDef : b2JointDef
 /// is destroyed.
 class b2GearJoint : b2Joint
 {
-    /// Get the first joint.
-    b2Joint GetJoint1()
-    {
-        return m_joint1;
-    }
+    // Gear Joint:
+    // C0 = (coordinate1 + ratio * coordinate2)_initial
+    // C = (coordinate1 + ratio * coordinate2) - C0 = 0
+    // J = [J1 ratio * J2]
+    // K = J * invM * JT
+    // = J1 * invM1 * J1T + ratio * ratio * J2 * invM2 * J2T
+    //
+    // Revolute:
+    // coordinate = rotation
+    // Cdot = angularVelocity
+    // J = [0 0 1]
+    // K = J * invM * JT = invI
+    //
+    // Prismatic:
+    // coordinate = dot(p - pg, ug)
+    // Cdot = dot(v + cross(w, r), ug)
+    // J = [ug cross(r, ug)]
+    // K = J * invM * JT = invMass + invI * cross(r, ug)^2
 
-    /// Get the second joint.
-    b2Joint GetJoint2()
-    {
-        return m_joint2;
-    }
-
-    /// Set/Get the gear ratio.
-    void SetRatio(float32 ratio);
-    float32 GetRatio() const;
-
+    ///
     this(const(b2GearJointDef) def)
     {
         super(def);
@@ -166,6 +166,81 @@ class b2GearJoint : b2Joint
 
         m_impulse = 0.0f;
     }
+
+    ///
+    override b2Vec2 GetAnchorA() const
+    {
+        return m_body_A.GetWorldPoint(m_localAnchorA);
+    }
+
+    ///
+    override b2Vec2 GetAnchorB() const
+    {
+        return m_body_B.GetWorldPoint(m_localAnchorB);
+    }
+
+    ///
+    override b2Vec2 GetReactionForce(float32 inv_dt) const
+    {
+        b2Vec2 P = m_impulse * m_JvAC;
+        return inv_dt * P;
+    }
+
+    ///
+    override float32 GetReactionTorque(float32 inv_dt) const
+    {
+        float32 L = m_impulse * m_JwA;
+        return inv_dt * L;
+    }
+
+    /// Get the first joint.
+    b2Joint GetJoint1()
+    {
+        return m_joint1;
+    }
+
+    /// Get the second joint.
+    b2Joint GetJoint2()
+    {
+        return m_joint2;
+    }
+
+    /// Get/set the gear ratio.
+    float32 GetRatio() const
+    {
+        return m_ratio;
+    }
+
+    /// ditto
+    void SetRatio(float32 ratio)
+    {
+        assert(b2IsValid(ratio));
+        m_ratio = ratio;
+    }
+
+    /// Dump joint to dmLog
+    override void Dump()
+    {
+        int32 indexA = m_body_A.m_islandIndex;
+        int32 indexB = m_body_B.m_islandIndex;
+
+        int32 index1 = m_joint1.m_index;
+        int32 index2 = m_joint2.m_index;
+
+        b2Log("  b2GearJointDef jd;\n");
+        b2Log("  jd.body_A = bodies[%d];\n", indexA);
+        b2Log("  jd.body_B = bodies[%d];\n", indexB);
+        b2Log("  jd.collideConnected = bool(%d);\n", m_collideConnected);
+        b2Log("  jd.joint1 = joints[%d];\n", index1);
+        b2Log("  jd.joint2 = joints[%d];\n", index2);
+        b2Log("  jd.ratio = %.15lef;\n", m_ratio);
+        b2Log("  joints[%d] = m_world.CreateJoint(&jd);\n", m_index);
+    }
+
+// note: this should be package but D's access implementation is lacking.
+// do not use in user code.
+/* package: */
+public:
 
     override void InitVelocityConstraints(b2SolverData data)
     {
@@ -413,57 +488,6 @@ class b2GearJoint : b2Joint
         return linearError < b2_linearSlop;
     }
 
-    override b2Vec2 GetAnchorA() const
-    {
-        return m_body_A.GetWorldPoint(m_localAnchorA);
-    }
-
-    override b2Vec2 GetAnchorB() const
-    {
-        return m_body_B.GetWorldPoint(m_localAnchorB);
-    }
-
-    override b2Vec2 GetReactionForce(float32 inv_dt) const
-    {
-        b2Vec2 P = m_impulse * m_JvAC;
-        return inv_dt * P;
-    }
-
-    override float32 GetReactionTorque(float32 inv_dt) const
-    {
-        float32 L = m_impulse * m_JwA;
-        return inv_dt * L;
-    }
-
-    void SetRatio(float32 ratio)
-    {
-        assert(b2IsValid(ratio));
-        m_ratio = ratio;
-    }
-
-    float32 GetRatio() const
-    {
-        return m_ratio;
-    }
-
-    override void Dump()
-    {
-        int32 indexA = m_body_A.m_islandIndex;
-        int32 indexB = m_body_B.m_islandIndex;
-
-        int32 index1 = m_joint1.m_index;
-        int32 index2 = m_joint2.m_index;
-
-        b2Log("  b2GearJointDef jd;\n");
-        b2Log("  jd.body_A = bodies[%d];\n", indexA);
-        b2Log("  jd.body_B = bodies[%d];\n", indexB);
-        b2Log("  jd.collideConnected = bool(%d);\n", m_collideConnected);
-        b2Log("  jd.joint1 = joints[%d];\n", index1);
-        b2Log("  jd.joint2 = joints[%d];\n", index2);
-        b2Log("  jd.ratio = %.15lef;\n", m_ratio);
-        b2Log("  joints[%d] = m_world.CreateJoint(&jd);\n", m_index);
-    }
-
     b2Joint m_joint1;
     b2Joint m_joint2;
 
@@ -501,47 +525,3 @@ class b2GearJoint : b2Joint
     float32 m_JwA = 0, m_JwB = 0, m_JwC = 0, m_JwD = 0;
     float32 m_mass = 0;
 }
-
-// #endif
-/*
- * Copyright (c) 2007-2011 Erin Catto http://www.box2d.org
- *
- * This software is provided 'as-is', without any express or implied
- * warranty.  In no event will the authors be held liable for any damages
- * arising from the use of this software.
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
- * 1. The origin of this software must not be misrepresented; you must not
- * claim that you wrote the original software. If you use this software
- * in a product, an acknowledgment in the product documentation would be
- * appreciated but is not required.
- * 2. Altered source versions must be plainly marked as such, and must not be
- * misrepresented as being the original software.
- * 3. This notice may not be removed or altered from any source distribution.
- */
-
-import dbox.dynamics.joints.b2gearjoint;
-import dbox.dynamics.joints.b2revolutejoint;
-import dbox.dynamics.joints.b2prismaticjoint;
-import dbox.dynamics.b2body;
-import dbox.dynamics.b2timestep;
-
-// Gear Joint:
-// C0 = (coordinate1 + ratio * coordinate2)_initial
-// C = (coordinate1 + ratio * coordinate2) - C0 = 0
-// J = [J1 ratio * J2]
-// K = J * invM * JT
-// = J1 * invM1 * J1T + ratio * ratio * J2 * invM2 * J2T
-//
-// Revolute:
-// coordinate = rotation
-// Cdot = angularVelocity
-// J = [0 0 1]
-// K = J * invM * JT = invI
-//
-// Prismatic:
-// coordinate = dot(p - pg, ug)
-// Cdot = dot(v + cross(w, r), ug)
-// J = [ug cross(r, ug)]
-// K = J * invM * JT = invMass + invI * cross(r, ug)^2
