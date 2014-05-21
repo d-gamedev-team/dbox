@@ -48,8 +48,6 @@ class b2ContactFilter
 {
     /// Return true if contact calculations should be performed between these two shapes.
     /// @warning for performance reasons this is only called when the AABBs begin to overlap.
-
-    // Return true if contact calculations should be performed between these two shapes.
     // If you implement your own collision filter you may want to build from this implementation.
     bool ShouldCollide(b2Fixture* fixtureA, b2Fixture* fixtureB)
     {
@@ -72,8 +70,8 @@ class b2ContactFilter
 /// match up one-to-one with the contact points in b2Manifold.
 struct b2ContactImpulse
 {
-    float32 normalImpulses[b2_maxManifoldPoints] = 0;
-    float32 tangentImpulses[b2_maxManifoldPoints] = 0;
+    float32[b2_maxManifoldPoints] normalImpulses = 0;
+    float32[b2_maxManifoldPoints] tangentImpulses = 0;
     int32 count;
 }
 
@@ -88,10 +86,6 @@ struct b2ContactImpulse
 /// @warning You cannot create/destroy Box2D entities inside these callbacks.
 class b2ContactListener
 {
-    /* virtual */ ~this()
-    {
-    }
-
     /// Called when two fixtures begin to touch.
     /* virtual */ void BeginContact(b2Contact contact)
     {
@@ -146,10 +140,6 @@ class b2QueryCallback
 /// See b2World*.RayCast
 class b2RayCastCallback
 {
-    /* virtual */ ~this()
-    {
-    }
-
     /// Called for each fixture found in the query. You control how the ray cast
     /// proceeds by returning a float:
     /// return -1: ignore this fixture and continue
@@ -161,28 +151,6 @@ class b2RayCastCallback
     /// @param normal the normal vector at the point of intersection
     /// @return -1 to filter, 0 to terminate, fraction to clip the ray for
     /// closest hit, 1 to continue
-    abstract /* virtual */ float32 ReportFixture(b2Fixture* fixture, b2Vec2 point,
-                                  b2Vec2 normal, float32 fraction);
+    abstract float32 ReportFixture(b2Fixture* fixture, b2Vec2 point,
+                                   b2Vec2 normal, float32 fraction);
 }
-
-// #endif
-/*
- * Copyright (c) 2006-2009 Erin Catto http://www.box2d.org
- *
- * This software is provided 'as-is', without any express or implied
- * warranty.  In no event will the authors be held liable for any damages
- * arising from the use of this software.
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
- * 1. The origin of this software must not be misrepresented; you must not
- * claim that you wrote the original software. If you use this software
- * in a product, an acknowledgment in the product documentation would be
- * appreciated but is not required.
- * 2. Altered source versions must be plainly marked as such, and must not be
- * misrepresented as being the original software.
- * 3. This notice may not be removed or altered from any source distribution.
- */
-
-import dbox.dynamics.b2worldcallbacks;
-import dbox.dynamics.b2fixture;
