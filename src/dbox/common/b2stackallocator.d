@@ -1,12 +1,3 @@
-module dbox.common.b2stackallocator;
-
-import core.stdc.float_;
-import core.stdc.stdlib;
-import core.stdc.string;
-
-import dbox.common;
-import dbox.common.b2math;
-
 /*
  * Copyright (c) 2006-2009 Erin Catto http://www.box2d.org
  *
@@ -24,9 +15,11 @@ import dbox.common.b2math;
  * misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
  */
+module dbox.common.b2stackallocator;
 
-// #ifndef B2_STACK_ALLOCATOR_H
-// #define B2_STACK_ALLOCATOR_H
+import core.stdc.float_;
+import core.stdc.stdlib;
+import core.stdc.string;
 
 import dbox.common;
 
@@ -45,12 +38,14 @@ struct b2StackEntry
 // if you try to interleave multiple allocate/free pairs.
 struct b2StackAllocator
 {
+    ///
     ~this()
     {
         assert(m_index == 0);
         assert(m_entryCount == 0);
     }
 
+    ///
     void* Allocate(int32 size)
     {
         assert(m_entryCount < b2_maxStackEntries);
@@ -77,6 +72,7 @@ struct b2StackAllocator
         return entry.data;
     }
 
+    ///
     void Free(void* p)
     {
         assert(m_entryCount > 0);
@@ -97,20 +93,20 @@ struct b2StackAllocator
         p = null;
     }
 
+    ///
     int32 GetMaxAllocation() const
     {
         return m_maxAllocation;
     }
 
-    byte m_data[b2_stackSize];
+private:
+
+    byte[b2_stackSize] m_data;
     int32 m_index;
 
     int32 m_allocation;
     int32 m_maxAllocation;
 
-    b2StackEntry m_entries[b2_maxStackEntries];
+    b2StackEntry[b2_maxStackEntries] m_entries;
     int32 m_entryCount;
 }
-
-import dbox.common.b2stackallocator;
-import dbox.common.b2math;
