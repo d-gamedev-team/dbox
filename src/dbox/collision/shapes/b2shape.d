@@ -57,12 +57,8 @@ class b2Shape
     alias e_chain = Type.e_chain;
     alias e_typeCount = Type.e_typeCount;
 
-    /* virtual */ ~this()
-    {
-    }
-
     /// Clone the concrete shape using the provided allocator.
-    /* virtual */ abstract b2Shape Clone(b2BlockAllocator* allocator) const;
+    abstract b2Shape Clone(b2BlockAllocator* allocator) const;
 
     /// Get the type of this shape. You can use this to down cast to the concrete shape.
     /// @return the shape type.
@@ -72,32 +68,32 @@ class b2Shape
     }
 
     /// Get the number of child primitives.
-    /* virtual */ abstract int32 GetChildCount() const;
+    abstract int32 GetChildCount() const;
 
     /// Test a point for containment in this shape. This only works for convex shapes.
     /// @param xf the shape world transform.
     /// @param p a point in world coordinates.
-    /* virtual */ abstract bool TestPoint(b2Transform xf, b2Vec2 p) const;
+    abstract bool TestPoint(b2Transform xf, b2Vec2 p) const;
 
     /// Cast a ray against a child shape.
     /// @param output the ray-cast results.
     /// @param input the ray-cast input parameters.
     /// @param transform the transform to be applied to the shape.
     /// @param childIndex the child shape index
-    /* virtual */ abstract bool RayCast(b2RayCastOutput* output, b2RayCastInput input,
+    abstract bool RayCast(b2RayCastOutput* output, b2RayCastInput input,
                                         b2Transform transform, int32 childIndex) const;
 
     /// Given a transform, compute the associated axis aligned bounding box for a child shape.
     /// @param aabb returns the axis aligned box.
     /// @param xf the world transform of the shape.
     /// @param childIndex the child shape
-    /* virtual */ abstract void ComputeAABB(b2AABB* aabb, b2Transform xf, int32 childIndex) const;
+    abstract void ComputeAABB(b2AABB* aabb, b2Transform xf, int32 childIndex) const;
 
     /// Compute the mass properties of this shape using its dimensions and density.
     /// The inertia tensor is computed about the local origin.
     /// @param massData returns the mass data for this shape.
     /// @param density the density in kilograms per meter squared.
-    /* virtual */ abstract void ComputeMass(b2MassData* massData, float32 density) const;
+    abstract void ComputeMass(b2MassData* massData, float32 density) const;
 
     Type m_type;
     float32 m_radius = 0;

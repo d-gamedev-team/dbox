@@ -341,15 +341,11 @@ class b2Joint
         B2_NOT_USED(newOrigin);
     }
 
-    /* virtual */ ~this()
-    {
-    }
-
-    /* virtual */ abstract void InitVelocityConstraints(b2SolverData data);
-    /* virtual */ abstract void SolveVelocityConstraints(b2SolverData data);
+    abstract void InitVelocityConstraints(b2SolverData data);
+    abstract void SolveVelocityConstraints(b2SolverData data);
 
     // This returns true if the position errors are within tolerance.
-    /* virtual */ abstract bool SolvePositionConstraints(b2SolverData data);
+    abstract bool SolvePositionConstraints(b2SolverData data);
 
     b2JointType m_type;
     b2Joint m_prev;

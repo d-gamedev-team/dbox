@@ -1,15 +1,3 @@
-module dbox.dynamics.b2worldcallbacks;
-
-import core.stdc.float_;
-import core.stdc.stdlib;
-import core.stdc.string;
-
-import dbox.collision;
-import dbox.common;
-import dbox.dynamics;
-import dbox.dynamics.contacts;
-import dbox.dynamics.joints;
-
 /*
  * Copyright (c) 2006-2009 Erin Catto http://www.box2d.org
  *
@@ -27,38 +15,37 @@ import dbox.dynamics.joints;
  * misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
  */
+module dbox.dynamics.b2worldcallbacks;
 
-// #ifndef B2_WORLD_CALLBACKS_H
-// #define B2_WORLD_CALLBACKS_H
+import core.stdc.float_;
+import core.stdc.stdlib;
+import core.stdc.string;
 
+import dbox.collision;
+import dbox.collision.shapes;
 import dbox.common;
+import dbox.dynamics;
+import dbox.dynamics.contacts;
+import dbox.dynamics.joints;
 
 /// Joints and fixtures are destroyed when their associated
 /// body is destroyed. Implement this listener so that you
 /// may nullify references to these joints and shapes.
 class b2DestructionListener
 {
-    /* virtual */ ~this()
-    {
-    }
-
     /// Called when any joint is about to be destroyed due
     /// to the destruction of one of its attached bodies.
-    /* virtual */ abstract void SayGoodbye(b2Joint joint);
+    abstract void SayGoodbye(b2Joint joint);
 
     /// Called when any fixture is about to be destroyed due
     /// to the destruction of its parent body_.
-    /* virtual */ abstract void SayGoodbye(b2Fixture* fixture);
+    abstract void SayGoodbye(b2Fixture* fixture);
 }
 
 /// Implement this class to provide collision filtering. In other words, you can implement
 /// this class if you want finer control over contact creation.
 class b2ContactFilter
 {
-    /* virtual */ ~this()
-    {
-    }
-
     /// Return true if contact calculations should be performed between these two shapes.
     /// @warning for performance reasons this is only called when the AABBs begin to overlap.
 
@@ -150,13 +137,9 @@ class b2ContactListener
 /// See b2World*.Query
 class b2QueryCallback
 {
-    /* virtual */ ~this()
-    {
-    }
-
     /// Called for each fixture found in the query AABB.
     /// @return false to terminate the query.
-    /* virtual */ abstract bool ReportFixture(b2Fixture* fixture);
+    abstract bool ReportFixture(b2Fixture* fixture);
 }
 
 /// Callback class for ray casts.
