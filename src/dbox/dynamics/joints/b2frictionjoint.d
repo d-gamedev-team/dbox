@@ -1,12 +1,3 @@
-module dbox.dynamics.joints.b2frictionjoint;
-
-import core.stdc.float_;
-import core.stdc.stdlib;
-import core.stdc.string;
-
-import dbox.common;
-import dbox.dynamics;
-
 /*
  * Copyright (c) 2006-2007 Erin Catto http://www.box2d.org
  *
@@ -24,15 +15,20 @@ import dbox.dynamics;
  * misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
  */
+module dbox.dynamics.joints.b2frictionjoint;
 
-// #ifndef B2_FRICTION_JOINT_H
-// #define B2_FRICTION_JOINT_H
+import core.stdc.float_;
+import core.stdc.stdlib;
+import core.stdc.string;
 
-import dbox.dynamics.joints.b2joint;
+import dbox.common;
+import dbox.dynamics;
+import dbox.dynamics.joints;
 
 /// Friction joint definition.
 class b2FrictionJointDef : b2JointDef
 {
+    ///
     this()
     {
         type = e_frictionJoint;
@@ -41,6 +37,18 @@ class b2FrictionJointDef : b2JointDef
         maxForce  = 0.0f;
         maxTorque = 0.0f;
     }
+
+    // Point-to-point constraint
+    // Cdot = v2 - v1
+    // = v2 + cross(w2, r2) - v1 - cross(w1, r1)
+    // J = [-I -r1_skew I r2_skew ]
+    // Identity used:
+    // w k % (rx i + ry j) = w * (-ry i + rx j)
+
+    // Angle constraint
+    // Cdot = w2 - w1
+    // J = [0 0 -1 0 0 1]
+    // K = invI1 + invI2
 
     /// Initialize the bodies, anchors, axis, and reference angle using the world
     /// anchor and world axis.
@@ -69,18 +77,7 @@ class b2FrictionJointDef : b2JointDef
 /// It provides 2D translational friction and angular friction.
 class b2FrictionJoint : b2Joint
 {
-    /// The local anchor point relative to body_A's origin.
-    b2Vec2 GetLocalAnchorA() const
-    {
-        return m_localAnchorA;
-    }
-
-    /// The local anchor point relative to body_B's origin.
-    b2Vec2 GetLocalAnchorB() const
-    {
-        return m_localAnchorB;
-    }
-
+    ///
     this(const(b2FrictionJointDef) def)
     {
         super(def);
@@ -93,6 +90,90 @@ class b2FrictionJoint : b2Joint
         m_maxForce  = def.maxForce;
         m_maxTorque = def.maxTorque;
     }
+
+    ///
+    override b2Vec2 GetAnchorA() const
+    {
+        return m_body_A.GetWorldPoint(m_localAnchorA);
+    }
+
+    ///
+    override b2Vec2 GetAnchorB() const
+    {
+        return m_body_B.GetWorldPoint(m_localAnchorB);
+    }
+
+    ///
+    override b2Vec2 GetReactionForce(float32 inv_dt) const
+    {
+        return inv_dt * m_linearImpulse;
+    }
+
+    ///
+    override float32 GetReactionTorque(float32 inv_dt) const
+    {
+        return inv_dt * m_angularImpulse;
+    }
+
+    /// The local anchor point relative to body_A's origin.
+    b2Vec2 GetLocalAnchorA() const
+    {
+        return m_localAnchorA;
+    }
+
+    /// The local anchor point relative to body_B's origin.
+    b2Vec2 GetLocalAnchorB() const
+    {
+        return m_localAnchorB;
+    }
+
+    /// Get the maximum friction force in N.
+    float32 GetMaxForce() const
+    {
+        return m_maxForce;
+    }
+
+    /// Set the maximum friction force in N.
+    void SetMaxForce(float32 force)
+    {
+        assert(b2IsValid(force) && force >= 0.0f);
+        m_maxForce = force;
+    }
+
+    /// Get the maximum friction torque in N*m.
+    float32 GetMaxTorque() const
+    {
+        return m_maxTorque;
+    }
+
+    /// Set the maximum friction torque in N*m.
+    void SetMaxTorque(float32 torque)
+    {
+        assert(b2IsValid(torque) && torque >= 0.0f);
+        m_maxTorque = torque;
+    }
+
+    /// Dump joint to dmLog
+    override void Dump()
+    {
+        int32 indexA = m_body_A.m_islandIndex;
+        int32 indexB = m_body_B.m_islandIndex;
+
+        b2Log("  b2FrictionJointDef jd;\n");
+        b2Log("  jd.body_A = bodies[%d];\n", indexA);
+        b2Log("  jd.body_B = bodies[%d];\n", indexB);
+        b2Log("  jd.collideConnected = bool(%d);\n", m_collideConnected);
+        b2Log("  jd.localAnchorA.Set(%.15lef, %.15lef);\n", m_localAnchorA.x, m_localAnchorA.y);
+        b2Log("  jd.localAnchorB.Set(%.15lef, %.15lef);\n", m_localAnchorB.x, m_localAnchorB.y);
+        b2Log("  jd.maxForce = %.15lef;\n", m_maxForce);
+        b2Log("  jd.maxTorque = %.15lef;\n", m_maxTorque);
+        b2Log("  joints[%d] = m_world.CreateJoint(&jd);\n", m_index);
+    }
+
+// note: this should be package but D's access implementation is lacking.
+// do not use in user code.
+/* package: */
+public:
 
     override void InitVelocityConstraints(b2SolverData data)
     {
@@ -235,64 +316,6 @@ class b2FrictionJoint : b2Joint
         return true;
     }
 
-    override b2Vec2 GetAnchorA() const
-    {
-        return m_body_A.GetWorldPoint(m_localAnchorA);
-    }
-
-    override b2Vec2 GetAnchorB() const
-    {
-        return m_body_B.GetWorldPoint(m_localAnchorB);
-    }
-
-    override b2Vec2 GetReactionForce(float32 inv_dt) const
-    {
-        return inv_dt * m_linearImpulse;
-    }
-
-    override float32 GetReactionTorque(float32 inv_dt) const
-    {
-        return inv_dt * m_angularImpulse;
-    }
-
-    void SetMaxForce(float32 force)
-    {
-        assert(b2IsValid(force) && force >= 0.0f);
-        m_maxForce = force;
-    }
-
-    float32 GetMaxForce() const
-    {
-        return m_maxForce;
-    }
-
-    void SetMaxTorque(float32 torque)
-    {
-        assert(b2IsValid(torque) && torque >= 0.0f);
-        m_maxTorque = torque;
-    }
-
-    float32 GetMaxTorque() const
-    {
-        return m_maxTorque;
-    }
-
-    override void Dump()
-    {
-        int32 indexA = m_body_A.m_islandIndex;
-        int32 indexB = m_body_B.m_islandIndex;
-
-        b2Log("  b2FrictionJointDef jd;\n");
-        b2Log("  jd.body_A = bodies[%d];\n", indexA);
-        b2Log("  jd.body_B = bodies[%d];\n", indexB);
-        b2Log("  jd.collideConnected = bool(%d);\n", m_collideConnected);
-        b2Log("  jd.localAnchorA.Set(%.15lef, %.15lef);\n", m_localAnchorA.x, m_localAnchorA.y);
-        b2Log("  jd.localAnchorB.Set(%.15lef, %.15lef);\n", m_localAnchorB.x, m_localAnchorB.y);
-        b2Log("  jd.maxForce = %.15lef;\n", m_maxForce);
-        b2Log("  jd.maxTorque = %.15lef;\n", m_maxTorque);
-        b2Log("  joints[%d] = m_world.CreateJoint(&jd);\n", m_index);
-    }
-
     b2Vec2 m_localAnchorA;
     b2Vec2 m_localAnchorB;
 
@@ -316,38 +339,3 @@ class b2FrictionJoint : b2Joint
     b2Mat22 m_linearMass;
     float32 m_angularMass = 0;
 }
-
-// #endif
-/*
- * Copyright (c) 2006-2011 Erin Catto http://www.box2d.org
- *
- * This software is provided 'as-is', without any express or implied
- * warranty.  In no event will the authors be held liable for any damages
- * arising from the use of this software.
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
- * 1. The origin of this software must not be misrepresented; you must not
- * claim that you wrote the original software. If you use this software
- * in a product, an acknowledgment in the product documentation would be
- * appreciated but is not required.
- * 2. Altered source versions must be plainly marked as such, and must not be
- * misrepresented as being the original software.
- * 3. This notice may not be removed or altered from any source distribution.
- */
-
-import dbox.dynamics.joints.b2frictionjoint;
-import dbox.dynamics.b2body;
-import dbox.dynamics.b2timestep;
-
-// Point-to-point constraint
-// Cdot = v2 - v1
-// = v2 + cross(w2, r2) - v1 - cross(w1, r1)
-// J = [-I -r1_skew I r2_skew ]
-// Identity used:
-// w k % (rx i + ry j) = w * (-ry i + rx j)
-
-// Angle constraint
-// Cdot = w2 - w1
-// J = [0 0 -1 0 0 1]
-// K = invI1 + invI2
