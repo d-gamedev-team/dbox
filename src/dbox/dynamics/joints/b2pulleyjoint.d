@@ -1,15 +1,5 @@
-
-module dbox.dynamics.joints.b2pulleyjoint;
-
-import core.stdc.float_;
-import core.stdc.stdlib;
-import core.stdc.string;
-
-import dbox.common;
-import dbox.dynamics;
-
 /*
- * Copyright (c) 2006-2011 Erin Catto http://www.box2d.org
+ * Copyright (c) 2006-2012 Erin Catto http://www.box2d.org
  *
  * This software is provided 'as-is', without any express or implied
  * warranty.  In no event will the authors be held liable for any damages
@@ -25,11 +15,15 @@ import dbox.dynamics;
  * misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
  */
+module dbox.dynamics.joints.b2pulleyjoint;
 
-// #ifndef B2_PULLEY_JOINT_H
-// #define B2_PULLEY_JOINT_H
+import core.stdc.float_;
+import core.stdc.stdlib;
+import core.stdc.string;
 
-import dbox.dynamics.joints.b2joint;
+import dbox.common;
+import dbox.dynamics;
+import dbox.dynamics.joints;
 
 const float32 b2_minPulleyLength = 2.0f;
 
@@ -37,6 +31,7 @@ const float32 b2_minPulleyLength = 2.0f;
 /// two dynamic body anchor points, and a pulley ratio.
 class b2PulleyJointDef : b2JointDef
 {
+    ///
     this()
     {
         type = e_pulleyJoint;
@@ -50,10 +45,23 @@ class b2PulleyJointDef : b2JointDef
         collideConnected = true;
     }
 
+    // Pulley:
+    // length1 = norm(p1 - s1)
+    // length2 = norm(p2 - s2)
+    // C0 = (length1 + ratio * length2)_initial
+    // C = C0 - (length1 + ratio * length2)
+    // u1 = (p1 - s1) / norm(p1 - s1)
+    // u2 = (p2 - s2) / norm(p2 - s2)
+    // Cdot = -dot(u1, v1 + cross(w1, r1)) - ratio * dot(u2, v2 + cross(w2, r2))
+    // J = -[u1 cross(r1, u1) ratio * u2  ratio * cross(r2, u2)]
+    // K = J * invM * JT
+    // = invMass1 + invI1 * cross(r1, u1)^2 + ratio^2 * (invMass2 + invI2 * cross(r2, u2)^2)
+
+    /// Initialize the bodies, anchors, lengths, max lengths, and ratio using the world anchors.
     void Initialize(b2Body* bA, b2Body* bB,
-                                      b2Vec2 groundA, b2Vec2 groundB,
-                                      b2Vec2 anchorA, b2Vec2 anchorB,
-                                      float32 r)
+                    b2Vec2 groundA, b2Vec2 groundB,
+                    b2Vec2 anchorA, b2Vec2 anchorB,
+                    float32 r)
     {
         bodyA         = bA;
         bodyB         = bB;
@@ -68,12 +76,6 @@ class b2PulleyJointDef : b2JointDef
         ratio   = r;
         assert(ratio > b2_epsilon);
     }
-
-    /// Initialize the bodies, anchors, lengths, max lengths, and ratio using the world anchors.
-    void Initialize(b2Body* bodyA, b2Body* bodyB,
-                    b2Vec2 groundAnchorA, b2Vec2 groundAnchorB,
-                    b2Vec2 anchorA, b2Vec2 anchorB,
-                    float32 ratio);
 
     /// The first ground anchor in world coordinates. This point never moves.
     b2Vec2 groundAnchorA;
@@ -107,6 +109,7 @@ class b2PulleyJointDef : b2JointDef
 /// zero length.
 class b2PulleyJoint : b2Joint
 {
+    ///
     this(const(b2PulleyJointDef) def)
     {
         super(def);
@@ -125,6 +128,112 @@ class b2PulleyJoint : b2Joint
 
         m_impulse = 0.0f;
     }
+
+    ///
+    override b2Vec2 GetAnchorA() const
+    {
+        return m_bodyA.GetWorldPoint(m_localAnchorA);
+    }
+
+    ///
+    override b2Vec2 GetAnchorB() const
+    {
+        return m_bodyB.GetWorldPoint(m_localAnchorB);
+    }
+
+    ///
+    override b2Vec2 GetReactionForce(float32 inv_dt) const
+    {
+        b2Vec2 P = m_impulse * m_uB;
+        return inv_dt * P;
+    }
+
+    ///
+    override float32 GetReactionTorque(float32 inv_dt) const
+    {
+        B2_NOT_USED(inv_dt);
+        return 0.0f;
+    }
+
+    /// Get the first ground anchor.
+    b2Vec2 GetGroundAnchorA() const
+    {
+        return m_groundAnchorA;
+    }
+
+    /// Get the second ground anchor.
+    b2Vec2 GetGroundAnchorB() const
+    {
+        return m_groundAnchorB;
+    }
+
+    /// Get the current length of the segment attached to bodyA.
+    float32 GetLengthA() const
+    {
+        return m_lengthA;
+    }
+
+    /// Get the current length of the segment attached to bodyB.
+    float32 GetLengthB() const
+    {
+        return m_lengthB;
+    }
+
+    /// Get the pulley ratio.
+    float32 GetRatio() const
+    {
+        return m_ratio;
+    }
+
+    /// Get the current length of the segment attached to bodyA.
+    float32 GetCurrentLengthA() const
+    {
+        b2Vec2 p = m_bodyA.GetWorldPoint(m_localAnchorA);
+        b2Vec2 s = m_groundAnchorA;
+        b2Vec2 d = p - s;
+        return d.Length();
+    }
+
+    /// Get the current length of the segment attached to bodyB.
+    float32 GetCurrentLengthB() const
+    {
+        b2Vec2 p = m_bodyB.GetWorldPoint(m_localAnchorB);
+        b2Vec2 s = m_groundAnchorB;
+        b2Vec2 d = p - s;
+        return d.Length();
+    }
+
+    /// Dump joint to dmLog
+    override void Dump()
+    {
+        int32 indexA = m_bodyA.m_islandIndex;
+        int32 indexB = m_bodyB.m_islandIndex;
+
+        b2Log("  b2PulleyJointDef jd;\n");
+        b2Log("  jd.bodyA = bodies[%d];\n", indexA);
+        b2Log("  jd.bodyB = bodies[%d];\n", indexB);
+        b2Log("  jd.collideConnected = bool(%d);\n", m_collideConnected);
+        b2Log("  jd.groundAnchorA.Set(%.15lef, %.15lef);\n", m_groundAnchorA.x, m_groundAnchorA.y);
+        b2Log("  jd.groundAnchorB.Set(%.15lef, %.15lef);\n", m_groundAnchorB.x, m_groundAnchorB.y);
+        b2Log("  jd.localAnchorA.Set(%.15lef, %.15lef);\n", m_localAnchorA.x, m_localAnchorA.y);
+        b2Log("  jd.localAnchorB.Set(%.15lef, %.15lef);\n", m_localAnchorB.x, m_localAnchorB.y);
+        b2Log("  jd.lengthA = %.15lef;\n", m_lengthA);
+        b2Log("  jd.lengthB = %.15lef;\n", m_lengthB);
+        b2Log("  jd.ratio = %.15lef;\n", m_ratio);
+        b2Log("  joints[%d] = m_world.CreateJoint(&jd);\n", m_index);
+    }
+
+    /// Implement b2Joint.ShiftOrigin
+    override void ShiftOrigin(b2Vec2 newOrigin)
+    {
+        m_groundAnchorA -= newOrigin;
+        m_groundAnchorB -= newOrigin;
+    }
+
+// note: this should be package but D's access implementation is lacking.
+// do not use in user code.
+/* package: */
+public:
 
     override void InitVelocityConstraints(b2SolverData data)
     {
@@ -317,96 +426,6 @@ class b2PulleyJoint : b2Joint
         return linearError < b2_linearSlop;
     }
 
-    override b2Vec2 GetAnchorA() const
-    {
-        return m_bodyA.GetWorldPoint(m_localAnchorA);
-    }
-
-    override b2Vec2 GetAnchorB() const
-    {
-        return m_bodyB.GetWorldPoint(m_localAnchorB);
-    }
-
-    override b2Vec2 GetReactionForce(float32 inv_dt) const
-    {
-        b2Vec2 P = m_impulse * m_uB;
-        return inv_dt * P;
-    }
-
-    override float32 GetReactionTorque(float32 inv_dt) const
-    {
-        B2_NOT_USED(inv_dt);
-        return 0.0f;
-    }
-
-    b2Vec2 GetGroundAnchorA() const
-    {
-        return m_groundAnchorA;
-    }
-
-    b2Vec2 GetGroundAnchorB() const
-    {
-        return m_groundAnchorB;
-    }
-
-    float32 GetLengthA() const
-    {
-        return m_lengthA;
-    }
-
-    float32 GetLengthB() const
-    {
-        return m_lengthB;
-    }
-
-    float32 GetRatio() const
-    {
-        return m_ratio;
-    }
-
-    float32 GetCurrentLengthA() const
-    {
-        b2Vec2 p = m_bodyA.GetWorldPoint(m_localAnchorA);
-        b2Vec2 s = m_groundAnchorA;
-        b2Vec2 d = p - s;
-        return d.Length();
-    }
-
-    float32 GetCurrentLengthB() const
-    {
-        b2Vec2 p = m_bodyB.GetWorldPoint(m_localAnchorB);
-        b2Vec2 s = m_groundAnchorB;
-        b2Vec2 d = p - s;
-        return d.Length();
-    }
-
-    override void Dump()
-    {
-        int32 indexA = m_bodyA.m_islandIndex;
-        int32 indexB = m_bodyB.m_islandIndex;
-
-        b2Log("  b2PulleyJointDef jd;\n");
-        b2Log("  jd.bodyA = bodies[%d];\n", indexA);
-        b2Log("  jd.bodyB = bodies[%d];\n", indexB);
-        b2Log("  jd.collideConnected = bool(%d);\n", m_collideConnected);
-        b2Log("  jd.groundAnchorA.Set(%.15lef, %.15lef);\n", m_groundAnchorA.x, m_groundAnchorA.y);
-        b2Log("  jd.groundAnchorB.Set(%.15lef, %.15lef);\n", m_groundAnchorB.x, m_groundAnchorB.y);
-        b2Log("  jd.localAnchorA.Set(%.15lef, %.15lef);\n", m_localAnchorA.x, m_localAnchorA.y);
-        b2Log("  jd.localAnchorB.Set(%.15lef, %.15lef);\n", m_localAnchorB.x, m_localAnchorB.y);
-        b2Log("  jd.lengthA = %.15lef;\n", m_lengthA);
-        b2Log("  jd.lengthB = %.15lef;\n", m_lengthB);
-        b2Log("  jd.ratio = %.15lef;\n", m_ratio);
-        b2Log("  joints[%d] = m_world.CreateJoint(&jd);\n", m_index);
-    }
-
-    override void ShiftOrigin(b2Vec2 newOrigin)
-    {
-        m_groundAnchorA -= newOrigin;
-        m_groundAnchorB -= newOrigin;
-    }
-
-
-
     b2Vec2  m_groundAnchorA;
     b2Vec2  m_groundAnchorB;
     float32 m_lengthA = 0;
@@ -434,38 +453,3 @@ class b2PulleyJoint : b2Joint
     float32 m_invIB = 0;
     float32 m_mass = 0;
 }
-
-// #endif
-/*
- * Copyright (c) 2007 Erin Catto http://www.box2d.org
- *
- * This software is provided 'as-is', without any express or implied
- * warranty.  In no event will the authors be held liable for any damages
- * arising from the use of this software.
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
- * 1. The origin of this software must not be misrepresented; you must not
- * claim that you wrote the original software. If you use this software
- * in a product, an acknowledgment in the product documentation would be
- * appreciated but is not required.
- * 2. Altered source versions must be plainly marked as such, and must not be
- * misrepresented as being the original software.
- * 3. This notice may not be removed or altered from any source distribution.
- */
-
-import dbox.dynamics.joints.b2pulleyjoint;
-import dbox.dynamics.b2body;
-import dbox.dynamics.b2timestep;
-
-// Pulley:
-// length1 = norm(p1 - s1)
-// length2 = norm(p2 - s2)
-// C0 = (length1 + ratio * length2)_initial
-// C = C0 - (length1 + ratio * length2)
-// u1 = (p1 - s1) / norm(p1 - s1)
-// u2 = (p2 - s2) / norm(p2 - s2)
-// Cdot = -dot(u1, v1 + cross(w1, r1)) - ratio * dot(u2, v2 + cross(w2, r2))
-// J = -[u1 cross(r1, u1) ratio * u2  ratio * cross(r2, u2)]
-// K = J * invM * JT
-// = invMass1 + invI1 * cross(r1, u1)^2 + ratio^2 * (invMass2 + invI2 * cross(r2, u2)^2)
