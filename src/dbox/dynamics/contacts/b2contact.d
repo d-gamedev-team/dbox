@@ -200,7 +200,7 @@ class b2Contact
     /// Evaluate this contact with your own manifold and transforms.
     abstract void Evaluate(b2Manifold* manifold, b2Transform xfA, b2Transform xfB);
 
-// note: this should be package but D access implementation is lacking.
+// note: this should be package but D's access implementation is lacking.
 // do not use in user code.
 /* package: */
 public:
