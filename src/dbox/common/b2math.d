@@ -50,7 +50,10 @@ float32 b2InvSqrt(float32 x)
     return x;
 }
 
+///
 alias b2Sqrt = sqrtf;
+
+///
 alias b2Atan2 = atan2f;
 
 /// A 2D column vector.
@@ -139,7 +142,7 @@ struct b2Vec2
     /// Return true whether this vector is equal to another vector.
     bool opEquals(b2Vec2 b) const
     {
-        return this.x == b.x && this.y == b.y;
+        return this.tupleof == b.tupleof;
     }
 
     /// Get the length of this vector (the norm).
@@ -262,6 +265,12 @@ struct b2Vec3
         mixin("z " ~ op ~ "= s;");
     }
 
+    /// Return true whether this vector is equal to another vector.
+    bool opEquals(b2Vec3 b) const
+    {
+        return this.tupleof == b.tupleof;
+    }
+
     float32 x = 0, y = 0, z = 0;
 }
 
@@ -309,6 +318,7 @@ struct b2Mat22
         ey.y = 0.0f;
     }
 
+    ///
     b2Mat22 GetInverse() const
     {
         float32 a = ex.x, b = ey.x, c = ex.y, d = ey.y;
@@ -343,7 +353,7 @@ struct b2Mat22
         return x;
     }
 
-    b2Mat22 opBinary(string op : "+")(const(b2Mat22) b)
+    b2Mat22 opBinary(string op : "+")(b2Mat22 b)
     {
         return b2Mat22(this.ex + b.ex, this.ey + b.ey);
     }
@@ -511,7 +521,7 @@ struct b2Rot
 struct b2Transform
 {
     /// Initialize using a position vector and a rotation.
-    this(b2Vec2 position, const(b2Rot) rotation)
+    this(b2Vec2 position, b2Rot rotation)
     {
         p = position;
         q = rotation;
@@ -575,12 +585,15 @@ struct b2Sweep
 
     b2Vec2 localCenter;         ///< local center of mass position
     b2Vec2 c0, c;               ///< center world positions
-    float32 a0 = 0, a = 0;              ///< world angles
+    float32 a0 = 0, a = 0;      ///< world angles
 
     /// Fraction of the current time step in the range [0,1]
     /// c0 and a0 are the positions at alpha0.
     float32 alpha0 = 0;
 }
+
+/// Useful constant
+enum b2Vec2_zero = b2Vec2(0.0f, 0.0f);
 
 /// Perform the dot product on two vectors.
 float32 b2Dot(b2Vec2 a, b2Vec2 b)
@@ -610,24 +623,26 @@ b2Vec2 b2Cross(float32 s, b2Vec2 a)
 
 /// Multiply a matrix times a vector. If a rotation matrix is provided,
 /// then this transforms the vector from one frame to another.
-b2Vec2 b2Mul(const(b2Mat22) A, b2Vec2 v)
+b2Vec2 b2Mul(b2Mat22 A, b2Vec2 v)
 {
     return b2Vec2(A.ex.x * v.x + A.ey.x * v.y, A.ex.y * v.x + A.ey.y * v.y);
 }
 
 /// Multiply a matrix transpose times a vector. If a rotation matrix is provided,
 /// then this transforms the vector from one frame to another (inverse transform).
-b2Vec2 b2MulT(const(b2Mat22) A, b2Vec2 v)
+b2Vec2 b2MulT(b2Mat22 A, b2Vec2 v)
 {
     return b2Vec2(b2Dot(v, A.ex), b2Dot(v, A.ey));
 }
 
+///
 float32 b2Distance(b2Vec2 a, b2Vec2 b)
 {
     b2Vec2 c = a - b;
     return c.Length();
 }
 
+///
 float32 b2DistanceSquared(b2Vec2 a, b2Vec2 b)
 {
     b2Vec2 c = a - b;
@@ -647,13 +662,13 @@ b2Vec3 b2Cross(b2Vec3 a, b2Vec3 b)
 }
 
 // A * B
-b2Mat22 b2Mul(const(b2Mat22) A, const(b2Mat22) B)
+b2Mat22 b2Mul(b2Mat22 A, b2Mat22 B)
 {
     return b2Mat22(b2Mul(A, B.ex), b2Mul(A, B.ey));
 }
 
 // A^T * B
-b2Mat22 b2MulT(const(b2Mat22) A, const(b2Mat22) B)
+b2Mat22 b2MulT(b2Mat22 A, b2Mat22 B)
 {
     auto c1 = b2Vec2(b2Dot(A.ex, B.ex), b2Dot(A.ey, B.ex));
     auto c2 = b2Vec2(b2Dot(A.ex, B.ey), b2Dot(A.ey, B.ey));
@@ -661,19 +676,19 @@ b2Mat22 b2MulT(const(b2Mat22) A, const(b2Mat22) B)
 }
 
 /// Multiply a matrix times a vector.
-b2Vec3 b2Mul(const(b2Mat33) A, b2Vec3 v)
+b2Vec3 b2Mul(b2Mat33 A, b2Vec3 v)
 {
     return v.x * A.ex + v.y * A.ey + v.z * A.ez;
 }
 
 /// Multiply a matrix times a vector.
-b2Vec2 b2Mul22(const(b2Mat33) A, b2Vec2 v)
+b2Vec2 b2Mul22(b2Mat33 A, b2Vec2 v)
 {
     return b2Vec2(A.ex.x * v.x + A.ey.x * v.y, A.ex.y * v.x + A.ey.y * v.y);
 }
 
 /// Multiply two rotations: q * r
-b2Rot b2Mul(const(b2Rot) q, const(b2Rot) r)
+b2Rot b2Mul(b2Rot q, b2Rot r)
 {
     // [qc -qs] * [rc -rs] = [qc*rc-qs*rs -qc*rs-qs*rc]
     // [qs  qc]   [rs  rc]   [qs*rc+qc*rs -qs*rs+qc*rc]
@@ -686,7 +701,7 @@ b2Rot b2Mul(const(b2Rot) q, const(b2Rot) r)
 }
 
 /// Transpose multiply two rotations: qT * r
-b2Rot b2MulT(const(b2Rot) q, const(b2Rot) r)
+b2Rot b2MulT(b2Rot q, b2Rot r)
 {
     // [ qc qs] * [rc -rs] = [qc*rc+qs*rs -qc*rs+qs*rc]
     // [-qs qc]   [rs  rc]   [-qs*rc+qc*rs qs*rs+qc*rc]
@@ -699,17 +714,18 @@ b2Rot b2MulT(const(b2Rot) q, const(b2Rot) r)
 }
 
 /// Rotate a vector
-b2Vec2 b2Mul(const(b2Rot) q, b2Vec2 v)
+b2Vec2 b2Mul(b2Rot q, b2Vec2 v)
 {
     return b2Vec2(q.c * v.x - q.s * v.y, q.s * v.x + q.c * v.y);
 }
 
 /// Inverse rotate a vector
-b2Vec2 b2MulT(const(b2Rot) q, b2Vec2 v)
+b2Vec2 b2MulT(b2Rot q, b2Vec2 v)
 {
     return b2Vec2(q.c * v.x + q.s * v.y, -q.s * v.x + q.c * v.y);
 }
 
+///
 b2Vec2 b2Mul(b2Transform T, b2Vec2 v)
 {
     float32 x = (T.q.c * v.x - T.q.s * v.y) + T.p.x;
@@ -718,6 +734,7 @@ b2Vec2 b2Mul(b2Transform T, b2Vec2 v)
     return b2Vec2(x, y);
 }
 
+///
 b2Vec2 b2MulT(b2Transform T, b2Vec2 v)
 {
     float32 px = v.x - T.p.x;
@@ -748,51 +765,69 @@ b2Transform b2MulT(b2Transform A, b2Transform B)
     return C;
 }
 
+///
 T b2Abs(T)(T a)
 {
-    return a > T(0) ? a : -a;
+    static if (__VERSION__ >= 2066)
+    {
+        return a > T(0) ? a : -a;
+    }
+    else
+    {
+        enum T t = 0;
+        return a > t ? a : -a;
+    }
 }
 
+///
 b2Vec2 b2Abs(b2Vec2 a)
 {
     return b2Vec2(b2Abs(a.x), b2Abs(a.y));
 }
 
-b2Mat22 b2Abs(const(b2Mat22) A)
+///
+b2Mat22 b2Abs(b2Mat22 A)
 {
     return b2Mat22(b2Abs(A.ex), b2Abs(A.ey));
 }
 
+///
 T b2Min(T)(T a, T b)
 {
     return a < b ? a : b;
 }
 
+///
 b2Vec2 b2Min(b2Vec2 a, b2Vec2 b)
 {
     return b2Vec2(b2Min(a.x, b.x), b2Min(a.y, b.y));
 }
 
+///
 T b2Max(T)(T a, T b)
 {
     return a > b ? a : b;
 }
 
+///
 b2Vec2 b2Max(b2Vec2 a, b2Vec2 b)
 {
     return b2Vec2(b2Max(a.x, b.x), b2Max(a.y, b.y));
 }
 
+///
 T b2Clamp(T)(T a, T low, T high)
 {
     return b2Max(low, b2Min(a, high));
 }
 
+///
 b2Vec2 b2Clamp(b2Vec2 a, b2Vec2 low, b2Vec2 high)
 {
     return b2Max(low, b2Min(a, high));
 }
 
+///
 void b2Swap(T)(ref T a, ref T b)
 {
     T tmp = a;
@@ -815,11 +850,9 @@ uint32 b2NextPowerOfTwo(uint32 x)
     return x + 1;
 }
 
+///
 bool b2IsPowerOfTwo(uint32 x)
 {
     bool result = x > 0 && (x & (x - 1)) == 0;
     return result;
 }
-
-/// Useful constant
-enum b2Vec2_zero = b2Vec2(0.0f, 0.0f);
