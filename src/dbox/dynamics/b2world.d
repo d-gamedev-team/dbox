@@ -1,18 +1,5 @@
-module dbox.dynamics.b2world;
-
-import core.stdc.float_;
-import core.stdc.stdlib;
-import core.stdc.string;
-
-import dbox.common;
-import dbox.collision;
-import dbox.collision.shapes;
-import dbox.dynamics;
-import dbox.dynamics.contacts;
-import dbox.dynamics.joints;
-
 /*
- * Copyright (c) 2006-2011 Erin Catto http://www.box2d.org
+ * Copyright (c) 2006-2009 Erin Catto http://www.box2d.org
  *
  * This software is provided 'as-is', without any express or implied
  * warranty.  In no event will the authors be held liable for any damages
@@ -28,187 +15,63 @@ import dbox.dynamics.joints;
  * misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
  */
+module dbox.dynamics.b2world;
 
-// #ifndef B2_WORLD_H
-// #define B2_WORLD_H
+import core.stdc.float_;
+import core.stdc.stdlib;
+import core.stdc.string;
 
-import dbox.common.b2math;
-import dbox.common.b2blockallocator;
-import dbox.common.b2stackallocator;
-import dbox.dynamics.b2worldcallbacks;
-import dbox.dynamics.b2timestep;
+import dbox.collision;
+import dbox.collision.shapes;
+import dbox.common;
+import dbox.dynamics;
+import dbox.dynamics.contacts;
+import dbox.dynamics.joints;
 
 /// The world class manages all physics entities, dynamic simulation,
 /// and asynchronous queries. The world also contains efficient memory
 /// management facilities.
 struct b2World
 {
+    /// This struct must be properly initialized with an explicit constructor.
     @disable this();
+
+    /// This struct cannot be copied.
     @disable this(this);
 
-    this(b2Vec2 gravity)
-    {
-        m_destructionListener = null;
-        g_debugDraw = null;
-
-        m_bodyList  = null;
-        m_jointList = null;
-
-        m_bodyCount  = 0;
-        m_jointCount = 0;
-
-        m_warmStarting      = true;
-        m_continuousPhysics = true;
-        m_subStepping       = false;
-
-        m_stepComplete = true;
-
-        m_allowSleep = true;
-        m_gravity    = gravity;
-
-        m_flags = e_clearForces;
-
-        m_inv_dt0 = 0.0f;
-
-        m_blockAllocator = b2BlockAllocator(1);
-
-        m_contactManager = b2ContactManager(1);
-        m_contactManager.m_allocator = &m_blockAllocator;
-
-        memset(&m_profile, 0, b2memSizeOf!b2Profile);
-    }
-
-    b2Body* GetBodyList()
-    {
-        return m_bodyList;
-    }
-
-    const(b2Body*) GetBodyList() const
-    {
-        return m_bodyList;
-    }
-
-    b2Joint GetJointList()
-    {
-        return m_jointList;
-    }
-
-    const(b2Joint) GetJointList() const
-    {
-        return m_jointList;
-    }
-
-    b2Contact GetContactList()
-    {
-        return m_contactManager.m_contactList;
-    }
-
-    const(b2Contact) GetContactList() const
-    {
-        return m_contactManager.m_contactList;
-    }
-
-    int32 GetBodyCount() const
-    {
-        return m_bodyCount;
-    }
-
-    int32 GetJointCount() const
-    {
-        return m_jointCount;
-    }
-
-    int32 GetContactCount() const
-    {
-        return m_contactManager.m_contactCount;
-    }
-
-    void SetGravity(b2Vec2 gravity)
-    {
-        m_gravity = gravity;
-    }
-
-    b2Vec2 GetGravity() const
-    {
-        return m_gravity;
-    }
-
-    bool IsLocked() const
-    {
-        return (m_flags & e_locked) == e_locked;
-    }
-
-    void SetAutoClearForces(bool flag)
-    {
-        if (flag)
-        {
-            m_flags |= e_clearForces;
-        }
-        else
-        {
-            m_flags &= ~e_clearForces;
-        }
-    }
-
-    /// Get the flag that controls automatic clearing of forces after each time step.
-    bool GetAutoClearForces() const
-    {
-        return (m_flags & e_clearForces) == e_clearForces;
-    }
-
-    b2ContactManager* GetContactManager() const
-    {
-        return cast(b2ContactManager*)&m_contactManager;
-    }
-
-    b2Profile GetProfile() const
-    {
-        return m_profile;
-    }
-
-    ~this()
-    {
-        // Some shapes allocate using b2Alloc.
-        b2Body* b = m_bodyList;
-
-        while (b)
-        {
-            b2Body* bNext = b.m_next;
-
-            b2Fixture* f = b.m_fixtureList;
-
-            while (f)
-            {
-                b2Fixture* fNext = f.m_next;
-                f.m_proxyCount = 0;
-                f.Destroy(&m_blockAllocator);
-                f = fNext;
-            }
-
-            b = bNext;
-        }
-    }
-
+    /// Register a destruction listener. The listener is owned by you and must
+    /// remain in scope.
     void SetDestructionListener(b2DestructionListener listener)
     {
         m_destructionListener = listener;
     }
 
+    /// Register a contact filter to provide specific control over collision.
+    /// Otherwise the default filter is used (b2_defaultFilter). The listener is
+    /// owned by you and must remain in scope.
     void SetContactFilter(b2ContactFilter filter)
     {
         m_contactManager.m_contactFilter = filter;
     }
 
+    /// Register a contact event listener. The listener is owned by you and must
+    /// remain in scope.
     void SetContactListener(b2ContactListener listener)
     {
         m_contactManager.m_contactListener = listener;
     }
 
+    /// Register a routine for debug drawing. The debug draw functions are called
+    /// inside with b2World::DrawDebugData method. The debug draw object is owned
+    /// by you and must remain in scope.
     void SetDebugDraw(b2Draw debugDraw)
     {
         g_debugDraw = debugDraw;
     }
 
+    /// Create a rigid body given a definition. No reference to the definition
+    /// is retained.
+    /// @warning This function is locked during callbacks.
     b2Body* CreateBody(const(b2BodyDef)* def)
     {
         assert(IsLocked() == false);
@@ -235,6 +98,10 @@ struct b2World
         return b;
     }
 
+    /// Destroy a rigid body given a definition. No reference to the definition
+    /// is retained. This function is locked during callbacks.
+    /// @warning This automatically deletes all associated shapes and joints.
+    /// @warning This function is locked during callbacks.
     void DestroyBody(b2Body* b)
     {
         assert(m_bodyCount > 0);
@@ -323,6 +190,9 @@ struct b2World
         m_blockAllocator.Free(cast(void*)b, b2memSizeOf!b2Body);
     }
 
+    /// Create a joint to constrain bodies together. No reference to the definition
+    /// is retained. This may cause the connected bodies to cease colliding.
+    /// @warning This function is locked during callbacks.
     b2Joint CreateJoint(const(b2JointDef) def)
     {
         assert(IsLocked() == false);
@@ -390,6 +260,8 @@ struct b2World
         return j;
     }
 
+    /// Destroy a joint. This may cause the connected bodies to begin colliding.
+    /// @warning This function is locked during callbacks.
     void DestroyJoint(b2Joint j)
     {
         assert(IsLocked() == false);
@@ -487,7 +359,266 @@ struct b2World
         }
     }
 
-    //
+    /// Take a time step. This performs collision detection, integration,
+    /// and constraint solution.
+    /// @param timeStep the amount of time to simulate, this should not vary.
+    /// @param velocityIterations for the velocity constraint solver.
+    /// @param positionIterations for the position constraint solver.
+    void Step(float32 dt, int32 velocityIterations, int32 positionIterations)
+    {
+        auto stepTimer = b2Timer();
+
+        // If new fixtures were added, we need to find the new contacts.
+        if (m_flags & e_newFixture)
+        {
+            m_contactManager.FindNewContacts();
+            m_flags &= ~e_newFixture;
+        }
+
+        m_flags |= e_locked;
+
+        b2TimeStep step;
+        step.dt = dt;
+        step.velocityIterations = velocityIterations;
+        step.positionIterations = positionIterations;
+
+        if (dt > 0.0f)
+        {
+            step.inv_dt = 1.0f / dt;
+        }
+        else
+        {
+            step.inv_dt = 0.0f;
+        }
+
+        step.dtRatio = m_inv_dt0 * dt;
+
+        step.warmStarting = m_warmStarting;
+
+        // Update contacts. This is where some contacts are destroyed.
+        {
+            auto timer = b2Timer();
+            m_contactManager.Collide();
+            m_profile.collide = timer.GetMilliseconds();
+        }
+
+        // Integrate velocities, solve velocity constraints, and integrate positions.
+        if (m_stepComplete && step.dt > 0.0f)
+        {
+            auto timer = b2Timer();
+            Solve(step);
+            m_profile.solve = timer.GetMilliseconds();
+        }
+
+        // Handle TOI events.
+        if (m_continuousPhysics && step.dt > 0.0f)
+        {
+            auto timer = b2Timer();
+            SolveTOI(step);
+            m_profile.solveTOI = timer.GetMilliseconds();
+        }
+
+        if (step.dt > 0.0f)
+        {
+            m_inv_dt0 = step.inv_dt;
+        }
+
+        if (m_flags & e_clearForces)
+        {
+            ClearForces();
+        }
+
+        m_flags &= ~e_locked;
+
+        m_profile.step = stepTimer.GetMilliseconds();
+    }
+
+    /// Manually clear the force buffer on all bodies. By default, forces are cleared automatically
+    /// after each call to Step. The default behavior is modified by calling SetAutoClearForces.
+    /// The purpose of this function is to support sub-stepping. Sub-stepping is often used to maintain
+    /// a fixed sized time step under a variable frame-rate.
+    /// When you perform sub-stepping you will disable auto clearing of forces and instead call
+    /// ClearForces after all sub-steps are complete in one pass of your game loop.
+    /// @see SetAutoClearForces
+    void ClearForces()
+    {
+        for (b2Body* body_ = m_bodyList; body_; body_ = body_.GetNext())
+        {
+            body_.m_force.SetZero();
+            body_.m_torque = 0.0f;
+        }
+    }
+
+    /// Call this to draw shapes and other debug draw data. This is intentionally non-const.
+    void DrawDebugData()
+    {
+        if (g_debugDraw is null)
+        {
+            return;
+        }
+
+        uint32 flags = g_debugDraw.GetFlags();
+
+        if (flags & b2Draw.e_shapeBit)
+        {
+            for (b2Body* b = m_bodyList; b; b = b.GetNext())
+            {
+                b2Transform xf = b.GetTransform();
+
+                for (b2Fixture* f = b.GetFixtureList(); f; f = f.GetNext())
+                {
+                    if (b.IsActive() == false)
+                    {
+                        DrawShape(f, xf, b2Color(0.5f, 0.5f, 0.3f));
+                    }
+                    else if (b.GetType() == b2_staticBody)
+                    {
+                        DrawShape(f, xf, b2Color(0.5f, 0.9f, 0.5f));
+                    }
+                    else if (b.GetType() == b2_kinematicBody)
+                    {
+                        DrawShape(f, xf, b2Color(0.5f, 0.5f, 0.9f));
+                    }
+                    else if (b.IsAwake() == false)
+                    {
+                        DrawShape(f, xf, b2Color(0.6f, 0.6f, 0.6f));
+                    }
+                    else
+                    {
+                        DrawShape(f, xf, b2Color(0.9f, 0.7f, 0.7f));
+                    }
+                }
+            }
+        }
+
+        if (flags & b2Draw.e_jointBit)
+        {
+            for (b2Joint j = m_jointList; j; j = j.GetNext())
+            {
+                DrawJoint(j);
+            }
+        }
+
+        if (flags & b2Draw.e_pairBit)
+        {
+            b2Color color = b2Color(0.3f, 0.9f, 0.9f);
+
+            for (b2Contact c = m_contactManager.m_contactList; c; c = c.GetNext())
+            {
+                // b2Fixture* fixtureA = c.GetFixtureA();
+                // b2Fixture* fixtureB = c.GetFixtureB();
+
+                // b2Vec2 cA = fixtureA.GetAABB().GetCenter();
+                // b2Vec2 cB = fixtureB.GetAABB().GetCenter();
+
+                // g_debugDraw.DrawSegment(cA, cB, color);
+            }
+        }
+
+        if (flags & b2Draw.e_aabbBit)
+        {
+            b2Color color = b2Color(0.9f, 0.3f, 0.9f);
+            b2BroadPhase* bp = &m_contactManager.m_broadPhase;
+
+            for (b2Body* b = m_bodyList; b; b = b.GetNext())
+            {
+                if (b.IsActive() == false)
+                {
+                    continue;
+                }
+
+                for (b2Fixture* f = b.GetFixtureList(); f; f = f.GetNext())
+                {
+                    for (int32 i = 0; i < f.m_proxyCount; ++i)
+                    {
+                        b2FixtureProxy* proxy = f.m_proxies + i;
+                        b2AABB aabb = bp.GetFatAABB(proxy.proxyId);
+                        b2Vec2 vs[4];
+                        vs[0].Set(aabb.lowerBound.x, aabb.lowerBound.y);
+                        vs[1].Set(aabb.upperBound.x, aabb.lowerBound.y);
+                        vs[2].Set(aabb.upperBound.x, aabb.upperBound.y);
+                        vs[3].Set(aabb.lowerBound.x, aabb.upperBound.y);
+
+                        g_debugDraw.DrawPolygon(vs.ptr, 4, color);
+                    }
+                }
+            }
+        }
+
+        if (flags & b2Draw.e_centerOfMassBit)
+        {
+            for (b2Body* b = m_bodyList; b; b = b.GetNext())
+            {
+                b2Transform xf = b.GetTransform();
+                xf.p = b.GetWorldCenter();
+                g_debugDraw.DrawTransform(xf);
+            }
+        }
+    }
+
+    /// Query the world for all fixtures that potentially overlap the
+    /// provided AABB.
+    /// @param callback a user implemented callback class.
+    /// @param aabb the query box.
+    void QueryAABB(b2QueryCallback callback, b2AABB aabb) const
+    {
+        b2WorldQueryWrapper wrapper;
+        wrapper.broadPhase = cast(b2BroadPhase*)&m_contactManager.m_broadPhase;
+        wrapper.callback   = callback;
+        m_contactManager.m_broadPhase.Query(wrapper, aabb);
+    }
+
+    /// Ray-cast the world for all fixtures in the path of the ray. Your callback
+    /// controls whether you get the closest point, any point, or n-points.
+    /// The ray-cast ignores shapes that contain the starting point.
+    /// @param callback a user implemented callback class.
+    /// @param point1 the ray starting point
+    /// @param point2 the ray ending point
+    void RayCast(b2RayCastCallback callback, b2Vec2 point1, b2Vec2 point2) const
+    {
+        b2WorldRayCastWrapper wrapper;
+        wrapper.broadPhase = cast(b2BroadPhase*)&m_contactManager.m_broadPhase;
+        wrapper.callback   = callback;
+        b2RayCastInput input;
+        input.maxFraction = 1.0f;
+        input.p1 = point1;
+        input.p2 = point2;
+        m_contactManager.m_broadPhase.RayCast(wrapper, input);
+    }
+
+    /// Get the world body list. With the returned body, use b2Body::GetNext to get
+    /// the next body in the world list. A NULL body indicates the end of the list.
+    /// @return the head of the world body list.
+    inout(b2Body*) GetBodyList() inout
+    {
+        return m_bodyList;
+    }
+
+    /// Get the world joint list. With the returned joint, use b2Joint::GetNext to get
+    /// the next joint in the world list. A NULL joint indicates the end of the list.
+    /// @return the head of the world joint list.
+    inout(b2Joint) GetJointList() inout
+    {
+        return m_jointList;
+    }
+
+    /// Get the world contact list. With the returned contact, use b2Contact::GetNext to get
+    /// the next contact in the world list. A NULL contact indicates the end of the list.
+    /// @return the head of the world contact list.
+    /// @warning contacts are created and destroyed in the middle of a time step.
+    /// Use b2ContactListener to avoid missing contacts.
+    inout(b2Contact) GetContactList() inout
+    {
+        return m_contactManager.m_contactList;
+    }
+
+    /// Check whether sleeping is allowed.
+    bool GetAllowSleeping() const
+    {
+        return m_allowSleep;
+    }
+
+    /// Enable or disable sleep.
     void SetAllowSleeping(bool flag)
     {
         if (flag == m_allowSleep)
@@ -504,6 +635,295 @@ struct b2World
                 b.SetAwake(true);
             }
         }
+    }
+
+    /// Check whether warm starting is enabled.
+    bool GetWarmStarting() const
+    {
+        return m_warmStarting;
+    }
+
+    /// Enable/disable warm starting. For testing.
+    void SetWarmStarting(bool flag)
+    {
+        m_warmStarting = flag;
+    }
+
+    /// Check whether continuous physics is enabled.
+    bool GetContinuousPhysics() const
+    {
+        return m_continuousPhysics;
+    }
+
+    /// Enable/disable continuous physics. For testing.
+    void SetContinuousPhysics(bool flag)
+    {
+        m_continuousPhysics = flag;
+    }
+
+    /// Check whether sub-stepping is enabled.
+    bool GetSubStepping() const
+    {
+        return m_subStepping;
+    }
+
+    /// Enable/disable single stepped continuous physics. For testing.
+    void SetSubStepping(bool flag)
+    {
+        m_subStepping = flag;
+    }
+
+    /// Get the number of broad-phase proxies.
+    int32 GetProxyCount() const
+    {
+        return m_contactManager.m_broadPhase.GetProxyCount();
+    }
+
+    /// Get the number of bodies.
+    int32 GetBodyCount() const
+    {
+        return m_bodyCount;
+    }
+
+    /// Get the number of joints.
+    int32 GetJointCount() const
+    {
+        return m_jointCount;
+    }
+
+    /// Get the number of contacts (each may have 0 or more contact points).
+    int32 GetContactCount() const
+    {
+        return m_contactManager.m_contactCount;
+    }
+
+    /// Get the height of the dynamic tree.
+    int32 GetTreeHeight() const
+    {
+        return m_contactManager.m_broadPhase.GetTreeHeight();
+    }
+
+    /// Get the balance of the dynamic tree.
+    int32 GetTreeBalance() const
+    {
+        return m_contactManager.m_broadPhase.GetTreeBalance();
+    }
+
+    /// Get the balance of the dynamic tree.
+    float32 GetTreeQuality() const
+    {
+        return m_contactManager.m_broadPhase.GetTreeQuality();
+    }
+
+    /// Get the global gravity vector.
+    b2Vec2 GetGravity() const
+    {
+        return m_gravity;
+    }
+
+    /// Change the global gravity vector.
+    void SetGravity(b2Vec2 gravity)
+    {
+        m_gravity = gravity;
+    }
+
+    /// Is the world locked (in the middle of a time step).
+    bool IsLocked() const
+    {
+        return (m_flags & e_locked) == e_locked;
+    }
+
+    /// Get the flag that controls automatic clearing of forces after each time step.
+    bool GetAutoClearForces() const
+    {
+        return (m_flags & e_clearForces) == e_clearForces;
+    }
+
+    /// Set flag to control automatic clearing of forces after each time step.
+    void SetAutoClearForces(bool flag)
+    {
+        if (flag)
+        {
+            m_flags |= e_clearForces;
+        }
+        else
+        {
+            m_flags &= ~e_clearForces;
+        }
+    }
+
+    /// Shift the world origin. Useful for large worlds.
+    /// The body shift formula is: position -= newOrigin
+    /// @param newOrigin the new origin with respect to the old origin
+    void ShiftOrigin(b2Vec2 newOrigin)
+    {
+        assert((m_flags & e_locked) == 0);
+
+        if ((m_flags & e_locked) == e_locked)
+        {
+            return;
+        }
+
+        for (b2Body* b = m_bodyList; b; b = b.m_next)
+        {
+            b.m_xf.p     -= newOrigin;
+            b.m_sweep.c0 -= newOrigin;
+            b.m_sweep.c  -= newOrigin;
+        }
+
+        for (b2Joint j = m_jointList; j; j = j.m_next)
+        {
+            j.ShiftOrigin(newOrigin);
+        }
+
+        m_contactManager.m_broadPhase.ShiftOrigin(newOrigin);
+    }
+
+    /// Get the contact manager for testing.
+    b2ContactManager* GetContactManager() const
+    {
+        return cast(b2ContactManager*)&m_contactManager;
+    }
+
+    /// Get the current profile.
+    b2Profile GetProfile() const
+    {
+        return m_profile;
+    }
+
+    /// Dump the world into the log file.
+    /// Warning: this should be called outside of a time step.
+    void Dump()
+    {
+        if ((m_flags & e_locked) == e_locked)
+        {
+            return;
+        }
+
+        b2Log("b2Vec2 g(%.15lef, %.15lef);\n", m_gravity.x, m_gravity.y);
+        b2Log("m_world.SetGravity(g);\n");
+
+        b2Log("b2Body** bodies = cast(b2Body**)b2Alloc(%d * (b2Body*).sizeof);\n", m_bodyCount);
+        b2Log("b2Joint joints = cast(b2Joint)b2Alloc(%d * (b2Joint).sizeof);\n", m_jointCount);
+        int32 i = 0;
+
+        for (b2Body* b = m_bodyList; b; b = b.m_next)
+        {
+            b.m_islandIndex = i;
+            b.Dump();
+            ++i;
+        }
+
+        i = 0;
+
+        for (b2Joint j = m_jointList; j; j = j.m_next)
+        {
+            j.m_index = i;
+            ++i;
+        }
+
+        // First pass on joints, skip gear joints.
+        for (b2Joint j = m_jointList; j; j = j.m_next)
+        {
+            if (j.m_type == e_gearJoint)
+            {
+                continue;
+            }
+
+            b2Log("{\n");
+            j.Dump();
+            b2Log("}\n");
+        }
+
+        // Second pass on joints, only gear joints.
+        for (b2Joint j = m_jointList; j; j = j.m_next)
+        {
+            if (j.m_type != e_gearJoint)
+            {
+                continue;
+            }
+
+            b2Log("{\n");
+            j.Dump();
+            b2Log("}\n");
+        }
+
+        b2Log("b2Free(joints);\n");
+        b2Log("b2Free(bodies);\n");
+        b2Log("joints = null;\n");
+        b2Log("bodies = null;\n");
+    }
+
+// note: this should be package but D's access implementation is lacking.
+// do not use in user code.
+/* package: */
+public:
+
+    /// Explicit constructor.
+    /// Construct a world object.
+    /// @param gravity the world gravity vector.
+    this(b2Vec2 gravity)
+    {
+        m_destructionListener = null;
+        g_debugDraw = null;
+
+        m_bodyList  = null;
+        m_jointList = null;
+
+        m_bodyCount  = 0;
+        m_jointCount = 0;
+
+        m_warmStarting      = true;
+        m_continuousPhysics = true;
+        m_subStepping       = false;
+
+        m_stepComplete = true;
+
+        m_allowSleep = true;
+        m_gravity    = gravity;
+
+        m_flags = e_clearForces;
+
+        m_inv_dt0 = 0.0f;
+
+        m_blockAllocator = b2BlockAllocator(1);
+
+        m_contactManager = b2ContactManager(1);
+        m_contactManager.m_allocator = &m_blockAllocator;
+
+        memset(&m_profile, 0, b2memSizeOf!b2Profile);
+    }
+
+    /// Destroy the world. All physics entities are destroyed and all heap memory is released.
+    ~this()
+    {
+        // Some shapes allocate using b2Alloc.
+        b2Body* b = m_bodyList;
+
+        while (b)
+        {
+            b2Body* bNext = b.m_next;
+
+            b2Fixture* f = b.m_fixtureList;
+
+            while (f)
+            {
+                b2Fixture* fNext = f.m_next;
+                f.m_proxyCount = 0;
+                f.Destroy(&m_blockAllocator);
+                f = fNext;
+            }
+
+            b = bNext;
+        }
+    }
+
+    // m_flags
+    enum
+    {
+        e_newFixture = 0x0001,
+        e_locked      = 0x0002,
+        e_clearForces = 0x0004
     }
 
     // Find islands, integrate and solve constraints, solve position constraints
@@ -1031,139 +1451,46 @@ struct b2World
         }
     }
 
-    void Step(float32 dt, int32 velocityIterations, int32 positionIterations)
+    void DrawJoint(b2Joint joint)
     {
-        auto stepTimer = b2Timer();
+        b2Body* body_A = joint.Getbody_A();
+        b2Body* body_B = joint.Getbody_B();
+        b2Transform xf1 = body_A.GetTransform();
+        b2Transform xf2 = body_B.GetTransform();
+        b2Vec2 x1 = xf1.p;
+        b2Vec2 x2 = xf2.p;
+        b2Vec2 p1 = joint.GetAnchorA();
+        b2Vec2 p2 = joint.GetAnchorB();
 
-        // If new fixtures were added, we need to find the new contacts.
-        if (m_flags & e_newFixture)
+        b2Color color = b2Color(0.5f, 0.8f, 0.8f);
+
+        switch (joint.GetType())
         {
-            m_contactManager.FindNewContacts();
-            m_flags &= ~e_newFixture;
-        }
+            case e_distanceJoint:
+                g_debugDraw.DrawSegment(p1, p2, color);
+                break;
 
-        m_flags |= e_locked;
-
-        b2TimeStep step;
-        step.dt = dt;
-        step.velocityIterations = velocityIterations;
-        step.positionIterations = positionIterations;
-
-        if (dt > 0.0f)
-        {
-            step.inv_dt = 1.0f / dt;
-        }
-        else
-        {
-            step.inv_dt = 0.0f;
-        }
-
-        step.dtRatio = m_inv_dt0 * dt;
-
-        step.warmStarting = m_warmStarting;
-
-        // Update contacts. This is where some contacts are destroyed.
-        {
-            auto timer = b2Timer();
-            m_contactManager.Collide();
-            m_profile.collide = timer.GetMilliseconds();
-        }
-
-        // Integrate velocities, solve velocity constraints, and integrate positions.
-        if (m_stepComplete && step.dt > 0.0f)
-        {
-            auto timer = b2Timer();
-            Solve(step);
-            m_profile.solve = timer.GetMilliseconds();
-        }
-
-        // Handle TOI events.
-        if (m_continuousPhysics && step.dt > 0.0f)
-        {
-            auto timer = b2Timer();
-            SolveTOI(step);
-            m_profile.solveTOI = timer.GetMilliseconds();
-        }
-
-        if (step.dt > 0.0f)
-        {
-            m_inv_dt0 = step.inv_dt;
-        }
-
-        if (m_flags & e_clearForces)
-        {
-            ClearForces();
-        }
-
-        m_flags &= ~e_locked;
-
-        m_profile.step = stepTimer.GetMilliseconds();
-    }
-
-    void ClearForces()
-    {
-        for (b2Body* body_ = m_bodyList; body_; body_ = body_.GetNext())
-        {
-            body_.m_force.SetZero();
-            body_.m_torque = 0.0f;
-        }
-    }
-
-    struct b2WorldQueryWrapper
-    {
-        bool QueryCallback(int32 proxyId)
-        {
-            b2FixtureProxy* proxy = cast(b2FixtureProxy*)broadPhase.GetUserData(proxyId);
-            return callback.ReportFixture(proxy.fixture);
-        }
-
-        b2BroadPhase* broadPhase;
-        b2QueryCallback callback;
-    }
-
-    void QueryAABB(b2QueryCallback callback, b2AABB aabb) const
-    {
-        b2WorldQueryWrapper wrapper;
-        wrapper.broadPhase = cast(b2BroadPhase*)&m_contactManager.m_broadPhase;
-        wrapper.callback   = callback;
-        m_contactManager.m_broadPhase.Query(wrapper, aabb);
-    }
-
-    struct b2WorldRayCastWrapper
-    {
-        float32 RayCastCallback(b2RayCastInput input, int32 proxyId)
-        {
-            void* userData        = broadPhase.GetUserData(proxyId);
-            b2FixtureProxy* proxy = cast(b2FixtureProxy*)userData;
-            b2Fixture* fixture    = proxy.fixture;
-            int32 index = proxy.childIndex;
-            b2RayCastOutput output;
-            bool hit = fixture.RayCast(&output, input, index);
-
-            if (hit)
+            case e_pulleyJoint:
             {
-                float32 fraction = output.fraction;
-                b2Vec2  point    = (1.0f - fraction) * input.p1 + fraction * input.p2;
-                return callback.ReportFixture(fixture, point, output.normal, fraction);
+                b2PulleyJoint pulley = cast(b2PulleyJoint)joint;
+                b2Vec2 s1 = pulley.GetGroundAnchorA();
+                b2Vec2 s2 = pulley.GetGroundAnchorB();
+                g_debugDraw.DrawSegment(s1, p1, color);
+                g_debugDraw.DrawSegment(s2, p2, color);
+                g_debugDraw.DrawSegment(s1, s2, color);
             }
+            break;
 
-            return input.maxFraction;
+            case e_mouseJoint:
+
+                // don't draw this
+                break;
+
+            default:
+                g_debugDraw.DrawSegment(x1, p1, color);
+                g_debugDraw.DrawSegment(p1, p2, color);
+                g_debugDraw.DrawSegment(x2, p2, color);
         }
-
-        b2BroadPhase* broadPhase;
-        b2RayCastCallback callback;
-    }
-
-    void RayCast(b2RayCastCallback callback, b2Vec2 point1, b2Vec2 point2) const
-    {
-        b2WorldRayCastWrapper wrapper;
-        wrapper.broadPhase = cast(b2BroadPhase*)&m_contactManager.m_broadPhase;
-        wrapper.callback   = callback;
-        b2RayCastInput input;
-        input.maxFraction = 1.0f;
-        input.p1 = point1;
-        input.p2 = point2;
-        m_contactManager.m_broadPhase.RayCast(wrapper, input);
     }
 
     void DrawShape(b2Fixture* fixture, b2Transform xf, b2Color color)
@@ -1230,313 +1557,12 @@ struct b2World
         }
     }
 
-    void DrawJoint(b2Joint joint)
-    {
-        b2Body* body_A = joint.Getbody_A();
-        b2Body* body_B = joint.Getbody_B();
-        b2Transform xf1 = body_A.GetTransform();
-        b2Transform xf2 = body_B.GetTransform();
-        b2Vec2 x1 = xf1.p;
-        b2Vec2 x2 = xf2.p;
-        b2Vec2 p1 = joint.GetAnchorA();
-        b2Vec2 p2 = joint.GetAnchorB();
-
-        b2Color color = b2Color(0.5f, 0.8f, 0.8f);
-
-        switch (joint.GetType())
-        {
-            case e_distanceJoint:
-                g_debugDraw.DrawSegment(p1, p2, color);
-                break;
-
-            case e_pulleyJoint:
-            {
-                b2PulleyJoint pulley = cast(b2PulleyJoint)joint;
-                b2Vec2 s1 = pulley.GetGroundAnchorA();
-                b2Vec2 s2 = pulley.GetGroundAnchorB();
-                g_debugDraw.DrawSegment(s1, p1, color);
-                g_debugDraw.DrawSegment(s2, p2, color);
-                g_debugDraw.DrawSegment(s1, s2, color);
-            }
-            break;
-
-            case e_mouseJoint:
-
-                // don't draw this
-                break;
-
-            default:
-                g_debugDraw.DrawSegment(x1, p1, color);
-                g_debugDraw.DrawSegment(p1, p2, color);
-                g_debugDraw.DrawSegment(x2, p2, color);
-        }
-    }
-
-    void DrawDebugData()
-    {
-        if (g_debugDraw is null)
-        {
-            return;
-        }
-
-        uint32 flags = g_debugDraw.GetFlags();
-
-        if (flags & b2Draw.e_shapeBit)
-        {
-            for (b2Body* b = m_bodyList; b; b = b.GetNext())
-            {
-                b2Transform xf = b.GetTransform();
-
-                for (b2Fixture* f = b.GetFixtureList(); f; f = f.GetNext())
-                {
-                    if (b.IsActive() == false)
-                    {
-                        DrawShape(f, xf, b2Color(0.5f, 0.5f, 0.3f));
-                    }
-                    else if (b.GetType() == b2_staticBody)
-                    {
-                        DrawShape(f, xf, b2Color(0.5f, 0.9f, 0.5f));
-                    }
-                    else if (b.GetType() == b2_kinematicBody)
-                    {
-                        DrawShape(f, xf, b2Color(0.5f, 0.5f, 0.9f));
-                    }
-                    else if (b.IsAwake() == false)
-                    {
-                        DrawShape(f, xf, b2Color(0.6f, 0.6f, 0.6f));
-                    }
-                    else
-                    {
-                        DrawShape(f, xf, b2Color(0.9f, 0.7f, 0.7f));
-                    }
-                }
-            }
-        }
-
-        if (flags & b2Draw.e_jointBit)
-        {
-            for (b2Joint j = m_jointList; j; j = j.GetNext())
-            {
-                DrawJoint(j);
-            }
-        }
-
-        if (flags & b2Draw.e_pairBit)
-        {
-            b2Color color = b2Color(0.3f, 0.9f, 0.9f);
-
-            for (b2Contact c = m_contactManager.m_contactList; c; c = c.GetNext())
-            {
-                // b2Fixture* fixtureA = c.GetFixtureA();
-                // b2Fixture* fixtureB = c.GetFixtureB();
-
-                // b2Vec2 cA = fixtureA.GetAABB().GetCenter();
-                // b2Vec2 cB = fixtureB.GetAABB().GetCenter();
-
-                // g_debugDraw.DrawSegment(cA, cB, color);
-            }
-        }
-
-        if (flags & b2Draw.e_aabbBit)
-        {
-            b2Color color = b2Color(0.9f, 0.3f, 0.9f);
-            b2BroadPhase* bp = &m_contactManager.m_broadPhase;
-
-            for (b2Body* b = m_bodyList; b; b = b.GetNext())
-            {
-                if (b.IsActive() == false)
-                {
-                    continue;
-                }
-
-                for (b2Fixture* f = b.GetFixtureList(); f; f = f.GetNext())
-                {
-                    for (int32 i = 0; i < f.m_proxyCount; ++i)
-                    {
-                        b2FixtureProxy* proxy = f.m_proxies + i;
-                        b2AABB aabb = bp.GetFatAABB(proxy.proxyId);
-                        b2Vec2 vs[4];
-                        vs[0].Set(aabb.lowerBound.x, aabb.lowerBound.y);
-                        vs[1].Set(aabb.upperBound.x, aabb.lowerBound.y);
-                        vs[2].Set(aabb.upperBound.x, aabb.upperBound.y);
-                        vs[3].Set(aabb.lowerBound.x, aabb.upperBound.y);
-
-                        g_debugDraw.DrawPolygon(vs.ptr, 4, color);
-                    }
-                }
-            }
-        }
-
-        if (flags & b2Draw.e_centerOfMassBit)
-        {
-            for (b2Body* b = m_bodyList; b; b = b.GetNext())
-            {
-                b2Transform xf = b.GetTransform();
-                xf.p = b.GetWorldCenter();
-                g_debugDraw.DrawTransform(xf);
-            }
-        }
-    }
-
-    int32 GetProxyCount() const
-    {
-        return m_contactManager.m_broadPhase.GetProxyCount();
-    }
-
-    int32 GetTreeHeight() const
-    {
-        return m_contactManager.m_broadPhase.GetTreeHeight();
-    }
-
-    int32 GetTreeBalance() const
-    {
-        return m_contactManager.m_broadPhase.GetTreeBalance();
-    }
-
-    float32 GetTreeQuality() const
-    {
-        return m_contactManager.m_broadPhase.GetTreeQuality();
-    }
-
-    void ShiftOrigin(b2Vec2 newOrigin)
-    {
-        assert((m_flags & e_locked) == 0);
-
-        if ((m_flags & e_locked) == e_locked)
-        {
-            return;
-        }
-
-        for (b2Body* b = m_bodyList; b; b = b.m_next)
-        {
-            b.m_xf.p     -= newOrigin;
-            b.m_sweep.c0 -= newOrigin;
-            b.m_sweep.c  -= newOrigin;
-        }
-
-        for (b2Joint j = m_jointList; j; j = j.m_next)
-        {
-            j.ShiftOrigin(newOrigin);
-        }
-
-        m_contactManager.m_broadPhase.ShiftOrigin(newOrigin);
-    }
-
-    void Dump()
-    {
-        if ((m_flags & e_locked) == e_locked)
-        {
-            return;
-        }
-
-        b2Log("b2Vec2 g(%.15lef, %.15lef);\n", m_gravity.x, m_gravity.y);
-        b2Log("m_world.SetGravity(g);\n");
-
-        b2Log("b2Body** bodies = cast(b2Body**)b2Alloc(%d * (b2Body*).sizeof);\n", m_bodyCount);
-        b2Log("b2Joint joints = cast(b2Joint)b2Alloc(%d * (b2Joint).sizeof);\n", m_jointCount);
-        int32 i = 0;
-
-        for (b2Body* b = m_bodyList; b; b = b.m_next)
-        {
-            b.m_islandIndex = i;
-            b.Dump();
-            ++i;
-        }
-
-        i = 0;
-
-        for (b2Joint j = m_jointList; j; j = j.m_next)
-        {
-            j.m_index = i;
-            ++i;
-        }
-
-        // First pass on joints, skip gear joints.
-        for (b2Joint j = m_jointList; j; j = j.m_next)
-        {
-            if (j.m_type == e_gearJoint)
-            {
-                continue;
-            }
-
-            b2Log("{\n");
-            j.Dump();
-            b2Log("}\n");
-        }
-
-        // Second pass on joints, only gear joints.
-        for (b2Joint j = m_jointList; j; j = j.m_next)
-        {
-            if (j.m_type != e_gearJoint)
-            {
-                continue;
-            }
-
-            b2Log("{\n");
-            j.Dump();
-            b2Log("}\n");
-        }
-
-        b2Log("b2Free(joints);\n");
-        b2Log("b2Free(bodies);\n");
-        b2Log("joints = null;\n");
-        b2Log("bodies = null;\n");
-    }
-
-    bool GetAllowSleeping() const
-    {
-        return m_allowSleep;
-    }
-
-    /// Enable/disable warm starting. For testing.
-    void SetWarmStarting(bool flag)
-    {
-        m_warmStarting = flag;
-    }
-
-    bool GetWarmStarting() const
-    {
-        return m_warmStarting;
-    }
-
-    /// Enable/disable continuous physics. For testing.
-    void SetContinuousPhysics(bool flag)
-    {
-        m_continuousPhysics = flag;
-    }
-
-    bool GetContinuousPhysics() const
-    {
-        return m_continuousPhysics;
-    }
-
-    /// Enable/disable single stepped continuous physics. For testing.
-    void SetSubStepping(bool flag)
-    {
-        m_subStepping = flag;
-    }
-
-    bool GetSubStepping() const
-    {
-        return m_subStepping;
-    }
-
-/* private */
-
-    // m_flags
-    enum
-    {
-        e_newFixture = 0x0001,
-        e_locked      = 0x0002,
-        e_clearForces = 0x0004
-    }
-
-    public b2BlockAllocator m_blockAllocator;
-    public b2StackAllocator m_stackAllocator;
+    b2BlockAllocator m_blockAllocator;
+    b2StackAllocator m_stackAllocator;
 
     int32 m_flags;
 
-    public b2ContactManager m_contactManager;
+    b2ContactManager m_contactManager;
 
     b2Body* m_bodyList;
     b2Joint m_jointList;
@@ -1564,20 +1590,39 @@ struct b2World
     b2Profile m_profile;
 }
 
-import dbox.dynamics.b2world;
-import dbox.dynamics.b2body;
-import dbox.dynamics.b2fixture;
-import dbox.dynamics.b2island;
-import dbox.dynamics.joints.b2pulleyjoint;
-import dbox.dynamics.contacts.b2contact;
-import dbox.dynamics.contacts.b2contactsolver;
-import dbox.collision.b2collision;
-import dbox.collision.b2broadphase;
-import dbox.collision.shapes.b2circleshape;
-import dbox.collision.shapes.b2edgeshape;
-import dbox.collision.shapes.b2chainshape;
-import dbox.collision.shapes.b2polygonshape;
-import dbox.collision.b2timeofimpact;
-import dbox.common.b2draw;
-import dbox.common.b2timer;
+struct b2WorldQueryWrapper
+{
+    bool QueryCallback(int32 proxyId)
+    {
+        b2FixtureProxy* proxy = cast(b2FixtureProxy*)broadPhase.GetUserData(proxyId);
+        return callback.ReportFixture(proxy.fixture);
+    }
 
+    b2BroadPhase* broadPhase;
+    b2QueryCallback callback;
+}
+
+struct b2WorldRayCastWrapper
+{
+    float32 RayCastCallback(b2RayCastInput input, int32 proxyId)
+    {
+        void* userData        = broadPhase.GetUserData(proxyId);
+        b2FixtureProxy* proxy = cast(b2FixtureProxy*)userData;
+        b2Fixture* fixture    = proxy.fixture;
+        int32 index = proxy.childIndex;
+        b2RayCastOutput output;
+        bool hit = fixture.RayCast(&output, input, index);
+
+        if (hit)
+        {
+            float32 fraction = output.fraction;
+            b2Vec2  point    = (1.0f - fraction) * input.p1 + fraction * input.p2;
+            return callback.ReportFixture(fixture, point, output.normal, fraction);
+        }
+
+        return input.maxFraction;
+    }
+
+    b2BroadPhase* broadPhase;
+    b2RayCastCallback callback;
+}
