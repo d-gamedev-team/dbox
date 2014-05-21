@@ -45,10 +45,10 @@ class b2RopeJointDef : b2JointDef
         maxLength = 0.0f;
     }
 
-    /// The local anchor point relative to body_A's origin.
+    /// The local anchor point relative to bodyA's origin.
     b2Vec2 localAnchorA;
 
-    /// The local anchor point relative to body_B's origin.
+    /// The local anchor point relative to bodyB's origin.
     b2Vec2 localAnchorB;
 
     /// The maximum length of the rope.
@@ -273,8 +273,8 @@ class b2RopeJoint : b2Joint
         int32 indexB = m_bodyB.m_islandIndex;
 
         b2Log("  b2RopeJointDef jd;\n");
-        b2Log("  jd.body_A = bodies[%d];\n", indexA);
-        b2Log("  jd.body_B = bodies[%d];\n", indexB);
+        b2Log("  jd.bodyA = bodies[%d];\n", indexA);
+        b2Log("  jd.bodyB = bodies[%d];\n", indexB);
         b2Log("  jd.collideConnected = bool(%d);\n", m_collideConnected);
         b2Log("  jd.localAnchorA.Set(%.15lef, %.15lef);\n", m_localAnchorA.x, m_localAnchorA.y);
         b2Log("  jd.localAnchorB.Set(%.15lef, %.15lef);\n", m_localAnchorB.x, m_localAnchorB.y);
@@ -282,13 +282,13 @@ class b2RopeJoint : b2Joint
         b2Log("  joints[%d] = m_world.CreateJoint(&jd);\n", m_index);
     }
 
-    /// The local anchor point relative to body_A's origin.
+    /// The local anchor point relative to bodyA's origin.
     b2Vec2 GetLocalAnchorA() const
     {
         return m_localAnchorA;
     }
 
-    /// The local anchor point relative to body_B's origin.
+    /// The local anchor point relative to bodyB's origin.
     b2Vec2 GetLocalAnchorB() const
     {
         return m_localAnchorB;

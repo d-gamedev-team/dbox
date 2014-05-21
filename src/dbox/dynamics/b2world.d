@@ -234,17 +234,17 @@ struct b2World
             j.m_bodyB.m_jointList.prev = &j.m_edgeB;
         j.m_bodyB.m_jointList = &j.m_edgeB;
 
-        b2Body* body_A = cast(b2Body*)def.body_A;
-        b2Body* body_B = cast(b2Body*)def.body_B;
+        b2Body* bodyA = cast(b2Body*)def.bodyA;
+        b2Body* bodyB = cast(b2Body*)def.bodyB;
 
         // If the joint prevents collisions, then flag any contacts for filtering.
         if (def.collideConnected == false)
         {
-            b2ContactEdge* edge = body_B.GetContactList();
+            b2ContactEdge* edge = bodyB.GetContactList();
 
             while (edge)
             {
-                if (edge.other == body_A)
+                if (edge.other == bodyA)
                 {
                     // Flag the contact for filtering at the next time step (where either
                     // body is awake).
@@ -290,12 +290,12 @@ struct b2World
         }
 
         // Disconnect from island graph.
-        b2Body* body_A = j.m_bodyA;
-        b2Body* body_B = j.m_bodyB;
+        b2Body* bodyA = j.m_bodyA;
+        b2Body* bodyB = j.m_bodyB;
 
         // Wake up connected bodies.
-        body_A.SetAwake(true);
-        body_B.SetAwake(true);
+        bodyA.SetAwake(true);
+        bodyB.SetAwake(true);
 
         // Remove from body 1.
         if (j.m_edgeA.prev)
@@ -308,9 +308,9 @@ struct b2World
             j.m_edgeA.next.prev = j.m_edgeA.prev;
         }
 
-        if (&j.m_edgeA == body_A.m_jointList)
+        if (&j.m_edgeA == bodyA.m_jointList)
         {
-            body_A.m_jointList = j.m_edgeA.next;
+            bodyA.m_jointList = j.m_edgeA.next;
         }
 
         j.m_edgeA.prev = null;
@@ -327,9 +327,9 @@ struct b2World
             j.m_edgeB.next.prev = j.m_edgeB.prev;
         }
 
-        if (&j.m_edgeB == body_B.m_jointList)
+        if (&j.m_edgeB == bodyB.m_jointList)
         {
-            body_B.m_jointList = j.m_edgeB.next;
+            bodyB.m_jointList = j.m_edgeB.next;
         }
 
         j.m_edgeB.prev = null;
@@ -343,11 +343,11 @@ struct b2World
         // If the joint prevents collisions, then flag any contacts for filtering.
         if (collideConnected == false)
         {
-            b2ContactEdge* edge = body_B.GetContactList();
+            b2ContactEdge* edge = bodyB.GetContactList();
 
             while (edge)
             {
-                if (edge.other == body_A)
+                if (edge.other == bodyA)
                 {
                     // Flag the contact for filtering at the next time step (where either
                     // body is awake).
@@ -1313,7 +1313,7 @@ public:
             bB.m_flags         |= b2Body.e_islandFlag;
             minContact.m_flags |= b2Contact.e_islandFlag;
 
-            // Get contacts on body_A and body_B.
+            // Get contacts on bodyA and bodyB.
             b2Body* bodies[2] = [bA, bB];
 
             for (int32 i = 0; i < 2; ++i)
@@ -1453,10 +1453,10 @@ public:
 
     void DrawJoint(b2Joint joint)
     {
-        b2Body* body_A = joint.GetBodyA();
-        b2Body* body_B = joint.GetBodyB();
-        b2Transform xf1 = body_A.GetTransform();
-        b2Transform xf2 = body_B.GetTransform();
+        b2Body* bodyA = joint.GetBodyA();
+        b2Body* bodyB = joint.GetBodyB();
+        b2Transform xf1 = bodyA.GetTransform();
+        b2Transform xf2 = bodyB.GetTransform();
         b2Vec2 x1 = xf1.p;
         b2Vec2 x2 = xf2.p;
         b2Vec2 p1 = joint.GetAnchorA();

@@ -82,12 +82,12 @@ class b2Contact
     /// Get the world manifold.
     void GetWorldManifold(b2WorldManifold* worldManifold) const
     {
-        const(b2Body*) body_A  = m_fixtureA.GetBody();
-        const(b2Body*) body_B  = m_fixtureB.GetBody();
+        const(b2Body*) bodyA  = m_fixtureA.GetBody();
+        const(b2Body*) bodyB  = m_fixtureB.GetBody();
         const(b2Shape) shapeA = m_fixtureA.GetShape();
         const(b2Shape) shapeB = m_fixtureB.GetShape();
 
-        worldManifold.Initialize(&m_manifold, body_A.GetTransform(), shapeA.m_radius, body_B.GetTransform(), shapeB.m_radius);
+        worldManifold.Initialize(&m_manifold, bodyA.GetTransform(), shapeA.m_radius, bodyB.GetTransform(), shapeB.m_radius);
     }
 
     /// Is this contact touching?
@@ -281,10 +281,10 @@ public:
         bool sensorB = m_fixtureB.IsSensor();
         bool sensor  = sensorA || sensorB;
 
-        b2Body* body_A = m_fixtureA.GetBody();
-        b2Body* body_B = m_fixtureB.GetBody();
-        b2Transform xfA = body_A.GetTransform();
-        b2Transform xfB = body_B.GetTransform();
+        b2Body* bodyA = m_fixtureA.GetBody();
+        b2Body* bodyB = m_fixtureB.GetBody();
+        b2Transform xfA = bodyA.GetTransform();
+        b2Transform xfB = bodyB.GetTransform();
 
         // Is this contact a sensor?
         if (sensor)
@@ -325,8 +325,8 @@ public:
 
             if (touching != wasTouching)
             {
-                body_A.SetAwake(true);
-                body_B.SetAwake(true);
+                bodyA.SetAwake(true);
+                bodyB.SetAwake(true);
             }
         }
 

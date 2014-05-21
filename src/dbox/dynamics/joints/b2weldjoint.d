@@ -64,20 +64,20 @@ class b2WeldJointDef : b2JointDef
 
     void Initialize(b2Body* bA, b2Body* bB, b2Vec2 anchor)
     {
-        body_A          = bA;
-        body_B          = bB;
-        localAnchorA   = body_A.GetLocalPoint(anchor);
-        localAnchorB   = body_B.GetLocalPoint(anchor);
-        referenceAngle = body_B.GetAngle() - body_A.GetAngle();
+        bodyA          = bA;
+        bodyB          = bB;
+        localAnchorA   = bodyA.GetLocalPoint(anchor);
+        localAnchorB   = bodyB.GetLocalPoint(anchor);
+        referenceAngle = bodyB.GetAngle() - bodyA.GetAngle();
     }
 
-    /// The local anchor point relative to body_A's origin.
+    /// The local anchor point relative to bodyA's origin.
     b2Vec2 localAnchorA;
 
-    /// The local anchor point relative to body_B's origin.
+    /// The local anchor point relative to bodyB's origin.
     b2Vec2 localAnchorB;
 
-    /// The body_B angle minus body_A angle in the reference state (radians).
+    /// The bodyB angle minus bodyA angle in the reference state (radians).
     float32 referenceAngle = 0;
 
     /// The mass-spring-damper frequency in Hertz. Rotation only.
@@ -384,8 +384,8 @@ class b2WeldJoint : b2Joint
         int32 indexB = m_bodyB.m_islandIndex;
 
         b2Log("  b2WeldJointDef jd;\n");
-        b2Log("  jd.body_A = bodies[%d];\n", indexA);
-        b2Log("  jd.body_B = bodies[%d];\n", indexB);
+        b2Log("  jd.bodyA = bodies[%d];\n", indexA);
+        b2Log("  jd.bodyB = bodies[%d];\n", indexB);
         b2Log("  jd.collideConnected = bool(%d);\n", m_collideConnected);
         b2Log("  jd.localAnchorA.Set(%.15lef, %.15lef);\n", m_localAnchorA.x, m_localAnchorA.y);
         b2Log("  jd.localAnchorB.Set(%.15lef, %.15lef);\n", m_localAnchorB.x, m_localAnchorB.y);
@@ -395,13 +395,13 @@ class b2WeldJoint : b2Joint
         b2Log("  joints[%d] = m_world.CreateJoint(&jd);\n", m_index);
     }
 
-    /// The local anchor point relative to body_A's origin.
+    /// The local anchor point relative to bodyA's origin.
     b2Vec2 GetLocalAnchorA() const
     {
         return m_localAnchorA;
     }
 
-    /// The local anchor point relative to body_B's origin.
+    /// The local anchor point relative to bodyB's origin.
     b2Vec2 GetLocalAnchorB() const
     {
         return m_localAnchorB;

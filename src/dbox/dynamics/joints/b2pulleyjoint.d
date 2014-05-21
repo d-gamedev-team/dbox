@@ -55,12 +55,12 @@ class b2PulleyJointDef : b2JointDef
                                       b2Vec2 anchorA, b2Vec2 anchorB,
                                       float32 r)
     {
-        body_A         = bA;
-        body_B         = bB;
+        bodyA         = bA;
+        bodyB         = bB;
         groundAnchorA = groundA;
         groundAnchorB = groundB;
-        localAnchorA  = body_A.GetLocalPoint(anchorA);
-        localAnchorB  = body_B.GetLocalPoint(anchorB);
+        localAnchorA  = bodyA.GetLocalPoint(anchorA);
+        localAnchorB  = bodyB.GetLocalPoint(anchorB);
         b2Vec2 dA = anchorA - groundA;
         lengthA = dA.Length();
         b2Vec2 dB = anchorB - groundB;
@@ -70,7 +70,7 @@ class b2PulleyJointDef : b2JointDef
     }
 
     /// Initialize the bodies, anchors, lengths, max lengths, and ratio using the world anchors.
-    void Initialize(b2Body* body_A, b2Body* body_B,
+    void Initialize(b2Body* bodyA, b2Body* bodyB,
                     b2Vec2 groundAnchorA, b2Vec2 groundAnchorB,
                     b2Vec2 anchorA, b2Vec2 anchorB,
                     float32 ratio);
@@ -81,16 +81,16 @@ class b2PulleyJointDef : b2JointDef
     /// The second ground anchor in world coordinates. This point never moves.
     b2Vec2 groundAnchorB;
 
-    /// The local anchor point relative to body_A's origin.
+    /// The local anchor point relative to bodyA's origin.
     b2Vec2 localAnchorA;
 
-    /// The local anchor point relative to body_B's origin.
+    /// The local anchor point relative to bodyB's origin.
     b2Vec2 localAnchorB;
 
-    /// The a reference length for the segment attached to body_A.
+    /// The a reference length for the segment attached to bodyA.
     float32 lengthA = 0;
 
-    /// The a reference length for the segment attached to body_B.
+    /// The a reference length for the segment attached to bodyB.
     float32 lengthB = 0;
 
     /// The pulley ratio, used to simulate a block-and-tackle.
@@ -386,8 +386,8 @@ class b2PulleyJoint : b2Joint
         int32 indexB = m_bodyB.m_islandIndex;
 
         b2Log("  b2PulleyJointDef jd;\n");
-        b2Log("  jd.body_A = bodies[%d];\n", indexA);
-        b2Log("  jd.body_B = bodies[%d];\n", indexB);
+        b2Log("  jd.bodyA = bodies[%d];\n", indexA);
+        b2Log("  jd.bodyB = bodies[%d];\n", indexB);
         b2Log("  jd.collideConnected = bool(%d);\n", m_collideConnected);
         b2Log("  jd.groundAnchorA.Set(%.15lef, %.15lef);\n", m_groundAnchorA.x, m_groundAnchorA.y);
         b2Log("  jd.groundAnchorB.Set(%.15lef, %.15lef);\n", m_groundAnchorB.x, m_groundAnchorB.y);

@@ -54,16 +54,16 @@ class b2FrictionJointDef : b2JointDef
     /// anchor and world axis.
     void Initialize(b2Body* bA, b2Body* bB, b2Vec2 anchor)
     {
-        body_A        = bA;
-        body_B        = bB;
-        localAnchorA = body_A.GetLocalPoint(anchor);
-        localAnchorB = body_B.GetLocalPoint(anchor);
+        bodyA        = bA;
+        bodyB        = bB;
+        localAnchorA = bodyA.GetLocalPoint(anchor);
+        localAnchorB = bodyB.GetLocalPoint(anchor);
     }
 
-    /// The local anchor point relative to body_A's origin.
+    /// The local anchor point relative to bodyA's origin.
     b2Vec2 localAnchorA;
 
-    /// The local anchor point relative to body_B's origin.
+    /// The local anchor point relative to bodyB's origin.
     b2Vec2 localAnchorB;
 
     /// The maximum friction force in N.
@@ -115,13 +115,13 @@ class b2FrictionJoint : b2Joint
         return inv_dt * m_angularImpulse;
     }
 
-    /// The local anchor point relative to body_A's origin.
+    /// The local anchor point relative to bodyA's origin.
     b2Vec2 GetLocalAnchorA() const
     {
         return m_localAnchorA;
     }
 
-    /// The local anchor point relative to body_B's origin.
+    /// The local anchor point relative to bodyB's origin.
     b2Vec2 GetLocalAnchorB() const
     {
         return m_localAnchorB;
@@ -160,8 +160,8 @@ class b2FrictionJoint : b2Joint
         int32 indexB = m_bodyB.m_islandIndex;
 
         b2Log("  b2FrictionJointDef jd;\n");
-        b2Log("  jd.body_A = bodies[%d];\n", indexA);
-        b2Log("  jd.body_B = bodies[%d];\n", indexB);
+        b2Log("  jd.bodyA = bodies[%d];\n", indexA);
+        b2Log("  jd.bodyB = bodies[%d];\n", indexB);
         b2Log("  jd.collideConnected = bool(%d);\n", m_collideConnected);
         b2Log("  jd.localAnchorA.Set(%.15lef, %.15lef);\n", m_localAnchorA.x, m_localAnchorA.y);
         b2Log("  jd.localAnchorB.Set(%.15lef, %.15lef);\n", m_localAnchorB.x, m_localAnchorB.y);

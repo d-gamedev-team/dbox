@@ -45,23 +45,23 @@ class b2MotorJointDef : b2JointDef
 
     void Initialize(b2Body* bA, b2Body* bB)
     {
-        body_A = bA;
-        body_B = bB;
-        b2Vec2 xB = body_B.GetPosition();
-        linearOffset = body_A.GetLocalPoint(xB);
+        bodyA = bA;
+        bodyB = bB;
+        b2Vec2 xB = bodyB.GetPosition();
+        linearOffset = bodyA.GetLocalPoint(xB);
 
-        float32 angleA = body_A.GetAngle();
-        float32 angleB = body_B.GetAngle();
+        float32 angleA = bodyA.GetAngle();
+        float32 angleB = bodyB.GetAngle();
         angularOffset = angleB - angleA;
     }
 
     /// Initialize the bodies and offsets using the current transforms.
-    void Initialize(b2Body* body_A, b2Body* body_B);
+    void Initialize(b2Body* bodyA, b2Body* bodyB);
 
-    /// Position of body_B minus the position of body_A, in body_A's frame, in meters.
+    /// Position of bodyB minus the position of bodyA, in bodyA's frame, in meters.
     b2Vec2 linearOffset;
 
-    /// The body_B angle minus body_A angle in radians.
+    /// The bodyB angle minus bodyA angle in radians.
     float32 angularOffset = 0;
 
     /// The maximum motor force in N.
@@ -330,8 +330,8 @@ class b2MotorJoint : b2Joint
         int32 indexB = m_bodyB.m_islandIndex;
 
         b2Log("  b2MotorJointDef jd;\n");
-        b2Log("  jd.body_A = bodies[%d];\n", indexA);
-        b2Log("  jd.body_B = bodies[%d];\n", indexB);
+        b2Log("  jd.bodyA = bodies[%d];\n", indexA);
+        b2Log("  jd.bodyB = bodies[%d];\n", indexB);
         b2Log("  jd.collideConnected = bool(%d);\n", m_collideConnected);
         b2Log("  jd.linearOffset.Set(%.15lef, %.15lef);\n", m_linearOffset.x, m_linearOffset.y);
         b2Log("  jd.angularOffset = %.15lef;\n", m_angularOffset);

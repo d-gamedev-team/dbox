@@ -64,18 +64,18 @@ class b2DistanceJointDef : b2JointDef
     void Initialize(b2Body* b1, b2Body* b2,
                     b2Vec2 anchor1, b2Vec2 anchor2)
     {
-        body_A        = b1;
-        body_B        = b2;
-        localAnchorA = body_A.GetLocalPoint(anchor1);
-        localAnchorB = body_B.GetLocalPoint(anchor2);
+        bodyA        = b1;
+        bodyB        = b2;
+        localAnchorA = bodyA.GetLocalPoint(anchor1);
+        localAnchorB = bodyB.GetLocalPoint(anchor2);
         b2Vec2 d = anchor2 - anchor1;
         length = d.Length();
     }
 
-    /// The local anchor point relative to body_A's origin.
+    /// The local anchor point relative to bodyA's origin.
     b2Vec2 localAnchorA;
 
-    /// The local anchor point relative to body_B's origin.
+    /// The local anchor point relative to bodyB's origin.
     b2Vec2 localAnchorB;
 
     /// The natural length between the anchor points.
@@ -136,13 +136,13 @@ class b2DistanceJoint : b2Joint
         return 0.0f;
     }
 
-    /// The local anchor point relative to body_A's origin.
+    /// The local anchor point relative to bodyA's origin.
     b2Vec2 GetLocalAnchorA() const
     {
         return m_localAnchorA;
     }
 
-    /// The local anchor point relative to body_B's origin.
+    /// The local anchor point relative to bodyB's origin.
     b2Vec2 GetLocalAnchorB() const
     {
         return m_localAnchorB;
@@ -192,8 +192,8 @@ class b2DistanceJoint : b2Joint
         int32 indexB = m_bodyB.m_islandIndex;
 
         b2Log("  b2DistanceJointDef jd;\n");
-        b2Log("  jd.body_A = bodies[%d];\n", indexA);
-        b2Log("  jd.body_B = bodies[%d];\n", indexB);
+        b2Log("  jd.bodyA = bodies[%d];\n", indexA);
+        b2Log("  jd.bodyB = bodies[%d];\n", indexB);
         b2Log("  jd.collideConnected = bool(%d);\n", m_collideConnected);
         b2Log("  jd.localAnchorA.Set(%.15lef, %.15lef);\n", m_localAnchorA.x, m_localAnchorA.y);
         b2Log("  jd.localAnchorB.Set(%.15lef, %.15lef);\n", m_localAnchorB.x, m_localAnchorB.y);

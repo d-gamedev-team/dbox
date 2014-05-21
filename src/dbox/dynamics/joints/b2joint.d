@@ -83,10 +83,10 @@ class b2JointDef
     void* userData;
 
     /// The first attached body_.
-    b2Body* body_A;
+    b2Body* bodyA;
 
     /// The second attached body_.
-    b2Body* body_B;
+    b2Body* bodyB;
 
     /// Set this flag to true if the attached bodies should collide.
     bool collideConnected;
@@ -99,13 +99,13 @@ class b2Joint
     ///
     this(const(b2JointDef) def)
     {
-        assert(def.body_A != def.body_B);
+        assert(def.bodyA != def.bodyB);
 
         m_type  = def.type;
         m_prev  = null;
         m_next  = null;
-        m_bodyA = cast(b2Body*)def.body_A;
-        m_bodyB = cast(b2Body*)def.body_B;
+        m_bodyA = cast(b2Body*)def.bodyA;
+        m_bodyB = cast(b2Body*)def.bodyB;
         m_index = 0;
         m_collideConnected = def.collideConnected;
         m_islandFlag       = false;

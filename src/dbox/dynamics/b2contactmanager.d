@@ -60,11 +60,11 @@ struct b2ContactManager
         int32 indexA = proxyA.childIndex;
         int32 indexB = proxyB.childIndex;
 
-        b2Body* body_A = fixtureA.GetBody();
-        b2Body* body_B = fixtureB.GetBody();
+        b2Body* bodyA = fixtureA.GetBody();
+        b2Body* bodyB = fixtureB.GetBody();
 
         // Are the fixtures on the same body?
-        if (body_A == body_B)
+        if (bodyA == bodyB)
         {
             return;
         }
@@ -72,11 +72,11 @@ struct b2ContactManager
         // TODO_ERIN use a hash table to remove a potential bottleneck when both
         // bodies have a lot of contacts.
         // Does a contact already exist?
-        b2ContactEdge* edge = body_B.GetContactList();
+        b2ContactEdge* edge = bodyB.GetContactList();
 
         while (edge)
         {
-            if (edge.other == body_A)
+            if (edge.other == bodyA)
             {
                 b2Fixture* fA = edge.contact.GetFixtureA();
                 b2Fixture* fB = edge.contact.GetFixtureB();
@@ -100,7 +100,7 @@ struct b2ContactManager
         }
 
         // Does a joint override collision? Is at least one body dynamic?
-        if (body_B.ShouldCollide(body_A) == false)
+        if (bodyB.ShouldCollide(bodyA) == false)
         {
             return;
         }
@@ -124,8 +124,8 @@ struct b2ContactManager
         fixtureB = c.GetFixtureB();
         indexA   = c.GetChildIndexA();
         indexB   = c.GetChildIndexB();
-        body_A    = fixtureA.GetBody();
-        body_B    = fixtureB.GetBody();
+        bodyA    = fixtureA.GetBody();
+        bodyB    = fixtureB.GetBody();
 
         // Insert into the world.
         c.m_prev = null;
@@ -141,35 +141,35 @@ struct b2ContactManager
 
         // Connect to body A
         c.m_nodeA.contact = c;
-        c.m_nodeA.other   = body_B;
+        c.m_nodeA.other   = bodyB;
 
         c.m_nodeA.prev = null;
-        c.m_nodeA.next = body_A.m_contactList;
+        c.m_nodeA.next = bodyA.m_contactList;
 
-        if (body_A.m_contactList !is null)
+        if (bodyA.m_contactList !is null)
         {
-            body_A.m_contactList.prev = &c.m_nodeA;
+            bodyA.m_contactList.prev = &c.m_nodeA;
         }
-        body_A.m_contactList = &c.m_nodeA;
+        bodyA.m_contactList = &c.m_nodeA;
 
         // Connect to body B
         c.m_nodeB.contact = c;
-        c.m_nodeB.other   = body_A;
+        c.m_nodeB.other   = bodyA;
 
         c.m_nodeB.prev = null;
-        c.m_nodeB.next = body_B.m_contactList;
+        c.m_nodeB.next = bodyB.m_contactList;
 
-        if (body_B.m_contactList !is null)
+        if (bodyB.m_contactList !is null)
         {
-            body_B.m_contactList.prev = &c.m_nodeB;
+            bodyB.m_contactList.prev = &c.m_nodeB;
         }
-        body_B.m_contactList = &c.m_nodeB;
+        bodyB.m_contactList = &c.m_nodeB;
 
         // Wake up the bodies
         if (fixtureA.IsSensor() == false && fixtureB.IsSensor() == false)
         {
-            body_A.SetAwake(true);
-            body_B.SetAwake(true);
+            bodyA.SetAwake(true);
+            bodyB.SetAwake(true);
         }
 
         ++m_contactCount;
@@ -184,8 +184,8 @@ struct b2ContactManager
     {
         b2Fixture* fixtureA = c.GetFixtureA();
         b2Fixture* fixtureB = c.GetFixtureB();
-        b2Body* body_A       = fixtureA.GetBody();
-        b2Body* body_B       = fixtureB.GetBody();
+        b2Body* bodyA       = fixtureA.GetBody();
+        b2Body* bodyB       = fixtureB.GetBody();
 
         if (m_contactListener && c.IsTouching())
         {
@@ -219,9 +219,9 @@ struct b2ContactManager
             c.m_nodeA.next.prev = c.m_nodeA.prev;
         }
 
-        if (&c.m_nodeA == body_A.m_contactList)
+        if (&c.m_nodeA == bodyA.m_contactList)
         {
-            body_A.m_contactList = c.m_nodeA.next;
+            bodyA.m_contactList = c.m_nodeA.next;
         }
 
         // Remove from body 2
@@ -235,9 +235,9 @@ struct b2ContactManager
             c.m_nodeB.next.prev = c.m_nodeB.prev;
         }
 
-        if (&c.m_nodeB == body_B.m_contactList)
+        if (&c.m_nodeB == bodyB.m_contactList)
         {
-            body_B.m_contactList = c.m_nodeB.next;
+            bodyB.m_contactList = c.m_nodeB.next;
         }
 
         // Call the factory.
@@ -259,14 +259,14 @@ struct b2ContactManager
             b2Fixture* fixtureB = c.GetFixtureB();
             int32 indexA        = c.GetChildIndexA();
             int32 indexB        = c.GetChildIndexB();
-            b2Body* body_A       = fixtureA.GetBody();
-            b2Body* body_B       = fixtureB.GetBody();
+            b2Body* bodyA       = fixtureA.GetBody();
+            b2Body* bodyB       = fixtureB.GetBody();
 
             // Is this contact flagged for filtering?
             if (c.m_flags & b2Contact.e_filterFlag)
             {
                 // Should these bodies collide?
-                if (body_B.ShouldCollide(body_A) == false)
+                if (bodyB.ShouldCollide(bodyA) == false)
                 {
                     b2Contact cNuke = c;
                     c = cNuke.GetNext();
@@ -287,8 +287,8 @@ struct b2ContactManager
                 c.m_flags &= ~b2Contact.e_filterFlag;
             }
 
-            bool activeA = body_A.IsAwake() && body_A.m_type != b2_staticBody;
-            bool activeB = body_B.IsAwake() && body_B.m_type != b2_staticBody;
+            bool activeA = bodyA.IsAwake() && bodyA.m_type != b2_staticBody;
+            bool activeB = bodyB.IsAwake() && bodyB.m_type != b2_staticBody;
 
             // At least one body must be awake and it must be dynamic or kinematic.
             if (activeA == false && activeB == false)

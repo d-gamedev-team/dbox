@@ -72,20 +72,20 @@ class b2WheelJointDef : b2JointDef
 
     void Initialize(b2Body* bA, b2Body* bB, b2Vec2 anchor, b2Vec2 axis)
     {
-        body_A        = bA;
-        body_B        = bB;
-        localAnchorA = body_A.GetLocalPoint(anchor);
-        localAnchorB = body_B.GetLocalPoint(anchor);
-        localAxisA   = body_A.GetLocalVector(axis);
+        bodyA        = bA;
+        bodyB        = bB;
+        localAnchorA = bodyA.GetLocalPoint(anchor);
+        localAnchorB = bodyB.GetLocalPoint(anchor);
+        localAxisA   = bodyA.GetLocalVector(axis);
     }
 
-    /// The local anchor point relative to body_A's origin.
+    /// The local anchor point relative to bodyA's origin.
     b2Vec2 localAnchorA;
 
-    /// The local anchor point relative to body_B's origin.
+    /// The local anchor point relative to bodyB's origin.
     b2Vec2 localAnchorB;
 
-    /// The local translation axis in body_A.
+    /// The local translation axis in bodyA.
     b2Vec2 localAxisA;
 
     /// Enable/disable the joint motor.
@@ -105,7 +105,7 @@ class b2WheelJointDef : b2JointDef
 }
 
 /// A wheel joint. This joint provides two degrees of freedom: translation
-/// along an axis fixed in body_A and rotation in the plane. You can use a
+/// along an axis fixed in bodyA and rotation in the plane. You can use a
 /// joint limit to restrict the range of motion and a joint motor to drive
 /// the rotation or to model rotational friction.
 /// This joint is designed for vehicle suspensions.
@@ -475,8 +475,8 @@ class b2WheelJoint : b2Joint
         int32 indexB = m_bodyB.m_islandIndex;
 
         b2Log("  b2WheelJointDef jd;\n");
-        b2Log("  jd.body_A = bodies[%d];\n", indexA);
-        b2Log("  jd.body_B = bodies[%d];\n", indexB);
+        b2Log("  jd.bodyA = bodies[%d];\n", indexA);
+        b2Log("  jd.bodyB = bodies[%d];\n", indexB);
         b2Log("  jd.collideConnected = bool(%d);\n", m_collideConnected);
         b2Log("  jd.localAnchorA.Set(%.15lef, %.15lef);\n", m_localAnchorA.x, m_localAnchorA.y);
         b2Log("  jd.localAnchorB.Set(%.15lef, %.15lef);\n", m_localAnchorB.x, m_localAnchorB.y);
@@ -519,19 +519,19 @@ class b2WheelJoint : b2Joint
         return m_dampingRatio;
     }
 
-    /// The local anchor point relative to body_A's origin.
+    /// The local anchor point relative to bodyA's origin.
     b2Vec2 GetLocalAnchorA() const
     {
         return m_localAnchorA;
     }
 
-    /// The local anchor point relative to body_B's origin.
+    /// The local anchor point relative to bodyB's origin.
     b2Vec2 GetLocalAnchorB() const
     {
         return m_localAnchorB;
     }
 
-    /// The local joint axis relative to body_A.
+    /// The local joint axis relative to bodyA.
     b2Vec2 GetLocalAxisA() const
     {
         return m_localXAxisA;
