@@ -1,15 +1,3 @@
-module dbox.dynamics.contacts.b2contactsolver;
-
-import core.stdc.float_;
-import core.stdc.stdlib;
-import core.stdc.string;
-
-import dbox.common;
-import dbox.collision.shapes;
-import dbox.common.b2math;
-import dbox.dynamics;
-import dbox.collision;
-
 /*
  * Copyright (c) 2006-2009 Erin Catto http://www.box2d.org
  *
@@ -27,13 +15,19 @@ import dbox.collision;
  * misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
  */
+module dbox.dynamics.contacts.b2contactsolver;
 
-// #ifndef B2_CONTACT_SOLVER_H
-// #define B2_CONTACT_SOLVER_H
+import core.stdc.float_;
+import core.stdc.stdlib;
+import core.stdc.string;
 
-import dbox.common.b2math;
-import dbox.collision.b2collision;
-import dbox.dynamics.b2timestep;
+import dbox.collision;
+import dbox.collision.shapes;
+import dbox.common;
+import dbox.dynamics;
+import dbox.dynamics.contacts;
+
+// version = B2_DEBUG_SOLVER;
 
 struct b2VelocityConstraintPoint
 {
@@ -802,40 +796,11 @@ struct b2ContactSolver
     int m_count;
 }
 
-// #endif
-/*
- * Copyright (c) 2006-2011 Erin Catto http://www.box2d.org
- *
- * This software is provided 'as-is', without any express or implied
- * warranty.  In no event will the authors be held liable for any damages
- * arising from the use of this software.
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
- * 1. The origin of this software must not be misrepresented; you must not
- * claim that you wrote the original software. If you use this software
- * in a product, an acknowledgment in the product documentation would be
- * appreciated but is not required.
- * 2. Altered source versions must be plainly marked as such, and must not be
- * misrepresented as being the original software.
- * 3. This notice may not be removed or altered from any source distribution.
- */
-
-import dbox.dynamics.contacts.b2contactsolver;
-
-import dbox.dynamics.contacts.b2contact;
-import dbox.dynamics.b2body;
-import dbox.dynamics.b2fixture;
-import dbox.dynamics.b2world;
-import dbox.common.b2stackallocator;
-
-// #define B2_DEBUG_SOLVER 0
-
-bool g_blockSolve = true;
+private __gshared bool g_blockSolve = true;
 
 struct b2ContactPositionConstraint
 {
-    b2Vec2 localPoints[b2_maxManifoldPoints];
+    b2Vec2[b2_maxManifoldPoints] localPoints;
     b2Vec2 localNormal;
     b2Vec2 localPoint;
     int32 indexA;
@@ -893,7 +858,7 @@ struct b2PositionSolverManifold
             break;
 
             default:
-                assert(0);
+                break;
         }
     }
 
