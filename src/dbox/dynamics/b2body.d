@@ -373,7 +373,7 @@ struct b2Body
         fixture.Destroy(allocator);
         fixture.m_body = null;
         fixture.m_next = null;
-        typeid(fixture).destroy(&fixture);
+        destroy(fixture);
         allocator.Free(cast(void*)fixture, b2memSizeOf!b2Fixture);
 
         --m_fixtureCount;

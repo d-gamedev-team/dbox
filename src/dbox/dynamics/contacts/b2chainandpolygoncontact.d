@@ -37,12 +37,14 @@ class b2ChainAndPolygonContact : b2Contact
         return b2emplace!b2ChainAndPolygonContact(mem, fixtureA, indexA, fixtureB, indexB);
     }
 
+    ///
     static void Destroy(b2Contact contact, b2BlockAllocator* allocator)
     {
-        typeid(cast(b2ChainAndPolygonContact)contact).destroy(&contact);
+        destroy(contact);
         allocator.Free(cast(void*)contact, b2memSizeOf!b2ChainAndPolygonContact);
     }
 
+    ///
     this(b2Fixture* fixtureA, int32 indexA, b2Fixture* fixtureB, int32 indexB)
     {
         super(fixtureA, indexA, fixtureB, indexB);
@@ -50,6 +52,7 @@ class b2ChainAndPolygonContact : b2Contact
         assert(m_fixtureB.GetType() == b2Shape.e_polygon);
     }
 
+    ///
     override void Evaluate(b2Manifold* manifold, b2Transform xfA, b2Transform xfB)
     {
         b2ChainShape chain = cast(b2ChainShape)m_fixtureA.GetShape();
@@ -62,9 +65,3 @@ class b2ChainAndPolygonContact : b2Contact
                                 cast(b2PolygonShape)m_fixtureB.GetShape(), xfB);
     }
 }
-
-import dbox.dynamics.contacts.b2chainandpolygoncontact;
-import dbox.common.b2blockallocator;
-import dbox.dynamics.b2fixture;
-import dbox.collision.shapes.b2chainshape;
-import dbox.collision.shapes.b2edgeshape;

@@ -233,9 +233,10 @@ class b2Joint
 
     static void Destroy(b2Joint joint, b2BlockAllocator* allocator)
     {
-        typeid(joint).destroy(&joint);
+        auto jointType = joint.m_type;
+        destroy(joint);
 
-        switch (joint.m_type)
+        switch (jointType)
         {
             case e_distanceJoint:
                 allocator.Free(cast(void*)joint, b2memSizeOf!b2DistanceJoint);

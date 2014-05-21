@@ -44,7 +44,7 @@ class b2PolygonContact : b2Contact
 
     static void Destroy(b2Contact contact, b2BlockAllocator* allocator)
     {
-        typeid(cast(b2PolygonContact)contact).destroy(&contact);
+        destroy(contact);
         allocator.Free(cast(void*)contact, b2memSizeOf!b2PolygonContact);
     }
 

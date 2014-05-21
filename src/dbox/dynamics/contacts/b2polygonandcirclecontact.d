@@ -45,7 +45,7 @@ class b2PolygonAndCircleContact : b2Contact
 
     static void Destroy(b2Contact contact, b2BlockAllocator* allocator)
     {
-        typeid(cast(b2PolygonAndCircleContact)contact).destroy(&contact);
+        destroy(contact);
         allocator.Free(cast(void*)contact, b2memSizeOf!b2PolygonAndCircleContact);
     }
 

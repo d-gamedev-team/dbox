@@ -40,7 +40,7 @@ class b2ChainAndCircleContact : b2Contact
     ///
     static void Destroy(b2Contact contact, b2BlockAllocator* allocator)
     {
-        typeid(cast(b2ChainAndCircleContact)contact).destroy(&contact);
+        destroy(contact);
         allocator.Free(cast(void*)contact, b2memSizeOf!b2ChainAndCircleContact);
     }
 
@@ -59,8 +59,8 @@ class b2ChainAndCircleContact : b2Contact
 
         import std.typecons;
         auto edge = scoped!b2EdgeShape();
-        chain.GetChildEdge(edge, m_indexA);
 
+        chain.GetChildEdge(edge, m_indexA);
         b2CollideEdgeAndCircle(manifold, edge, xfA,
                                cast(b2CircleShape)m_fixtureB.GetShape(), xfB);
     }

@@ -336,7 +336,7 @@ struct b2Fixture
             case b2Shape.e_circle:
             {
                 b2CircleShape s = cast(b2CircleShape)m_shape;
-                typeid(s).destroy(&s);
+                destroy(s);
                 allocator.Free(cast(void*)s, b2memSizeOf!b2CircleShape);
             }
             break;
@@ -344,7 +344,7 @@ struct b2Fixture
             case b2Shape.e_edge:
             {
                 b2EdgeShape s = cast(b2EdgeShape)m_shape;
-                typeid(s).destroy(&s);
+                destroy(s);
                 allocator.Free(cast(void*)s, b2memSizeOf!b2EdgeShape);
             }
             break;
@@ -352,7 +352,7 @@ struct b2Fixture
             case b2Shape.e_polygon:
             {
                 b2PolygonShape s = cast(b2PolygonShape)m_shape;
-                typeid(s).destroy(&s);
+                destroy(s);
                 allocator.Free(cast(void*)s, b2memSizeOf!b2PolygonShape);
             }
             break;
@@ -360,7 +360,7 @@ struct b2Fixture
             case b2Shape.e_chain:
             {
                 b2ChainShape s = cast(b2ChainShape)m_shape;
-                typeid(s).destroy(&s);
+                destroy(s);
                 allocator.Free(cast(void*)s, b2memSizeOf!b2ChainShape);
             }
             break;

@@ -293,7 +293,7 @@ struct b2World
 
             f0.DestroyProxies(&m_contactManager.m_broadPhase);
             f0.Destroy(&m_blockAllocator);
-            typeid(f0).destroy(&f0);
+            destroy(f0);
             m_blockAllocator.Free(cast(void*)f0, b2memSizeOf!b2Fixture);
 
             b.m_fixtureList   = f;
@@ -320,7 +320,7 @@ struct b2World
         }
 
         --m_bodyCount;
-        typeid(b).destroy(&b);
+        destroy(b);
         m_blockAllocator.Free(cast(void*)b, b2memSizeOf!b2Body);
     }
 
