@@ -61,10 +61,10 @@ struct b2ContactRegister
 /// nodes, one for each attached body_.
 struct b2ContactEdge
 {
-    b2Body* other;              ///< provides quick access to the other body attached.
-    b2Contact contact;         ///< the contact
-    b2ContactEdge* prev;        ///< the previous contact edge in the body's contact list
-    b2ContactEdge* next;        ///< the next contact edge in the body's contact list
+    b2Body* other;        ///< provides quick access to the other body attached.
+    b2Contact contact;    ///< the contact
+    b2ContactEdge* prev;  ///< the previous contact edge in the body's contact list
+    b2ContactEdge* next;  ///< the next contact edge in the body's contact list
 }
 
 /// The class manages contact between two shapes. A contact exists for each overlapping

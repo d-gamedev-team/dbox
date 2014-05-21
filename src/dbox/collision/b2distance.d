@@ -152,10 +152,10 @@ struct b2DistanceProxy
 /// Set count to zero on first call.
 struct b2SimplexCache
 {
-    float32 metric = 0;             ///< length or area
+    float32 metric = 0;  ///< length or area
     uint16 count;
-    uint8[3] indexA;            ///< vertices on shape A
-    uint8[3] indexB;            ///< vertices on shape B
+    uint8[3] indexA;     ///< vertices on shape A
+    uint8[3] indexB;     ///< vertices on shape B
 }
 
 /// Input for b2Distance.
@@ -173,10 +173,10 @@ struct b2DistanceInput
 /// Output for b2Distance.
 struct b2DistanceOutput
 {
-    b2Vec2 pointA;              ///< closest point on shapeA
-    b2Vec2 pointB;              ///< closest point on shapeB
+    b2Vec2 pointA;         ///< closest point on shapeA
+    b2Vec2 pointB;         ///< closest point on shapeB
     float32 distance = 0;
-    int32 iterations;           ///< number of GJK iterations used
+    int32 iterations;      ///< number of GJK iterations used
 }
 
 /// Compute the closest points between two shapes. Supports any combination of:

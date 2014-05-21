@@ -1,12 +1,3 @@
-module dbox.dynamics.joints.b2joint;
-
-import core.stdc.float_;
-import core.stdc.stdlib;
-import core.stdc.string;
-
-import dbox.common;
-import dbox.dynamics;
-
 /*
  * Copyright (c) 2006-2007 Erin Catto http://www.box2d.org
  *
@@ -24,11 +15,15 @@ import dbox.dynamics;
  * misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
  */
+module dbox.dynamics.joints.b2joint;
 
-// #ifndef B2_JOINT_H
-// #define B2_JOINT_H
+import core.stdc.float_;
+import core.stdc.stdlib;
+import core.stdc.string;
 
+import dbox.common;
 import dbox.dynamics;
+import dbox.dynamics.joints;
 
 enum b2JointType
 {
@@ -72,10 +67,10 @@ struct b2Jacobian
 /// nodes, one for each attached body_.
 struct b2JointEdge
 {
-    b2Body* other;                      ///< provides quick access to the other body attached.
-    b2Joint joint;                     ///< the joint
-    b2JointEdge* prev;                  ///< the previous joint edge in the body's joint list
-    b2JointEdge* next;                  ///< the next joint edge in the body's joint list
+    b2Body* other;      ///< provides quick access to the other body attached.
+    b2Joint joint;      ///< the joint
+    b2JointEdge* prev;  ///< the previous joint edge in the body's joint list
+    b2JointEdge* next;  ///< the next joint edge in the body's joint list
 }
 
 /// Joint definitions are used to construct joints.

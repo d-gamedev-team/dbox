@@ -46,10 +46,10 @@ struct b2ContactFeature
     alias e_vertex = Type.e_vertex;
     alias e_face = Type.e_face;
 
-    uint8 indexA;               ///< Feature index on shapeA
-    uint8 indexB;               ///< Feature index on shapeB
-    uint8 typeA;                ///< The feature type on shapeA
-    uint8 typeB;                ///< The feature type on shapeB
+    uint8 indexA;  ///< Feature index on shapeA
+    uint8 indexB;  ///< Feature index on shapeB
+    uint8 typeA;   ///< The feature type on shapeA
+    uint8 typeB;   ///< The feature type on shapeB
 }
 
 /// Contact ids to facilitate warm starting.
@@ -71,10 +71,10 @@ union b2ContactID
 /// provide reliable contact forces, especially for high speed collisions.
 struct b2ManifoldPoint
 {
-    b2Vec2 localPoint;          ///< usage depends on manifold type
-    float32 normalImpulse = 0;      ///< the non-penetration impulse
-    float32 tangentImpulse = 0;     ///< the friction impulse
-    b2ContactID id;             ///< uniquely identifies a contact point between two shapes
+    b2Vec2 localPoint;           ///< usage depends on manifold type
+    float32 normalImpulse = 0;   ///< the non-penetration impulse
+    float32 tangentImpulse = 0;  ///< the friction impulse
+    b2ContactID id;              ///< uniquely identifies a contact point between two shapes
 }
 
 /// A manifold for two touching convex shapes.
@@ -106,11 +106,11 @@ struct b2Manifold
     alias e_faceA = Type.e_faceA;
     alias e_faceB = Type.e_faceB;
 
-    b2ManifoldPoint[b2_maxManifoldPoints] points;       ///< the points of contact
-    b2Vec2 localNormal;                                 ///< not use for Type.e_points
-    b2Vec2 localPoint;                                  ///< usage depends on manifold type
+    b2ManifoldPoint[b2_maxManifoldPoints] points;  ///< the points of contact
+    b2Vec2 localNormal;                            ///< not use for Type.e_points
+    b2Vec2 localPoint;                             ///< usage depends on manifold type
     Type type;
-    int32 pointCount;                                   ///< the number of manifold points
+    int32 pointCount;                              ///< the number of manifold points
 }
 
 /// This is used to compute the current state of a contact manifold.
@@ -190,18 +190,18 @@ struct b2WorldManifold
         }
     }
 
-    b2Vec2 normal;                                      ///< world vector pointing from A to B
-    b2Vec2[b2_maxManifoldPoints] points;                ///< world contact point (point of intersection)
-    float32[b2_maxManifoldPoints] separations = 0;      ///< a negative value indicates overlap, in meters
+    b2Vec2 normal;                                  ///< world vector pointing from A to B
+    b2Vec2[b2_maxManifoldPoints] points;            ///< world contact point (point of intersection)
+    float32[b2_maxManifoldPoints] separations = 0;  ///< a negative value indicates overlap, in meters
 }
 
 /// This is used for determining the state of contact points.
 enum b2PointState
 {
-    b2_nullState,               ///< point does not exist
-    b2_addState,                ///< point was added in the update
-    b2_persistState,            ///< point persisted across the update
-    b2_removeState              ///< point was removed in the update
+    b2_nullState,     ///< point does not exist
+    b2_addState,      ///< point was added in the update
+    b2_persistState,  ///< point persisted across the update
+    b2_removeState    ///< point was removed in the update
 }
 
 alias b2_nullState = b2PointState.b2_nullState;
@@ -404,8 +404,8 @@ struct b2AABB
         return true;
     }
 
-    b2Vec2 lowerBound;          ///< the lower vertex
-    b2Vec2 upperBound;          ///< the upper vertex
+    b2Vec2 lowerBound;  ///< the lower vertex
+    b2Vec2 upperBound;  ///< the upper vertex
 }
 
 // Sutherland-Hodgman clipping.
