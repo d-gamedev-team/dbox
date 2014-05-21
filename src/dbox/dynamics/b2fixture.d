@@ -1,15 +1,3 @@
-module dbox.dynamics.b2fixture;
-
-import core.stdc.float_;
-import core.stdc.stdlib;
-import core.stdc.string;
-
-import dbox.common;
-import dbox.collision;
-import dbox.dynamics;
-import dbox.dynamics.contacts;
-import dbox.dynamics.joints;
-
 /*
  * Copyright (c) 2006-2009 Erin Catto http://www.box2d.org
  *
@@ -27,19 +15,24 @@ import dbox.dynamics.joints;
  * misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
  */
+module dbox.dynamics.b2fixture;
 
-// #ifndef B2_FIXTURE_H
-// #define B2_FIXTURE_H
+import core.stdc.float_;
+import core.stdc.stdlib;
+import core.stdc.string;
 
-import dbox.dynamics.b2body;
-import dbox.collision.b2collision;
-import dbox.collision.shapes.b2shape;
+import dbox.collision;
+import dbox.collision.shapes;
+import dbox.common;
+import dbox.dynamics;
+import dbox.dynamics.contacts;
+import dbox.dynamics.joints;
 
 /// This holds contact filtering data.
 struct b2Filter
 {
     /// The collision category bits. Normally you would just set one bit.
-    uint16 categoryBits= 0x0001;
+    uint16 categoryBits = 0x0001;
 
     /// The collision mask bits. This states the categories that this
     /// shape would accept for collision.
@@ -95,201 +88,282 @@ struct b2FixtureProxy
 /// @warning you cannot reuse fixtures.
 struct b2Fixture
 {
-    b2Shape GetShape()
+    /// Get the type of the child shape. You can use this to down cast to the concrete shape.
+    /// @return the shape type.
+    b2Shape.Type GetType() const
+    {
+        return m_shape.GetType();
+    }
+
+    /// Get the child shape. You can modify the child shape, however you should not change the
+    /// number of vertices because this will crash some collision caching mechanisms.
+    /// Manipulating the shape may lead to non-physical behavior.
+    inout(b2Shape) GetShape() inout
     {
         return m_shape;
     }
 
-    const(b2Shape) GetShape() const
-    {
-        return m_shape;
-    }
-
+    /// Is this fixture a sensor (non-solid)?
+    /// @return the true if the shape is a sensor.
     bool IsSensor() const
     {
         return m_isSensor;
     }
 
+    /// Set if this fixture is a sensor.
+    void SetSensor(bool sensor)
+    {
+        if (sensor != m_isSensor)
+        {
+            m_body.SetAwake(true);
+            m_isSensor = sensor;
+        }
+    }
+
+    /// Get the contact filtering data.
     b2Filter GetFilterData() const
     {
         return m_filter;
     }
 
+    /// Set the contact filtering data. This will not update contacts until the next time
+    /// step when either parent body is active and awake.
+    /// This automatically calls Refilter.
+    void SetFilterData(b2Filter filter)
+    {
+        m_filter = filter;
+
+        Refilter();
+    }
+
+    /// Call this if you want to establish collision that was previously disabled by b2ContactFilter::ShouldCollide.
+    void Refilter()
+    {
+        if (m_body is null)
+        {
+            return;
+        }
+
+        // Flag associated contacts for filtering.
+        b2ContactEdge* edge = m_body.GetContactList();
+
+        while (edge)
+        {
+            b2Contact contact  = edge.contact;
+            b2Fixture* fixtureA = contact.GetFixtureA();
+            b2Fixture* fixtureB = contact.GetFixtureB();
+
+            if (fixtureA == &this || fixtureB == &this)
+            {
+                contact.FlagForFiltering();
+            }
+
+            edge = edge.next;
+        }
+
+        b2World* world = m_body.GetWorld();
+
+        if (world is null)
+        {
+            return;
+        }
+
+        // Touch each proxy so that new pairs may be created
+        b2BroadPhase* broadPhase = &world.m_contactManager.m_broadPhase;
+
+        for (int32 i = 0; i < m_proxyCount; ++i)
+        {
+            broadPhase.TouchProxy(m_proxies[i].proxyId);
+        }
+    }
+
+    /// Get the parent body of this fixture. This is NULL if the fixture is not attached.
+    /// @return the parent body.
+    inout(b2Body)* GetBody() inout
+    {
+        return m_body;
+    }
+
+    /// Get the next fixture in the parent body's fixture list.
+    /// @return the next shape.
+    inout(b2Fixture)* GetNext() inout
+    {
+        return m_next;
+    }
+
+    /// Get the user data that was assigned in the fixture definition. Use this to
+    /// store your application specific data.
     void* GetUserData() const
     {
         return cast(void*)m_userData;
     }
 
+    /// Set the user data. Use this to store your application specific data.
     void SetUserData(void* data)
     {
         m_userData = data;
     }
 
-    b2Body* GetBody()
+    /// Test a point for containment in this fixture.
+    /// @param p a point in world coordinates.
+    bool TestPoint(b2Vec2 p) const
     {
-        return m_body;
+        return m_shape.TestPoint(m_body.GetTransform(), p);
     }
 
-    const(b2Body*) GetBody() const
+    /// Cast a ray against this shape.
+    /// @param output the ray-cast results.
+    /// @param input the ray-cast input parameters.
+    bool RayCast(b2RayCastOutput* output, b2RayCastInput input, int32 childIndex) const
     {
-        return m_body;
+        return m_shape.RayCast(output, input, m_body.GetTransform(), childIndex);
     }
 
-    b2Fixture* GetNext()
+    /// Get the mass data for this fixture. The mass data is based on the density and
+    /// the shape. The rotational inertia is about the shape's origin. This operation
+    /// may be expensive.
+    void GetMassData(b2MassData* massData) const
     {
-        return m_next;
+        m_shape.ComputeMass(massData, m_density);
     }
 
-    const(b2Fixture)* GetNext() const
+    /// Get the density of this fixture.
+    float32 GetDensity() const
     {
-        return m_next;
+        return m_density;
     }
 
+    /// Set the density of this fixture. This will _not_ automatically adjust the mass
+    /// of the body. You must call b2Body::ResetMassData to update the body's mass.
     void SetDensity(float32 density)
     {
         assert(b2IsValid(density) && density >= 0.0f);
         m_density = density;
     }
 
-    float32 GetDensity() const
-    {
-        return m_density;
-    }
-
+    /// Get the coefficient of friction.
     float32 GetFriction() const
     {
         return m_friction;
     }
 
+    /// Set the coefficient of friction. This will _not_ change the friction of
+    /// existing contacts.
     void SetFriction(float32 friction)
     {
         m_friction = friction;
     }
 
+    /// Get the coefficient of restitution.
     float32 GetRestitution() const
     {
         return m_restitution;
     }
 
+    /// Set the coefficient of restitution. This will _not_ change the restitution of
+    /// existing contacts.
     void SetRestitution(float32 restitution)
     {
         m_restitution = restitution;
     }
 
-    bool TestPoint(b2Vec2 p) const
-    {
-        return m_shape.TestPoint(m_body.GetTransform(), p);
-    }
-
-    bool RayCast(b2RayCastOutput* output, b2RayCastInput input, int32 childIndex) const
-    {
-        return m_shape.RayCast(output, input, m_body.GetTransform(), childIndex);
-    }
-
-    void GetMassData(b2MassData* massData) const
-    {
-        m_shape.ComputeMass(massData, m_density);
-    }
-
+    /// Get the fixture's AABB. This AABB may be enlarge and/or stale.
+    /// If you need a more accurate AABB, compute it using the shape and
+    /// the body transform.
     b2AABB GetAABB(int32 childIndex) const
     {
         assert(0 <= childIndex && childIndex < m_proxyCount);
         return m_proxies[childIndex].aabb;
     }
 
-    /// Get the type of the child shape. You can use this to down cast to the concrete shape.
-    /// @return the shape type.
-    b2Shape.Type GetType() const;
-
-    /// Get the child shape. You can modify the child shape, however you should not change the
-    /// number of vertices because this will crash some collision caching mechanisms.
-    /// Manipulating the shape may lead to non-physical behavior.
-    b2Shape GetShape();
-    const(b2Shape) GetShape() const;
-
-    /// Set if this fixture is a sensor.
-    void SetSensor(bool sensor);
-
-    /// Is this fixture a sensor (non-solid)?
-    /// @return the true if the shape is a sensor.
-    bool IsSensor() const;
-
-    /// Set the contact filtering data. This will not update contacts until the next time
-    /// step when either parent body is active and awake.
-    /// This automatically calls Refilter.
-    void SetFilterData(b2Filter filter);
-
-    /// Get the contact filtering data.
-    b2Filter GetFilterData() const;
-
-    /// Call this if you want to establish collision that was previously disabled by b2ContactFilter.ShouldCollide.
-    void Refilter();
-
-    /// Get the parent body of this fixture. This is null if the fixture is not attached.
-    /// @return the parent body_.
-    b2Body* GetBody();
-    const(b2Body*) GetBody() const;
-
-    /// Get the next fixture in the parent body's fixture list.
-    /// @return the next shape.
-    b2Fixture* GetNext();
-    const(b2Fixture)* GetNext() const;
-
-    /// Get the user data that was assigned in the fixture definition. Use this to
-    /// store your application specific data.
-    void* GetUserData() const;
-
-    /// Set the user data. Use this to store your application specific data.
-    void SetUserData(void* data);
-
-    /// Test a point for containment in this fixture.
-    /// @param p a point in world coordinates.
-    bool TestPoint(b2Vec2 p) const;
-
-    /// Cast a ray against this shape.
-    /// @param output the ray-cast results.
-    /// @param input the ray-cast input parameters.
-    bool RayCast(b2RayCastOutput* output, b2RayCastInput input, int32 childIndex) const;
-
-    /// Get the mass data for this fixture. The mass data is based on the density and
-    /// the shape. The rotational inertia is about the shape's origin. This operation
-    /// may be expensive.
-    void GetMassData(b2MassData* massData) const;
-
-    /// Set the density of this fixture. This will _not_ automatically adjust the mass
-    /// of the body_. You must call b2Body.ResetMassData to update the body's mass.
-    void SetDensity(float32 density);
-
-    /// Get the density of this fixture.
-    float32 GetDensity() const;
-
-    /// Get the coefficient of friction.
-    float32 GetFriction() const;
-
-    /// Set the coefficient of friction. This will _not_ change the friction of
-    /// existing contacts.
-    void SetFriction(float32 friction);
-
-    /// Get the coefficient of restitution.
-    float32 GetRestitution() const;
-
-    /// Set the coefficient of restitution. This will _not_ change the restitution of
-    /// existing contacts.
-    void SetRestitution(float32 restitution);
-
-    /// Get the fixture's AABB. This AABB may be enlarge and/or stale.
-    /// If you need a more accurate AABB, compute it using the shape and
-    /// the body transform.
-    b2AABB GetAABB(int32 childIndex) const;
-
     /// Dump this fixture to the log file.
-    void Dump(int32 bodyIndex);
-
-    b2Shape.Type GetType() const
+    void Dump(int32 bodyIndex)
     {
-        return m_shape.GetType();
+        b2Log("    b2FixtureDef fd;\n");
+        b2Log("    fd.friction = %.15lef;\n", m_friction);
+        b2Log("    fd.restitution = %.15lef;\n", m_restitution);
+        b2Log("    fd.density = %.15lef;\n", m_density);
+        b2Log("    fd.isSensor = bool(%d);\n", m_isSensor);
+        b2Log("    fd.filter.categoryBits = uint16(%d);\n", m_filter.categoryBits);
+        b2Log("    fd.filter.maskBits = uint16(%d);\n", m_filter.maskBits);
+        b2Log("    fd.filter.groupIndex = int16(%d);\n", m_filter.groupIndex);
+
+        switch (m_shape.m_type)
+        {
+            case b2Shape.e_circle:
+            {
+                b2CircleShape s = cast(b2CircleShape)m_shape;
+                b2Log("    b2CircleShape shape;\n");
+                b2Log("    shape.m_radius = %.15lef;\n", s.m_radius);
+                b2Log("    shape.m_p.Set(%.15lef, %.15lef);\n", s.m_p.x, s.m_p.y);
+            }
+            break;
+
+            case b2Shape.e_edge:
+            {
+                b2EdgeShape s = cast(b2EdgeShape)m_shape;
+                b2Log("    b2EdgeShape shape;\n");
+                b2Log("    shape.m_radius = %.15lef;\n", s.m_radius);
+                b2Log("    shape.m_vertex0.Set(%.15lef, %.15lef);\n", s.m_vertex0.x, s.m_vertex0.y);
+                b2Log("    shape.m_vertex1.Set(%.15lef, %.15lef);\n", s.m_vertex1.x, s.m_vertex1.y);
+                b2Log("    shape.m_vertex2.Set(%.15lef, %.15lef);\n", s.m_vertex2.x, s.m_vertex2.y);
+                b2Log("    shape.m_vertex3.Set(%.15lef, %.15lef);\n", s.m_vertex3.x, s.m_vertex3.y);
+                b2Log("    shape.m_hasVertex0 = bool(%d);\n", s.m_hasVertex0);
+                b2Log("    shape.m_hasVertex3 = bool(%d);\n", s.m_hasVertex3);
+            }
+            break;
+
+            case b2Shape.e_polygon:
+            {
+                b2PolygonShape s = cast(b2PolygonShape)m_shape;
+                b2Log("    b2PolygonShape shape;\n");
+                b2Log("    b2Vec2 vs[%d];\n", b2_maxPolygonVertices);
+
+                for (int32 i = 0; i < s.m_count; ++i)
+                {
+                    b2Log("    vs[%d].Set(%.15lef, %.15lef);\n", i, s.m_vertices[i].x, s.m_vertices[i].y);
+                }
+
+                b2Log("    shape.Set(vs, %d);\n", s.m_count);
+            }
+            break;
+
+            case b2Shape.e_chain:
+            {
+                b2ChainShape s = cast(b2ChainShape)m_shape;
+                b2Log("    b2ChainShape shape;\n");
+                b2Log("    b2Vec2 vs[%d];\n", s.m_count);
+
+                for (int32 i = 0; i < s.m_count; ++i)
+                {
+                    b2Log("    vs[%d].Set(%.15lef, %.15lef);\n", i, s.m_vertices[i].x, s.m_vertices[i].y);
+                }
+
+                b2Log("    shape.CreateChain(vs, %d);\n", s.m_count);
+                b2Log("    shape.m_prevVertex.Set(%.15lef, %.15lef);\n", s.m_prevVertex.x, s.m_prevVertex.y);
+                b2Log("    shape.m_nextVertex.Set(%.15lef, %.15lef);\n", s.m_nextVertex.x, s.m_nextVertex.y);
+                b2Log("    shape.m_hasPrevVertex = bool(%d);\n", s.m_hasPrevVertex);
+                b2Log("    shape.m_hasNextVertex = bool(%d);\n", s.m_hasNextVertex);
+            }
+            break;
+
+            default:
+                return;
+        }
+
+        b2Log("\n");
+        b2Log("    fd.shape = &shape;\n");
+        b2Log("\n");
+        b2Log("    bodies[%d].CreateFixture(&fd);\n", bodyIndex);
     }
 
+// note: this should be package but D's access implementation is lacking.
+// do not use in user code.
+/* package: */
+public:
+
+    // We need separation create/destroy functions from the constructor/destructor because
+    // the destructor cannot access the allocator (no destructor arguments allowed by D).
     void Create(b2BlockAllocator* allocator, b2Body* body_, const(b2FixtureDef)* def)
     {
         m_userData    = cast(void*)def.userData;
@@ -372,6 +446,7 @@ struct b2Fixture
         m_shape = null;
     }
 
+    // These support body activation/deactivation.
     void CreateProxies(b2BroadPhase* broadPhase, b2Transform xf)
     {
         assert(m_proxyCount == 0);
@@ -426,142 +501,6 @@ struct b2Fixture
         }
     }
 
-    void SetFilterData(b2Filter filter)
-    {
-        m_filter = filter;
-
-        Refilter();
-    }
-
-    void Refilter()
-    {
-        if (m_body is null)
-        {
-            return;
-        }
-
-        // Flag associated contacts for filtering.
-        b2ContactEdge* edge = m_body.GetContactList();
-
-        while (edge)
-        {
-            b2Contact contact  = edge.contact;
-            b2Fixture* fixtureA = contact.GetFixtureA();
-            b2Fixture* fixtureB = contact.GetFixtureB();
-
-            if (fixtureA == &this || fixtureB == &this)
-            {
-                contact.FlagForFiltering();
-            }
-
-            edge = edge.next;
-        }
-
-        b2World* world = m_body.GetWorld();
-
-        if (world is null)
-        {
-            return;
-        }
-
-        // Touch each proxy so that new pairs may be created
-        b2BroadPhase* broadPhase = &world.m_contactManager.m_broadPhase;
-
-        for (int32 i = 0; i < m_proxyCount; ++i)
-        {
-            broadPhase.TouchProxy(m_proxies[i].proxyId);
-        }
-    }
-
-    void SetSensor(bool sensor)
-    {
-        if (sensor != m_isSensor)
-        {
-            m_body.SetAwake(true);
-            m_isSensor = sensor;
-        }
-    }
-
-    void Dump(int32 bodyIndex)
-    {
-        b2Log("    b2FixtureDef fd;\n");
-        b2Log("    fd.friction = %.15lef;\n", m_friction);
-        b2Log("    fd.restitution = %.15lef;\n", m_restitution);
-        b2Log("    fd.density = %.15lef;\n", m_density);
-        b2Log("    fd.isSensor = bool(%d);\n", m_isSensor);
-        b2Log("    fd.filter.categoryBits = uint16(%d);\n", m_filter.categoryBits);
-        b2Log("    fd.filter.maskBits = uint16(%d);\n", m_filter.maskBits);
-        b2Log("    fd.filter.groupIndex = int16(%d);\n", m_filter.groupIndex);
-
-        switch (m_shape.m_type)
-        {
-            case b2Shape.e_circle:
-            {
-                b2CircleShape s = cast(b2CircleShape)m_shape;
-                b2Log("    b2CircleShape shape;\n");
-                b2Log("    shape.m_radius = %.15lef;\n", s.m_radius);
-                b2Log("    shape.m_p.Set(%.15lef, %.15lef);\n", s.m_p.x, s.m_p.y);
-            }
-            break;
-
-            case b2Shape.e_edge:
-            {
-                b2EdgeShape s = cast(b2EdgeShape)m_shape;
-                b2Log("    b2EdgeShape shape;\n");
-                b2Log("    shape.m_radius = %.15lef;\n", s.m_radius);
-                b2Log("    shape.m_vertex0.Set(%.15lef, %.15lef);\n", s.m_vertex0.x, s.m_vertex0.y);
-                b2Log("    shape.m_vertex1.Set(%.15lef, %.15lef);\n", s.m_vertex1.x, s.m_vertex1.y);
-                b2Log("    shape.m_vertex2.Set(%.15lef, %.15lef);\n", s.m_vertex2.x, s.m_vertex2.y);
-                b2Log("    shape.m_vertex3.Set(%.15lef, %.15lef);\n", s.m_vertex3.x, s.m_vertex3.y);
-                b2Log("    shape.m_hasVertex0 = bool(%d);\n", s.m_hasVertex0);
-                b2Log("    shape.m_hasVertex3 = bool(%d);\n", s.m_hasVertex3);
-            }
-            break;
-
-            case b2Shape.e_polygon:
-            {
-                b2PolygonShape s = cast(b2PolygonShape)m_shape;
-                b2Log("    b2PolygonShape shape;\n");
-                b2Log("    b2Vec2 vs[%d];\n", b2_maxPolygonVertices);
-
-                for (int32 i = 0; i < s.m_count; ++i)
-                {
-                    b2Log("    vs[%d].Set(%.15lef, %.15lef);\n", i, s.m_vertices[i].x, s.m_vertices[i].y);
-                }
-
-                b2Log("    shape.Set(vs, %d);\n", s.m_count);
-            }
-            break;
-
-            case b2Shape.e_chain:
-            {
-                b2ChainShape s = cast(b2ChainShape)m_shape;
-                b2Log("    b2ChainShape shape;\n");
-                b2Log("    b2Vec2 vs[%d];\n", s.m_count);
-
-                for (int32 i = 0; i < s.m_count; ++i)
-                {
-                    b2Log("    vs[%d].Set(%.15lef, %.15lef);\n", i, s.m_vertices[i].x, s.m_vertices[i].y);
-                }
-
-                b2Log("    shape.CreateChain(vs, %d);\n", s.m_count);
-                b2Log("    shape.m_prevVertex.Set(%.15lef, %.15lef);\n", s.m_prevVertex.x, s.m_prevVertex.y);
-                b2Log("    shape.m_nextVertex.Set(%.15lef, %.15lef);\n", s.m_nextVertex.x, s.m_nextVertex.y);
-                b2Log("    shape.m_hasPrevVertex = bool(%d);\n", s.m_hasPrevVertex);
-                b2Log("    shape.m_hasNextVertex = bool(%d);\n", s.m_hasNextVertex);
-            }
-            break;
-
-            default:
-                return;
-        }
-
-        b2Log("\n");
-        b2Log("    fd.shape = &shape;\n");
-        b2Log("\n");
-        b2Log("    bodies[%d].CreateFixture(&fd);\n", bodyIndex);
-    }
-
     float32 m_density = 0;
 
     b2Fixture* m_next;
@@ -581,33 +520,3 @@ struct b2Fixture
 
     void* m_userData;
 }
-
-// #endif
-/*
- * Copyright (c) 2006-2009 Erin Catto http://www.box2d.org
- *
- * This software is provided 'as-is', without any express or implied
- * warranty.  In no event will the authors be held liable for any damages
- * arising from the use of this software.
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
- * 1. The origin of this software must not be misrepresented; you must not
- * claim that you wrote the original software. If you use this software
- * in a product, an acknowledgment in the product documentation would be
- * appreciated but is not required.
- * 2. Altered source versions must be plainly marked as such, and must not be
- * misrepresented as being the original software.
- * 3. This notice may not be removed or altered from any source distribution.
- */
-
-import dbox.dynamics.b2fixture;
-import dbox.dynamics.contacts.b2contact;
-import dbox.dynamics.b2world;
-import dbox.collision.shapes.b2circleshape;
-import dbox.collision.shapes.b2edgeshape;
-import dbox.collision.shapes.b2polygonshape;
-import dbox.collision.shapes.b2chainshape;
-import dbox.collision.b2broadphase;
-import dbox.collision.b2collision;
-import dbox.common.b2blockallocator;
