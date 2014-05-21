@@ -1,15 +1,5 @@
-module dbox.dynamics.joints.b2ropejoint;
-
-import core.stdc.float_;
-
-import core.stdc.stdlib;
-import core.stdc.string;
-
-import dbox.common;
-import dbox.dynamics;
-
 /*
- * Copyright (c) 2006-2011 Erin Catto http://www.box2d.org
+ * Copyright (c) 2006-2012 Erin Catto http://www.box2d.org
  *
  * This software is provided 'as-is', without any express or implied
  * warranty.  In no event will the authors be held liable for any damages
@@ -25,11 +15,15 @@ import dbox.dynamics;
  * misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
  */
+module dbox.dynamics.joints.b2ropejoint;
 
-// #ifndef B2_ROPE_JOINT_H
-// #define B2_ROPE_JOINT_H
+import core.stdc.float_;
+import core.stdc.stdlib;
+import core.stdc.string;
 
-import dbox.dynamics.joints.b2joint;
+import dbox.common;
+import dbox.dynamics;
+import dbox.dynamics.joints;
 
 /// Rope joint definition. This requires two body anchor points and
 /// a maximum lengths.
@@ -37,6 +31,7 @@ import dbox.dynamics.joints.b2joint;
 /// see collideConnected in b2JointDef.
 class b2RopeJointDef : b2JointDef
 {
+    ///
     this()
     {
         type = e_ropeJoint;
@@ -67,7 +62,15 @@ class b2RopeJointDef : b2JointDef
 /// control length.
 class b2RopeJoint : b2Joint
 {
+    // Limit:
+    // C = norm(pB - pA) - L
+    // u = (pB - pA) / norm(pB - pA)
+    // Cdot = dot(u, vB + cross(wB, rB) - vA - cross(wA, rA))
+    // J = [-u -cross(rA, u) u cross(rB, u)]
+    // K = J * invM * JT
+    // = invMassA + invIA * cross(rA, u)^2 + invMassB + invIB * cross(rB, u)^2
 
+    ///
     this(const(b2RopeJointDef) def)
     {
         super(def);
@@ -81,6 +84,83 @@ class b2RopeJoint : b2Joint
         m_state   = e_inactiveLimit;
         m_length  = 0.0f;
     }
+
+    ///
+    override b2Vec2 GetAnchorA() const
+    {
+        return m_bodyA.GetWorldPoint(m_localAnchorA);
+    }
+
+    ///
+    override b2Vec2 GetAnchorB() const
+    {
+        return m_bodyB.GetWorldPoint(m_localAnchorB);
+    }
+
+    ///
+    override b2Vec2 GetReactionForce(float32 inv_dt) const
+    {
+        b2Vec2 F = (inv_dt * m_impulse) * m_u;
+        return F;
+    }
+
+    ///
+    override float32 GetReactionTorque(float32 inv_dt) const
+    {
+        B2_NOT_USED(inv_dt);
+        return 0.0f;
+    }
+
+    /// The local anchor point relative to bodyA's origin.
+    b2Vec2 GetLocalAnchorA() const
+    {
+        return m_localAnchorA;
+    }
+
+    /// The local anchor point relative to bodyB's origin.
+    b2Vec2 GetLocalAnchorB() const
+    {
+        return m_localAnchorB;
+    }
+
+    /// Get/set the maximum length of the rope.
+    float32 GetMaxLength() const
+    {
+        return m_maxLength;
+    }
+
+    /// ditto
+    void SetMaxLength(float32 length)
+    {
+        m_maxLength = length;
+    }
+
+    ///
+    b2LimitState GetLimitState() const
+    {
+        return m_state;
+    }
+
+    /// Dump joint to dmLog
+    override void Dump()
+    {
+        int32 indexA = m_bodyA.m_islandIndex;
+        int32 indexB = m_bodyB.m_islandIndex;
+
+        b2Log("  b2RopeJointDef jd;\n");
+        b2Log("  jd.bodyA = bodies[%d];\n", indexA);
+        b2Log("  jd.bodyB = bodies[%d];\n", indexB);
+        b2Log("  jd.collideConnected = bool(%d);\n", m_collideConnected);
+        b2Log("  jd.localAnchorA.Set(%.15lef, %.15lef);\n", m_localAnchorA.x, m_localAnchorA.y);
+        b2Log("  jd.localAnchorB.Set(%.15lef, %.15lef);\n", m_localAnchorB.x, m_localAnchorB.y);
+        b2Log("  jd.maxLength = %.15lef;\n", m_maxLength);
+        b2Log("  joints[%d] = m_world.CreateJoint(&jd);\n", m_index);
+    }
+
+// note: this should be package but D's access implementation is lacking.
+// do not use in user code.
+/* package: */
+public:
 
     override void InitVelocityConstraints(b2SolverData data)
     {
@@ -235,73 +315,6 @@ class b2RopeJoint : b2Joint
         return length - m_maxLength < b2_linearSlop;
     }
 
-    override b2Vec2 GetAnchorA() const
-    {
-        return m_bodyA.GetWorldPoint(m_localAnchorA);
-    }
-
-    override b2Vec2 GetAnchorB() const
-    {
-        return m_bodyB.GetWorldPoint(m_localAnchorB);
-    }
-
-    override b2Vec2 GetReactionForce(float32 inv_dt) const
-    {
-        b2Vec2 F = (inv_dt * m_impulse) * m_u;
-        return F;
-    }
-
-    override float32 GetReactionTorque(float32 inv_dt) const
-    {
-        B2_NOT_USED(inv_dt);
-        return 0.0f;
-    }
-
-    float32 GetMaxLength() const
-    {
-        return m_maxLength;
-    }
-
-    b2LimitState GetLimitState() const
-    {
-        return m_state;
-    }
-
-    override void Dump()
-    {
-        int32 indexA = m_bodyA.m_islandIndex;
-        int32 indexB = m_bodyB.m_islandIndex;
-
-        b2Log("  b2RopeJointDef jd;\n");
-        b2Log("  jd.bodyA = bodies[%d];\n", indexA);
-        b2Log("  jd.bodyB = bodies[%d];\n", indexB);
-        b2Log("  jd.collideConnected = bool(%d);\n", m_collideConnected);
-        b2Log("  jd.localAnchorA.Set(%.15lef, %.15lef);\n", m_localAnchorA.x, m_localAnchorA.y);
-        b2Log("  jd.localAnchorB.Set(%.15lef, %.15lef);\n", m_localAnchorB.x, m_localAnchorB.y);
-        b2Log("  jd.maxLength = %.15lef;\n", m_maxLength);
-        b2Log("  joints[%d] = m_world.CreateJoint(&jd);\n", m_index);
-    }
-
-    /// The local anchor point relative to bodyA's origin.
-    b2Vec2 GetLocalAnchorA() const
-    {
-        return m_localAnchorA;
-    }
-
-    /// The local anchor point relative to bodyB's origin.
-    b2Vec2 GetLocalAnchorB() const
-    {
-        return m_localAnchorB;
-    }
-
-    /// Set/Get the maximum length of the rope.
-    void SetMaxLength(float32 length)
-    {
-        m_maxLength = length;
-    }
-
-
-
     // Solver shared
     b2Vec2  m_localAnchorA;
     b2Vec2  m_localAnchorB;
@@ -324,34 +337,3 @@ class b2RopeJoint : b2Joint
     float32 m_mass = 0;
     b2LimitState m_state;
 }
-
-// #endif
-/*
- * Copyright (c) 2007-2011 Erin Catto http://www.box2d.org
- *
- * This software is provided 'as-is', without any express or implied
- * warranty.  In no event will the authors be held liable for any damages
- * arising from the use of this software.
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
- * 1. The origin of this software must not be misrepresented; you must not
- * claim that you wrote the original software. If you use this software
- * in a product, an acknowledgment in the product documentation would be
- * appreciated but is not required.
- * 2. Altered source versions must be plainly marked as such, and must not be
- * misrepresented as being the original software.
- * 3. This notice may not be removed or altered from any source distribution.
- */
-
-import dbox.dynamics.joints.b2ropejoint;
-import dbox.dynamics.b2body;
-import dbox.dynamics.b2timestep;
-
-// Limit:
-// C = norm(pB - pA) - L
-// u = (pB - pA) / norm(pB - pA)
-// Cdot = dot(u, vB + cross(wB, rB) - vA - cross(wA, rA))
-// J = [-u -cross(rA, u) u cross(rB, u)]
-// K = J * invM * JT
-// = invMassA + invIA * cross(rA, u)^2 + invMassB + invIB * cross(rB, u)^2
