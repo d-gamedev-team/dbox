@@ -1,14 +1,5 @@
-module dbox.dynamics.joints.b2revolutejoint;
-
-import core.stdc.float_;
-import core.stdc.stdlib;
-import core.stdc.string;
-
-import dbox.common;
-import dbox.dynamics;
-
 /*
- * Copyright (c) 2006-2011 Erin Catto http://www.box2d.org
+ * Copyright (c) 2006-2012 Erin Catto http://www.box2d.org
  *
  * This software is provided 'as-is', without any express or implied
  * warranty.  In no event will the authors be held liable for any damages
@@ -24,11 +15,15 @@ import dbox.dynamics;
  * misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
  */
+module dbox.dynamics.joints.b2revolutejoint;
 
-// #ifndef B2_REVOLUTE_JOINT_H
-// #define B2_REVOLUTE_JOINT_H
+import core.stdc.float_;
+import core.stdc.stdlib;
+import core.stdc.string;
 
-import dbox.dynamics.joints.b2joint;
+import dbox.common;
+import dbox.dynamics;
+import dbox.dynamics.joints;
 
 /// Revolute joint definition. This requires defining an
 /// anchor point where the bodies are joined. The definition
@@ -43,16 +38,7 @@ import dbox.dynamics.joints.b2joint;
 ///    the joints will be broken.
 class b2RevoluteJointDef : b2JointDef
 {
-
-    void Initialize(b2Body* bA, b2Body* bB, b2Vec2 anchor)
-    {
-        bodyA          = bA;
-        bodyB          = bB;
-        localAnchorA   = bodyA.GetLocalPoint(anchor);
-        localAnchorB   = bodyB.GetLocalPoint(anchor);
-        referenceAngle = bodyB.GetAngle() - bodyA.GetAngle();
-    }
-
+    ///
     this()
     {
         type = e_revoluteJoint;
@@ -67,9 +53,29 @@ class b2RevoluteJointDef : b2JointDef
         enableMotor    = false;
     }
 
+    // Point-to-point constraint
+    // C = p2 - p1
+    // Cdot = v2 - v1
+    // = v2 + cross(w2, r2) - v1 - cross(w1, r1)
+    // J = [-I -r1_skew I r2_skew ]
+    // Identity used:
+    // w k % (rx i + ry j) = w * (-ry i + rx j)
+
+    // Motor constraint
+    // Cdot = w2 - w1
+    // J = [0 0 -1 0 0 1]
+    // K = invI1 + invI2
+
     /// Initialize the bodies, anchors, and reference angle using a world
     /// anchor point.
-    void Initialize(b2Body* bodyA, b2Body* bodyB, b2Vec2 anchor);
+    void Initialize(b2Body* bA, b2Body* bB, b2Vec2 anchor)
+    {
+        bodyA          = bA;
+        bodyB          = bB;
+        localAnchorA   = bodyA.GetLocalPoint(anchor);
+        localAnchorB   = bodyB.GetLocalPoint(anchor);
+        referenceAngle = bodyB.GetAngle() - bodyA.GetAngle();
+    }
 
     /// The local anchor point relative to bodyA's origin.
     b2Vec2 localAnchorA;
@@ -108,11 +114,7 @@ class b2RevoluteJointDef : b2JointDef
 /// is provided so that infinite forces are not generated.
 class b2RevoluteJoint : b2Joint
 {
-    float32 GetMotorSpeed() const
-    {
-        return m_motorSpeed;
-    }
-
+    ///
     this(const(b2RevoluteJointDef) def)
     {
         super(def);
@@ -131,6 +133,188 @@ class b2RevoluteJoint : b2Joint
         m_enableMotor    = def.enableMotor;
         m_limitState     = e_inactiveLimit;
     }
+
+    ///
+    override b2Vec2 GetAnchorA() const
+    {
+        return m_bodyA.GetWorldPoint(m_localAnchorA);
+    }
+
+    ///
+    override b2Vec2 GetAnchorB() const
+    {
+        return m_bodyB.GetWorldPoint(m_localAnchorB);
+    }
+
+    /// The local anchor point relative to bodyA's origin.
+    b2Vec2 GetLocalAnchorA() const
+    {
+        return m_localAnchorA;
+    }
+
+    /// The local anchor point relative to bodyB's origin.
+    b2Vec2 GetLocalAnchorB() const
+    {
+        return m_localAnchorB;
+    }
+
+    /// Get the reference angle.
+    float32 GetReferenceAngle() const
+    {
+        return m_referenceAngle;
+    }
+
+    /// Get the current joint angle in radians.
+    float32 GetJointAngle() const
+    {
+        b2Body* bA = cast(b2Body*)m_bodyA;
+        b2Body* bB = cast(b2Body*)m_bodyB;
+        return bB.m_sweep.a - bA.m_sweep.a - m_referenceAngle;
+    }
+
+    /// Get the current joint angle speed in radians per second.
+    float32 GetJointSpeed() const
+    {
+        b2Body* bA = cast(b2Body*)m_bodyA;
+        b2Body* bB = cast(b2Body*)m_bodyB;
+        return bB.m_angularVelocity - bA.m_angularVelocity;
+    }
+
+    /// Is the joint limit enabled?
+    bool IsLimitEnabled() const
+    {
+        return m_enableLimit;
+    }
+
+    /// Enable/disable the joint limit.
+    void EnableLimit(bool flag)
+    {
+        if (flag != m_enableLimit)
+        {
+            m_bodyA.SetAwake(true);
+            m_bodyB.SetAwake(true);
+            m_enableLimit = flag;
+            m_impulse.z   = 0.0f;
+        }
+    }
+
+    /// Get the lower joint limit in radians.
+    float32 GetLowerLimit() const
+    {
+        return m_lowerAngle;
+    }
+
+    /// Get the upper joint limit in radians.
+    float32 GetUpperLimit() const
+    {
+        return m_upperAngle;
+    }
+
+    /// Set the joint limits in radians.
+    void SetLimits(float32 lower, float32 upper)
+    {
+        assert(lower <= upper);
+
+        if (lower != m_lowerAngle || upper != m_upperAngle)
+        {
+            m_bodyA.SetAwake(true);
+            m_bodyB.SetAwake(true);
+            m_impulse.z  = 0.0f;
+            m_lowerAngle = lower;
+            m_upperAngle = upper;
+        }
+    }
+
+    /// Is the joint motor enabled?
+    bool IsMotorEnabled() const
+    {
+        return m_enableMotor;
+    }
+
+    /// Enable/disable the joint motor.
+    void EnableMotor(bool flag)
+    {
+        m_bodyA.SetAwake(true);
+        m_bodyB.SetAwake(true);
+        m_enableMotor = flag;
+    }
+
+    /// Get the motor speed in radians per second.
+    float32 GetMotorSpeed() const
+    {
+        return m_motorSpeed;
+    }
+
+    /// Set the motor speed in radians per second.
+    void SetMotorSpeed(float32 speed)
+    {
+        m_bodyA.SetAwake(true);
+        m_bodyB.SetAwake(true);
+        m_motorSpeed = speed;
+    }
+
+    /// Get the maximum motor torque, usually in N-m.
+    float32 GetMotorTorque(float32 inv_dt) const
+    {
+        return inv_dt * m_motorImpulse;
+    }
+
+    /// Set the maximum motor torque, usually in N-m.
+    void SetMaxMotorTorque(float32 torque)
+    {
+        m_bodyA.SetAwake(true);
+        m_bodyB.SetAwake(true);
+        m_maxMotorTorque = torque;
+    }
+
+    /// Get the reaction force given the inverse time step.
+    /// Unit is N.
+    override b2Vec2 GetReactionForce(float32 inv_dt) const
+    {
+        b2Vec2 P = b2Vec2(m_impulse.x, m_impulse.y);
+        return inv_dt * P;
+    }
+
+    /// Get the reaction torque due to the joint limit given the inverse time step.
+    /// Unit is N*m.
+    override float32 GetReactionTorque(float32 inv_dt) const
+    {
+        return inv_dt * m_impulse.z;
+    }
+
+    /// Get the current motor torque given the inverse time step.
+    /// Unit is N*m.
+    float32 GetMaxMotorTorque() const
+    {
+        return m_maxMotorTorque;
+    }
+
+    /// Dump to b2Log.
+    override void Dump()
+    {
+        int32 indexA = m_bodyA.m_islandIndex;
+        int32 indexB = m_bodyB.m_islandIndex;
+
+        b2Log("  b2RevoluteJointDef jd;\n");
+        b2Log("  jd.bodyA = bodies[%d];\n", indexA);
+        b2Log("  jd.bodyB = bodies[%d];\n", indexB);
+        b2Log("  jd.collideConnected = bool(%d);\n", m_collideConnected);
+        b2Log("  jd.localAnchorA.Set(%.15lef, %.15lef);\n", m_localAnchorA.x, m_localAnchorA.y);
+        b2Log("  jd.localAnchorB.Set(%.15lef, %.15lef);\n", m_localAnchorB.x, m_localAnchorB.y);
+        b2Log("  jd.referenceAngle = %.15lef;\n", m_referenceAngle);
+        b2Log("  jd.enableLimit = bool(%d);\n", m_enableLimit);
+        b2Log("  jd.lowerAngle = %.15lef;\n", m_lowerAngle);
+        b2Log("  jd.upperAngle = %.15lef;\n", m_upperAngle);
+        b2Log("  jd.enableMotor = bool(%d);\n", m_enableMotor);
+        b2Log("  jd.motorSpeed = %.15lef;\n", m_motorSpeed);
+        b2Log("  jd.maxMotorTorque = %.15lef;\n", m_maxMotorTorque);
+        b2Log("  joints[%d] = m_world.CreateJoint(&jd);\n", m_index);
+    }
+
+// note: this should be package but D's access implementation is lacking.
+// do not use in user code.
+/* package: */
+public:
 
     override void InitVelocityConstraints(b2SolverData data)
     {
@@ -451,161 +635,6 @@ class b2RevoluteJoint : b2Joint
         return positionError <= b2_linearSlop && angularError <= b2_angularSlop;
     }
 
-    override b2Vec2 GetAnchorA() const
-    {
-        return m_bodyA.GetWorldPoint(m_localAnchorA);
-    }
-
-    override b2Vec2 GetAnchorB() const
-    {
-        return m_bodyB.GetWorldPoint(m_localAnchorB);
-    }
-
-    override b2Vec2 GetReactionForce(float32 inv_dt) const
-    {
-        b2Vec2 P = b2Vec2(m_impulse.x, m_impulse.y);
-        return inv_dt * P;
-    }
-
-    override float32 GetReactionTorque(float32 inv_dt) const
-    {
-        return inv_dt * m_impulse.z;
-    }
-
-    float32 GetJointAngle() const
-    {
-        b2Body* bA = cast(b2Body*)m_bodyA;
-        b2Body* bB = cast(b2Body*)m_bodyB;
-        return bB.m_sweep.a - bA.m_sweep.a - m_referenceAngle;
-    }
-
-    float32 GetJointSpeed() const
-    {
-        b2Body* bA = cast(b2Body*)m_bodyA;
-        b2Body* bB = cast(b2Body*)m_bodyB;
-        return bB.m_angularVelocity - bA.m_angularVelocity;
-    }
-
-    bool IsMotorEnabled() const
-    {
-        return m_enableMotor;
-    }
-
-    void EnableMotor(bool flag)
-    {
-        m_bodyA.SetAwake(true);
-        m_bodyB.SetAwake(true);
-        m_enableMotor = flag;
-    }
-
-    float32 GetMotorTorque(float32 inv_dt) const
-    {
-        return inv_dt * m_motorImpulse;
-    }
-
-    void SetMotorSpeed(float32 speed)
-    {
-        m_bodyA.SetAwake(true);
-        m_bodyB.SetAwake(true);
-        m_motorSpeed = speed;
-    }
-
-    void SetMaxMotorTorque(float32 torque)
-    {
-        m_bodyA.SetAwake(true);
-        m_bodyB.SetAwake(true);
-        m_maxMotorTorque = torque;
-    }
-
-    bool IsLimitEnabled() const
-    {
-        return m_enableLimit;
-    }
-
-    void EnableLimit(bool flag)
-    {
-        if (flag != m_enableLimit)
-        {
-            m_bodyA.SetAwake(true);
-            m_bodyB.SetAwake(true);
-            m_enableLimit = flag;
-            m_impulse.z   = 0.0f;
-        }
-    }
-
-    float32 GetLowerLimit() const
-    {
-        return m_lowerAngle;
-    }
-
-    float32 GetUpperLimit() const
-    {
-        return m_upperAngle;
-    }
-
-    void SetLimits(float32 lower, float32 upper)
-    {
-        assert(lower <= upper);
-
-        if (lower != m_lowerAngle || upper != m_upperAngle)
-        {
-            m_bodyA.SetAwake(true);
-            m_bodyB.SetAwake(true);
-            m_impulse.z  = 0.0f;
-            m_lowerAngle = lower;
-            m_upperAngle = upper;
-        }
-    }
-
-    override void Dump()
-    {
-        int32 indexA = m_bodyA.m_islandIndex;
-        int32 indexB = m_bodyB.m_islandIndex;
-
-        b2Log("  b2RevoluteJointDef jd;\n");
-        b2Log("  jd.bodyA = bodies[%d];\n", indexA);
-        b2Log("  jd.bodyB = bodies[%d];\n", indexB);
-        b2Log("  jd.collideConnected = bool(%d);\n", m_collideConnected);
-        b2Log("  jd.localAnchorA.Set(%.15lef, %.15lef);\n", m_localAnchorA.x, m_localAnchorA.y);
-        b2Log("  jd.localAnchorB.Set(%.15lef, %.15lef);\n", m_localAnchorB.x, m_localAnchorB.y);
-        b2Log("  jd.referenceAngle = %.15lef;\n", m_referenceAngle);
-        b2Log("  jd.enableLimit = bool(%d);\n", m_enableLimit);
-        b2Log("  jd.lowerAngle = %.15lef;\n", m_lowerAngle);
-        b2Log("  jd.upperAngle = %.15lef;\n", m_upperAngle);
-        b2Log("  jd.enableMotor = bool(%d);\n", m_enableMotor);
-        b2Log("  jd.motorSpeed = %.15lef;\n", m_motorSpeed);
-        b2Log("  jd.maxMotorTorque = %.15lef;\n", m_maxMotorTorque);
-        b2Log("  joints[%d] = m_world.CreateJoint(&jd);\n", m_index);
-    }
-
-    /// The local anchor point relative to bodyA's origin.
-    b2Vec2 GetLocalAnchorA() const
-    {
-        return m_localAnchorA;
-    }
-
-    /// The local anchor point relative to bodyB's origin.
-    b2Vec2 GetLocalAnchorB() const
-    {
-        return m_localAnchorB;
-    }
-
-    /// Get the reference angle.
-    float32 GetReferenceAngle() const
-    {
-        return m_referenceAngle;
-    }
-
-    float32 GetMaxMotorTorque() const
-    {
-        return m_maxMotorTorque;
-    }
-
-
-
-
-
-
     // Solver shared
     b2Vec2  m_localAnchorA;
     b2Vec2  m_localAnchorB;
@@ -636,39 +665,3 @@ class b2RevoluteJoint : b2Joint
     float32 m_motorMass = 0;        // effective mass for motor/limit angular constraint.
     b2LimitState m_limitState;
 }
-
-// #endif
-/*
- * Copyright (c) 2006-2011 Erin Catto http://www.box2d.org
- *
- * This software is provided 'as-is', without any express or implied
- * warranty.  In no event will the authors be held liable for any damages
- * arising from the use of this software.
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
- * 1. The origin of this software must not be misrepresented; you must not
- * claim that you wrote the original software. If you use this software
- * in a product, an acknowledgment in the product documentation would be
- * appreciated but is not required.
- * 2. Altered source versions must be plainly marked as such, and must not be
- * misrepresented as being the original software.
- * 3. This notice may not be removed or altered from any source distribution.
- */
-
-import dbox.dynamics.joints.b2revolutejoint;
-import dbox.dynamics.b2body;
-import dbox.dynamics.b2timestep;
-
-// Point-to-point constraint
-// C = p2 - p1
-// Cdot = v2 - v1
-// = v2 + cross(w2, r2) - v1 - cross(w1, r1)
-// J = [-I -r1_skew I r2_skew ]
-// Identity used:
-// w k % (rx i + ry j) = w * (-ry i + rx j)
-
-// Motor constraint
-// Cdot = w2 - w1
-// J = [0 0 -1 0 0 1]
-// K = invI1 + invI2
