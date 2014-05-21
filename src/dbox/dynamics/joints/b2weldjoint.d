@@ -1,14 +1,5 @@
-module dbox.dynamics.joints.b2weldjoint;
-
-import core.stdc.float_;
-import core.stdc.stdlib;
-import core.stdc.string;
-
-import dbox.common;
-import dbox.dynamics;
-
 /*
- * Copyright (c) 2006-2011 Erin Catto http://www.box2d.org
+ * Copyright (c) 2006-2012 Erin Catto http://www.box2d.org
  *
  * This software is provided 'as-is', without any express or implied
  * warranty.  In no event will the authors be held liable for any damages
@@ -24,17 +15,22 @@ import dbox.dynamics;
  * misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
  */
+module dbox.dynamics.joints.b2weldjoint;
 
-// #ifndef B2_WELD_JOINT_H
-// #define B2_WELD_JOINT_H
+import core.stdc.float_;
+import core.stdc.stdlib;
+import core.stdc.string;
 
-import dbox.dynamics.joints.b2joint;
+import dbox.common;
+import dbox.dynamics;
+import dbox.dynamics.joints;
 
 /// Weld joint definition. You need to specify local anchor points
 /// where they are attached and the relative body angle. The position
 /// of the anchor points is important for computing the reaction torque.
 class b2WeldJointDef : b2JointDef
 {
+    ///
     this()
     {
         type = e_weldJoint;
@@ -62,6 +58,8 @@ class b2WeldJointDef : b2JointDef
     // J = [0 0 -1 0 0 1]
     // K = invI1 + invI2
 
+    /// Initialize the bodies, anchors, and reference angle using a world
+    /// anchor point.
     void Initialize(b2Body* bA, b2Body* bB, b2Vec2 anchor)
     {
         bodyA          = bA;
@@ -92,6 +90,7 @@ class b2WeldJointDef : b2JointDef
 /// distort somewhat because the island constraint solver is approximate.
 class b2WeldJoint : b2Joint
 {
+    ///
     this(const(b2WeldJointDef) def)
     {
         super(def);
@@ -102,6 +101,96 @@ class b2WeldJoint : b2Joint
         m_dampingRatio   = def.dampingRatio;
 
         m_impulse.SetZero();
+    }
+
+    ///
+    override b2Vec2 GetAnchorA() const
+    {
+        return m_bodyA.GetWorldPoint(m_localAnchorA);
+    }
+
+    ///
+    override b2Vec2 GetAnchorB() const
+    {
+        return m_bodyB.GetWorldPoint(m_localAnchorB);
+    }
+
+    ///
+    override b2Vec2 GetReactionForce(float32 inv_dt) const
+    {
+        b2Vec2 P = b2Vec2(m_impulse.x, m_impulse.y);
+        return inv_dt * P;
+    }
+
+    ///
+    override float32 GetReactionTorque(float32 inv_dt) const
+    {
+        return inv_dt * m_impulse.z;
+    }
+
+    /// The local anchor point relative to bodyA's origin.
+    b2Vec2 GetLocalAnchorA() const
+    {
+        return m_localAnchorA;
+    }
+
+    /// The local anchor point relative to bodyB's origin.
+    b2Vec2 GetLocalAnchorB() const
+    {
+        return m_localAnchorB;
+    }
+
+    /// Get the reference angle.
+    float32 GetReferenceAngle() const
+    {
+        return m_referenceAngle;
+    }
+
+    /// Get/set frequency in Hz.
+    float32 GetFrequency() const
+    {
+        return m_frequencyHz;
+    }
+
+    /// ditto
+    void SetFrequency(float32 hz)
+    {
+        m_frequencyHz = hz;
+    }
+
+    /// Get/set damping ratio.
+    float32 GetDampingRatio() const
+    {
+        return m_dampingRatio;
+    }
+
+    /// ditto
+    void SetDampingRatio(float32 ratio)
+    {
+        m_dampingRatio = ratio;
+    }
+
+// note: this should be package but D's access implementation is lacking.
+// do not use in user code.
+/* package: */
+public:
+
+    /// Dump to b2Log
+    override void Dump()
+    {
+        int32 indexA = m_bodyA.m_islandIndex;
+        int32 indexB = m_bodyB.m_islandIndex;
+
+        b2Log("  b2WeldJointDef jd;\n");
+        b2Log("  jd.bodyA = bodies[%d];\n", indexA);
+        b2Log("  jd.bodyB = bodies[%d];\n", indexB);
+        b2Log("  jd.collideConnected = bool(%d);\n", m_collideConnected);
+        b2Log("  jd.localAnchorA.Set(%.15lef, %.15lef);\n", m_localAnchorA.x, m_localAnchorA.y);
+        b2Log("  jd.localAnchorB.Set(%.15lef, %.15lef);\n", m_localAnchorB.x, m_localAnchorB.y);
+        b2Log("  jd.referenceAngle = %.15lef;\n", m_referenceAngle);
+        b2Log("  jd.frequencyHz = %.15lef;\n", m_frequencyHz);
+        b2Log("  jd.dampingRatio = %.15lef;\n", m_dampingRatio);
+        b2Log("  joints[%d] = m_world.CreateJoint(&jd);\n", m_index);
     }
 
     override void InitVelocityConstraints(b2SolverData data)
@@ -357,84 +446,6 @@ class b2WeldJoint : b2Joint
         return positionError <= b2_linearSlop && angularError <= b2_angularSlop;
     }
 
-    override b2Vec2 GetAnchorA() const
-    {
-        return m_bodyA.GetWorldPoint(m_localAnchorA);
-    }
-
-    override b2Vec2 GetAnchorB() const
-    {
-        return m_bodyB.GetWorldPoint(m_localAnchorB);
-    }
-
-    override b2Vec2 GetReactionForce(float32 inv_dt) const
-    {
-        b2Vec2 P = b2Vec2(m_impulse.x, m_impulse.y);
-        return inv_dt * P;
-    }
-
-    override float32 GetReactionTorque(float32 inv_dt) const
-    {
-        return inv_dt * m_impulse.z;
-    }
-
-    override void Dump()
-    {
-        int32 indexA = m_bodyA.m_islandIndex;
-        int32 indexB = m_bodyB.m_islandIndex;
-
-        b2Log("  b2WeldJointDef jd;\n");
-        b2Log("  jd.bodyA = bodies[%d];\n", indexA);
-        b2Log("  jd.bodyB = bodies[%d];\n", indexB);
-        b2Log("  jd.collideConnected = bool(%d);\n", m_collideConnected);
-        b2Log("  jd.localAnchorA.Set(%.15lef, %.15lef);\n", m_localAnchorA.x, m_localAnchorA.y);
-        b2Log("  jd.localAnchorB.Set(%.15lef, %.15lef);\n", m_localAnchorB.x, m_localAnchorB.y);
-        b2Log("  jd.referenceAngle = %.15lef;\n", m_referenceAngle);
-        b2Log("  jd.frequencyHz = %.15lef;\n", m_frequencyHz);
-        b2Log("  jd.dampingRatio = %.15lef;\n", m_dampingRatio);
-        b2Log("  joints[%d] = m_world.CreateJoint(&jd);\n", m_index);
-    }
-
-    /// The local anchor point relative to bodyA's origin.
-    b2Vec2 GetLocalAnchorA() const
-    {
-        return m_localAnchorA;
-    }
-
-    /// The local anchor point relative to bodyB's origin.
-    b2Vec2 GetLocalAnchorB() const
-    {
-        return m_localAnchorB;
-    }
-
-    /// Get the reference angle.
-    float32 GetReferenceAngle() const
-    {
-        return m_referenceAngle;
-    }
-
-    /// Set/get frequency in Hz.
-    void SetFrequency(float32 hz)
-    {
-        m_frequencyHz = hz;
-    }
-
-    float32 GetFrequency() const
-    {
-        return m_frequencyHz;
-    }
-
-    /// Set/get damping ratio.
-    void SetDampingRatio(float32 ratio)
-    {
-        m_dampingRatio = ratio;
-    }
-
-    float32 GetDampingRatio() const
-    {
-        return m_dampingRatio;
-    }
-
     float32 m_frequencyHz = 0;
     float32 m_dampingRatio = 0;
     float32 m_bias = 0;
@@ -459,7 +470,3 @@ class b2WeldJoint : b2Joint
     float32 m_invIB = 0;
     b2Mat33 m_mass;
 }
-
-import dbox.dynamics.joints.b2weldjoint;
-import dbox.dynamics.b2body;
-import dbox.dynamics.b2timestep;
