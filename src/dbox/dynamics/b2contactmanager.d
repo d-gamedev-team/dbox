@@ -1,15 +1,3 @@
-module dbox.dynamics.b2contactmanager;
-
-import core.stdc.float_;
-import core.stdc.stdlib;
-import core.stdc.string;
-
-import dbox.common;
-import dbox.collision;
-import dbox.dynamics;
-import dbox.dynamics.contacts;
-import dbox.dynamics.joints;
-
 /*
  * Copyright (c) 2006-2009 Erin Catto http://www.box2d.org
  *
@@ -27,18 +15,29 @@ import dbox.dynamics.joints;
  * misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
  */
+module dbox.dynamics.b2contactmanager;
 
-// #ifndef B2_CONTACT_MANAGER_H
-// #define B2_CONTACT_MANAGER_H
+import core.stdc.float_;
+import core.stdc.stdlib;
+import core.stdc.string;
 
-import dbox.collision.b2broadphase;
+import dbox.collision;
+import dbox.collision.shapes;
+import dbox.common;
+import dbox.dynamics;
+import dbox.dynamics.contacts;
+import dbox.dynamics.joints;
 
 // Delegate of b2World*.
 struct b2ContactManager
 {
+    /// This struct must be properly initialized with an explicit constructor.
     @disable this();
+
+    /// This struct cannot be copied.
     @disable this(this);
 
+    /// Explicit constructor.
     this(int)
     {
         m_contactList     = null;
@@ -49,8 +48,137 @@ struct b2ContactManager
         m_allocator       = null;
     }
 
-    b2ContactFilter m_contactFilter;
-    b2ContactListener m_contactListener;
+    // Broad-phase callback.
+    void AddPair(void* proxyUserDataA, void* proxyUserDataB)
+    {
+        b2FixtureProxy* proxyA = cast(b2FixtureProxy*)proxyUserDataA;
+        b2FixtureProxy* proxyB = cast(b2FixtureProxy*)proxyUserDataB;
+
+        b2Fixture* fixtureA = proxyA.fixture;
+        b2Fixture* fixtureB = proxyB.fixture;
+
+        int32 indexA = proxyA.childIndex;
+        int32 indexB = proxyB.childIndex;
+
+        b2Body* body_A = fixtureA.GetBody();
+        b2Body* body_B = fixtureB.GetBody();
+
+        // Are the fixtures on the same body?
+        if (body_A == body_B)
+        {
+            return;
+        }
+
+        // TODO_ERIN use a hash table to remove a potential bottleneck when both
+        // bodies have a lot of contacts.
+        // Does a contact already exist?
+        b2ContactEdge* edge = body_B.GetContactList();
+
+        while (edge)
+        {
+            if (edge.other == body_A)
+            {
+                b2Fixture* fA = edge.contact.GetFixtureA();
+                b2Fixture* fB = edge.contact.GetFixtureB();
+                int32 iA      = edge.contact.GetChildIndexA();
+                int32 iB      = edge.contact.GetChildIndexB();
+
+                if (fA == fixtureA && fB == fixtureB && iA == indexA && iB == indexB)
+                {
+                    // A contact already exists.
+                    return;
+                }
+
+                if (fA == fixtureB && fB == fixtureA && iA == indexB && iB == indexA)
+                {
+                    // A contact already exists.
+                    return;
+                }
+            }
+
+            edge = edge.next;
+        }
+
+        // Does a joint override collision? Is at least one body dynamic?
+        if (body_B.ShouldCollide(body_A) == false)
+        {
+            return;
+        }
+
+        // Check user filtering.
+        if (m_contactFilter && m_contactFilter.ShouldCollide(fixtureA, fixtureB) == false)
+        {
+            return;
+        }
+
+        // Call the factory.
+        b2Contact c = b2Contact.Create(fixtureA, indexA, fixtureB, indexB, m_allocator);
+
+        if (c is null)
+        {
+            return;
+        }
+
+        // Contact creation may swap fixtures.
+        fixtureA = c.GetFixtureA();
+        fixtureB = c.GetFixtureB();
+        indexA   = c.GetChildIndexA();
+        indexB   = c.GetChildIndexB();
+        body_A    = fixtureA.GetBody();
+        body_B    = fixtureB.GetBody();
+
+        // Insert into the world.
+        c.m_prev = null;
+        c.m_next = m_contactList;
+
+        if (m_contactList !is null)
+        {
+            m_contactList.m_prev = c;
+        }
+        m_contactList = c;
+
+        // Connect to island graph.
+
+        // Connect to body A
+        c.m_nodeA.contact = c;
+        c.m_nodeA.other   = body_B;
+
+        c.m_nodeA.prev = null;
+        c.m_nodeA.next = body_A.m_contactList;
+
+        if (body_A.m_contactList !is null)
+        {
+            body_A.m_contactList.prev = &c.m_nodeA;
+        }
+        body_A.m_contactList = &c.m_nodeA;
+
+        // Connect to body B
+        c.m_nodeB.contact = c;
+        c.m_nodeB.other   = body_A;
+
+        c.m_nodeB.prev = null;
+        c.m_nodeB.next = body_B.m_contactList;
+
+        if (body_B.m_contactList !is null)
+        {
+            body_B.m_contactList.prev = &c.m_nodeB;
+        }
+        body_B.m_contactList = &c.m_nodeB;
+
+        // Wake up the bodies
+        if (fixtureA.IsSensor() == false && fixtureB.IsSensor() == false)
+        {
+            body_A.SetAwake(true);
+            body_B.SetAwake(true);
+        }
+
+        ++m_contactCount;
+    }
+
+    void FindNewContacts()
+    {
+        m_broadPhase.UpdatePairs(this);
+    }
 
     void Destroy(b2Contact c)
     {
@@ -188,140 +316,11 @@ struct b2ContactManager
         }
     }
 
-    void FindNewContacts()
-    {
-        m_broadPhase.UpdatePairs(this);
-    }
-
-    void AddPair(void* proxyUserDataA, void* proxyUserDataB)
-    {
-        b2FixtureProxy* proxyA = cast(b2FixtureProxy*)proxyUserDataA;
-        b2FixtureProxy* proxyB = cast(b2FixtureProxy*)proxyUserDataB;
-
-        b2Fixture* fixtureA = proxyA.fixture;
-        b2Fixture* fixtureB = proxyB.fixture;
-
-        int32 indexA = proxyA.childIndex;
-        int32 indexB = proxyB.childIndex;
-
-        b2Body* body_A = fixtureA.GetBody();
-        b2Body* body_B = fixtureB.GetBody();
-
-        // Are the fixtures on the same body?
-        if (body_A == body_B)
-        {
-            return;
-        }
-
-        // TODO_ERIN use a hash table to remove a potential bottleneck when both
-        // bodies have a lot of contacts.
-        // Does a contact already exist?
-        b2ContactEdge* edge = body_B.GetContactList();
-
-        while (edge)
-        {
-            if (edge.other == body_A)
-            {
-                b2Fixture* fA = edge.contact.GetFixtureA();
-                b2Fixture* fB = edge.contact.GetFixtureB();
-                int32 iA      = edge.contact.GetChildIndexA();
-                int32 iB      = edge.contact.GetChildIndexB();
-
-                if (fA == fixtureA && fB == fixtureB && iA == indexA && iB == indexB)
-                {
-                    // A contact already exists.
-                    return;
-                }
-
-                if (fA == fixtureB && fB == fixtureA && iA == indexB && iB == indexA)
-                {
-                    // A contact already exists.
-                    return;
-                }
-            }
-
-            edge = edge.next;
-        }
-
-        // Does a joint override collision? Is at least one body dynamic?
-        if (body_B.ShouldCollide(body_A) == false)
-        {
-            return;
-        }
-
-        // Check user filtering.
-        if (m_contactFilter && m_contactFilter.ShouldCollide(fixtureA, fixtureB) == false)
-        {
-            return;
-        }
-
-        // Call the factory.
-        b2Contact c = b2Contact.Create(fixtureA, indexA, fixtureB, indexB, m_allocator);
-
-        if (c is null)
-        {
-            return;
-        }
-
-        // Contact creation may swap fixtures.
-        fixtureA = c.GetFixtureA();
-        fixtureB = c.GetFixtureB();
-        indexA   = c.GetChildIndexA();
-        indexB   = c.GetChildIndexB();
-        body_A    = fixtureA.GetBody();
-        body_B    = fixtureB.GetBody();
-
-        // Insert into the world.
-        c.m_prev = null;
-        c.m_next = m_contactList;
-
-        if (m_contactList !is null)
-        {
-            m_contactList.m_prev = c;
-        }
-        m_contactList = c;
-
-        // Connect to island graph.
-
-        // Connect to body A
-        c.m_nodeA.contact = c;
-        c.m_nodeA.other   = body_B;
-
-        c.m_nodeA.prev = null;
-        c.m_nodeA.next = body_A.m_contactList;
-
-        if (body_A.m_contactList !is null)
-        {
-            body_A.m_contactList.prev = &c.m_nodeA;
-        }
-        body_A.m_contactList = &c.m_nodeA;
-
-        // Connect to body B
-        c.m_nodeB.contact = c;
-        c.m_nodeB.other   = body_A;
-
-        c.m_nodeB.prev = null;
-        c.m_nodeB.next = body_B.m_contactList;
-
-        if (body_B.m_contactList !is null)
-        {
-            body_B.m_contactList.prev = &c.m_nodeB;
-        }
-        body_B.m_contactList = &c.m_nodeB;
-
-        // Wake up the bodies
-        if (fixtureA.IsSensor() == false && fixtureB.IsSensor() == false)
-        {
-            body_A.SetAwake(true);
-            body_B.SetAwake(true);
-        }
-
-        ++m_contactCount;
-    }
-
     b2BroadPhase m_broadPhase;
     b2Contact m_contactList;
     int32 m_contactCount;
+    b2ContactFilter m_contactFilter;
+    b2ContactListener m_contactListener;
     b2BlockAllocator* m_allocator;
 }
 
