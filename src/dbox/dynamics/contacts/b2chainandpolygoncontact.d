@@ -21,21 +21,20 @@ import core.stdc.float_;
 import core.stdc.stdlib;
 import core.stdc.string;
 
+import dbox.collision;
 import dbox.collision.shapes;
 import dbox.common;
 import dbox.dynamics;
-import dbox.collision;
+import dbox.dynamics.contacts;
 
-import dbox.dynamics.contacts.b2contact;
-
+///
 class b2ChainAndPolygonContact : b2Contact
 {
+    ///
     static b2Contact Create(b2Fixture* fixtureA, int32 indexA, b2Fixture* fixtureB, int32 indexB, b2BlockAllocator* allocator)
     {
-        //~ void* mem = allocator.Allocate(b2memSizeOf!b2ChainAndPolygonContact);
-        //~ return emplace!b2ChainAndPolygonContact(mem, fixtureA, indexA, fixtureB, indexB);
-
-        return new b2ChainAndPolygonContact(fixtureA, indexA, fixtureB, indexB);
+        void* mem = allocator.Allocate(b2memSizeOf!b2ChainAndPolygonContact);
+        return b2emplace!b2ChainAndPolygonContact(mem, fixtureA, indexA, fixtureB, indexB);
     }
 
     static void Destroy(b2Contact contact, b2BlockAllocator* allocator)

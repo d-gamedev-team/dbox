@@ -37,10 +37,8 @@ class b2EdgeAndPolygonContact : b2Contact
 {
     static b2Contact Create(b2Fixture* fixtureA, int32, b2Fixture* fixtureB, int32, b2BlockAllocator* allocator)
     {
-        //~ void* mem = allocator.Allocate(b2memSizeOf!b2EdgeAndPolygonContact);
-        //~ return emplace!b2EdgeAndPolygonContact(mem, fixtureA, fixtureB);
-
-        return new b2EdgeAndPolygonContact(fixtureA, fixtureB);
+        void* mem = allocator.Allocate(b2memSizeOf!b2EdgeAndPolygonContact);
+        return b2emplace!b2EdgeAndPolygonContact(mem, fixtureA, fixtureB);
     }
 
     static void Destroy(b2Contact contact, b2BlockAllocator* allocator)

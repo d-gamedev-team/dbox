@@ -27,20 +27,24 @@ import dbox.common;
 import dbox.dynamics;
 import dbox.dynamics.contacts;
 
+///
 class b2ChainAndCircleContact : b2Contact
 {
+    ///
     static b2Contact Create(b2Fixture* fixtureA, int32 indexA, b2Fixture* fixtureB, int32 indexB, b2BlockAllocator* allocator)
     {
         void* mem = allocator.Allocate(b2memSizeOf!b2ChainAndCircleContact);
         return b2emplace!b2ChainAndCircleContact(mem, fixtureA, indexA, fixtureB, indexB);
     }
 
+    ///
     static void Destroy(b2Contact contact, b2BlockAllocator* allocator)
     {
         typeid(cast(b2ChainAndCircleContact)contact).destroy(&contact);
         allocator.Free(cast(void*)contact, b2memSizeOf!b2ChainAndCircleContact);
     }
 
+    ///
     this(b2Fixture* fixtureA, int32 indexA, b2Fixture* fixtureB, int32 indexB)
     {
         super(fixtureA, indexA, fixtureB, indexB);
@@ -48,6 +52,7 @@ class b2ChainAndCircleContact : b2Contact
         assert(m_fixtureB.GetType() == b2Shape.e_circle);
     }
 
+    ///
     override void Evaluate(b2Manifold* manifold, b2Transform xfA, b2Transform xfB)
     {
         b2ChainShape chain = cast(b2ChainShape)m_fixtureA.GetShape();
