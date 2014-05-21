@@ -1,15 +1,5 @@
-module dbox.rope.b2rope;
-
-import core.stdc.float_;
-import core.stdc.math;
-import core.stdc.stdlib;
-import core.stdc.string;
-
-import dbox.common;
-import dbox.common.b2math;
-
 /*
- * Copyright (c) 2011 Erin Catto http://www.box2d.org
+ * Copyright (c) 2006-2012 Erin Catto http://www.box2d.org
  *
  * This software is provided 'as-is', without any express or implied
  * warranty.  In no event will the authors be held liable for any damages
@@ -25,10 +15,14 @@ import dbox.common.b2math;
  * misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
  */
+module dbox.rope.b2rope;
 
-// #ifndef B2_ROPE_H
-// #define B2_ROPE_H
+import core.stdc.float_;
+import core.stdc.math;
+import core.stdc.stdlib;
+import core.stdc.string;
 
+import dbox.common;
 import dbox.common.b2math;
 
 ///
@@ -59,17 +53,28 @@ struct b2RopeDef
 ///
 struct b2Rope
 {
+    /// This struct must be properly initialized with an explicit constructor.
+    @disable this();
+
+    /// This struct cannot be copied.
+    @disable this(this);
+
+    /// Explicit constructor.
+    this(int) { }
+
+    ///
     ~this()
     {
-        b2Free(m_ps);
-        b2Free(m_p0s);
-        b2Free(m_vs);
-        b2Free(m_ims);
-        b2Free(m_Ls);
-        b2Free(m_as);
+        if (m_ps) b2Free(m_ps);
+        if (m_p0s) b2Free(m_p0s);
+        if (m_vs) b2Free(m_vs);
+        if (m_ims) b2Free(m_ims);
+        if (m_Ls) b2Free(m_Ls);
+        if (m_as) b2Free(m_as);
     }
 
-    void Initialize(const(b2RopeDef*) def)
+    ///
+    void Initialize(const(b2RopeDef)* def)
     {
         assert(def.count >= 3);
         m_count = def.count;
@@ -129,6 +134,7 @@ struct b2Rope
         m_k3      = def.k3;
     }
 
+    ///
     void Step(float32 h, int32 iterations)
     {
         if (h == 0.0)
@@ -165,6 +171,7 @@ struct b2Rope
         }
     }
 
+    ///
     void SolveC2()
     {
         int32 count2 = m_count - 1;
@@ -196,6 +203,7 @@ struct b2Rope
         }
     }
 
+    ///
     void SetAngle(float32 angle)
     {
         int32 count3 = m_count - 2;
@@ -206,6 +214,7 @@ struct b2Rope
         }
     }
 
+    ///
     void SolveC3()
     {
         int32 count3 = m_count - 2;
@@ -278,6 +287,7 @@ struct b2Rope
         }
     }
 
+    ///
     void Draw(b2Draw draw) const
     {
         b2Color c = b2Color(0.4f, 0.5f, 0.7f);
@@ -300,7 +310,7 @@ struct b2Rope
         return m_ps;
     }
 
-/* private */
+private:
 
     int32 m_count;
     b2Vec2* m_ps;
@@ -318,9 +328,3 @@ struct b2Rope
     float32 m_k2 = 1.0f;
     float32 m_k3 = 0.1f;
 }
-
-// #endif
-
-
-import dbox.rope.b2rope;
-import dbox.common.b2draw;
