@@ -255,7 +255,7 @@ struct b2Body
 
     /// Set the position of the body's origin and rotation.
     /// Manipulating a body's transform may cause non-physical behavior.
-    /// Note: contacts are updated on the next call to b2World::Step.
+    /// Note: contacts are updated on the next call to b2World.Step.
     /// @param position the world position of the body's local origin.
     /// @param angle the world rotation in radians.
     void SetTransform(b2Vec2 position, float32 angle)

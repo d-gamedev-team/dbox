@@ -153,7 +153,7 @@ class b2Contact
         return m_friction;
     }
 
-    /// Override the default friction mixture. You can call this in b2ContactListener::PreSolve.
+    /// Override the default friction mixture. You can call this in b2ContactListener.PreSolve.
     /// This value persists until set or reset.
     void SetFriction(float32 friction)
     {
@@ -172,7 +172,7 @@ class b2Contact
         return m_restitution;
     }
 
-    /// Override the default restitution mixture. You can call this in b2ContactListener::PreSolve.
+    /// Override the default restitution mixture. You can call this in b2ContactListener.PreSolve.
     /// The value persists until you set or reset.
     void SetRestitution(float32 restitution)
     {

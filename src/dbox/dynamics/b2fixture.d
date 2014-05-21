@@ -136,7 +136,7 @@ struct b2Fixture
         Refilter();
     }
 
-    /// Call this if you want to establish collision that was previously disabled by b2ContactFilter::ShouldCollide.
+    /// Call this if you want to establish collision that was previously disabled by b2ContactFilter.ShouldCollide.
     void Refilter()
     {
         if (m_body is null)
@@ -234,7 +234,7 @@ struct b2Fixture
     }
 
     /// Set the density of this fixture. This will _not_ automatically adjust the mass
-    /// of the body. You must call b2Body::ResetMassData to update the body's mass.
+    /// of the body. You must call b2Body.ResetMassData to update the body's mass.
     void SetDensity(float32 density)
     {
         assert(b2IsValid(density) && density >= 0.0f);

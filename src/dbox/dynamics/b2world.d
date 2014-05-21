@@ -62,7 +62,7 @@ struct b2World
     }
 
     /// Register a routine for debug drawing. The debug draw functions are called
-    /// inside with b2World::DrawDebugData method. The debug draw object is owned
+    /// inside with b2World.DrawDebugData method. The debug draw object is owned
     /// by you and must remain in scope.
     void SetDebugDraw(b2Draw debugDraw)
     {
@@ -586,7 +586,7 @@ struct b2World
         m_contactManager.m_broadPhase.RayCast(wrapper, input);
     }
 
-    /// Get the world body list. With the returned body, use b2Body::GetNext to get
+    /// Get the world body list. With the returned body, use b2Body.GetNext to get
     /// the next body in the world list. A NULL body indicates the end of the list.
     /// @return the head of the world body list.
     inout(b2Body*) GetBodyList() inout
@@ -594,7 +594,7 @@ struct b2World
         return m_bodyList;
     }
 
-    /// Get the world joint list. With the returned joint, use b2Joint::GetNext to get
+    /// Get the world joint list. With the returned joint, use b2Joint.GetNext to get
     /// the next joint in the world list. A NULL joint indicates the end of the list.
     /// @return the head of the world joint list.
     inout(b2Joint) GetJointList() inout
@@ -602,7 +602,7 @@ struct b2World
         return m_jointList;
     }
 
-    /// Get the world contact list. With the returned contact, use b2Contact::GetNext to get
+    /// Get the world contact list. With the returned contact, use b2Contact.GetNext to get
     /// the next contact in the world list. A NULL contact indicates the end of the list.
     /// @return the head of the world contact list.
     /// @warning contacts are created and destroyed in the middle of a time step.

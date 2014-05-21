@@ -139,7 +139,7 @@ class b2ChainShape : b2Shape
         return clone;
     }
 
-    /// @see b2Shape::GetChildCount
+    /// @see b2Shape.GetChildCount
     override int32 GetChildCount() const
     {
         // edge count = vertex count - 1
@@ -180,7 +180,7 @@ class b2ChainShape : b2Shape
     }
 
     /// This always return false.
-    /// @see b2Shape::TestPoint
+    /// @see b2Shape.TestPoint
     override bool TestPoint(b2Transform xf, b2Vec2 p) const
     {
         B2_NOT_USED(xf);
@@ -210,7 +210,7 @@ class b2ChainShape : b2Shape
         return edgeShape.RayCast(output, input, xf, 0);
     }
 
-    /// @see b2Shape::ComputeAABB
+    /// @see b2Shape.ComputeAABB
     override void ComputeAABB(b2AABB* aabb, b2Transform xf, int32 childIndex) const
     {
         assert(childIndex < m_count);
@@ -231,7 +231,7 @@ class b2ChainShape : b2Shape
     }
 
     /// Chains have zero mass.
-    /// @see b2Shape::ComputeMass
+    /// @see b2Shape.ComputeMass
     override void ComputeMass(b2MassData* massData, float32 density) const
     {
         B2_NOT_USED(density);

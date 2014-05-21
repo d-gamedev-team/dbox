@@ -42,7 +42,7 @@ class b2CircleShape : b2Shape
         return clone;
     }
 
-    /// @see b2Shape::GetChildCount
+    /// @see b2Shape.GetChildCount
     override int32 GetChildCount() const
     {
         return 1;
@@ -98,7 +98,7 @@ class b2CircleShape : b2Shape
         return false;
     }
 
-    /// @see b2Shape::ComputeAABB
+    /// @see b2Shape.ComputeAABB
     override void ComputeAABB(b2AABB* aabb, b2Transform transform, int32 childIndex) const
     {
         B2_NOT_USED(childIndex);
@@ -108,7 +108,7 @@ class b2CircleShape : b2Shape
         aabb.upperBound.Set(p.x + m_radius, p.y + m_radius);
     }
 
-    /// @see b2Shape::ComputeMass
+    /// @see b2Shape.ComputeMass
     override void ComputeMass(b2MassData* massData, float32 density) const
     {
         massData.mass   = density * b2_pi * m_radius * m_radius;

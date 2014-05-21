@@ -49,7 +49,7 @@ class b2PolygonShape : b2Shape
         return clone;
     }
 
-    /// @see b2Shape::GetChildCount
+    /// @see b2Shape.GetChildCount
     override int32 GetChildCount() const
     {
         return 1;
@@ -244,7 +244,7 @@ class b2PolygonShape : b2Shape
         }
     }
 
-    /// @see b2Shape::TestPoint
+    /// @see b2Shape.TestPoint
     override bool TestPoint(b2Transform xf, b2Vec2 p) const
     {
         b2Vec2 pLocal = b2MulT(xf.q, p - xf.p);
@@ -335,7 +335,7 @@ class b2PolygonShape : b2Shape
         return false;
     }
 
-    /// @see b2Shape::ComputeAABB
+    /// @see b2Shape.ComputeAABB
     override void ComputeAABB(b2AABB* aabb, b2Transform xf, int32 childIndex) const
     {
         B2_NOT_USED(childIndex);
@@ -355,7 +355,7 @@ class b2PolygonShape : b2Shape
         aabb.upperBound = upper + r;
     }
 
-    /// @see b2Shape::ComputeMass
+    /// @see b2Shape.ComputeMass
     override void ComputeMass(b2MassData* massData, float32 density) const
     {
         // Polygon mass, centroid, and inertia.

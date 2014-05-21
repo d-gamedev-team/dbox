@@ -61,13 +61,13 @@ class b2EdgeShape : b2Shape
         return clone;
     }
 
-    /// @see b2Shape::GetChildCount
+    /// @see b2Shape.GetChildCount
     override int32 GetChildCount() const
     {
         return 1;
     }
 
-    /// @see b2Shape::TestPoint
+    /// @see b2Shape.TestPoint
     override bool TestPoint(b2Transform xf, b2Vec2 p) const
     {
         B2_NOT_USED(xf);
@@ -146,7 +146,7 @@ class b2EdgeShape : b2Shape
         return true;
     }
 
-    /// @see b2Shape::ComputeAABB
+    /// @see b2Shape.ComputeAABB
     override void ComputeAABB(b2AABB* aabb, b2Transform xf, int32 childIndex) const
     {
         B2_NOT_USED(childIndex);
@@ -162,7 +162,7 @@ class b2EdgeShape : b2Shape
         aabb.upperBound = upper + r;
     }
 
-    /// @see b2Shape::ComputeMass
+    /// @see b2Shape.ComputeMass
     override void ComputeMass(b2MassData* massData, float32 density) const
     {
         B2_NOT_USED(density);
