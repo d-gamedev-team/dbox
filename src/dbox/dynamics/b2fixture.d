@@ -562,11 +562,9 @@ struct b2Fixture
         b2Log("    bodies[%d].CreateFixture(&fd);\n", bodyIndex);
     }
 
-
-
     float32 m_density = 0;
 
-    public b2Fixture* m_next;
+    b2Fixture* m_next;
     b2Body* m_body;
 
     b2Shape m_shape;
@@ -574,8 +572,8 @@ struct b2Fixture
     float32 m_friction = 0;
     float32 m_restitution = 0;
 
-    public b2FixtureProxy* m_proxies;
-    public int32 m_proxyCount;
+    b2FixtureProxy* m_proxies;
+    int32 m_proxyCount;
 
     b2Filter m_filter;
 
