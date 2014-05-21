@@ -77,7 +77,7 @@ struct b2JointEdge
 class b2JointDef
 {
     /// The joint type is set automatically for concrete joint types.
-    b2JointType type             = b2JointType.e_unknownJoint;
+    b2JointType type = b2JointType.e_unknownJoint;
 
     /// Use this to attach application specific data to your joints.
     void* userData;
@@ -96,17 +96,19 @@ class b2JointDef
 /// various fashions. Some joints also feature limits and motors.
 class b2Joint
 {
+    /// Get the type of the concrete joint.
     b2JointType GetType() const
     {
         return m_type;
     }
 
-    b2Body* Getbody_A()
+    /// Get the first body attached to this joint.
+    b2Body* GetBodyA()
     {
         return m_body_A;
     }
 
-    b2Body* Getbody_B()
+    b2Body* GetBodyB()
     {
         return m_body_B;
     }

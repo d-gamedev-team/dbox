@@ -1453,8 +1453,8 @@ public:
 
     void DrawJoint(b2Joint joint)
     {
-        b2Body* body_A = joint.Getbody_A();
-        b2Body* body_B = joint.Getbody_B();
+        b2Body* body_A = joint.GetBodyA();
+        b2Body* body_B = joint.GetBodyB();
         b2Transform xf1 = body_A.GetTransform();
         b2Transform xf2 = body_B.GetTransform();
         b2Vec2 x1 = xf1.p;

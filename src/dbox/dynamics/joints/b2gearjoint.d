@@ -96,8 +96,8 @@ class b2GearJoint : b2Joint
 
         // TODO_ERIN there might be some problem with the joint edges in b2Joint.
 
-        m_bodyC = m_joint1.Getbody_A();
-        m_body_A = m_joint1.Getbody_B();
+        m_bodyC = m_joint1.GetBodyA();
+        m_body_A = m_joint1.GetBodyB();
 
         // Get geometry of joint1
         b2Transform xfA = m_body_A.m_xf;
@@ -128,8 +128,8 @@ class b2GearJoint : b2Joint
             coordinateA = b2Dot(pA - pC, m_localAxisC);
         }
 
-        m_bodyD = m_joint2.Getbody_A();
-        m_body_B = m_joint2.Getbody_B();
+        m_bodyD = m_joint2.GetBodyA();
+        m_body_B = m_joint2.GetBodyB();
 
         // Get geometry of joint2
         b2Transform xfB = m_body_B.m_xf;
