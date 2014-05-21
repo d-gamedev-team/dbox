@@ -1021,7 +1021,6 @@ struct b2Body
         b2Log("}\n");
     }
 
-
 // note: this should be package but D's access implementation is lacking.
 // do not use in user code.
 /* package: */
