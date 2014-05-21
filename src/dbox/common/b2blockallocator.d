@@ -47,9 +47,9 @@ struct b2BlockAllocator
 
         m_chunkSpace = b2_chunkArrayIncrement;
         m_chunkCount = 0;
-        m_chunks     = cast(b2Chunk*)b2Alloc(m_chunkSpace * getSizeOf!b2Chunk);
+        m_chunks     = cast(b2Chunk*)b2Alloc(m_chunkSpace * b2memSizeOf!b2Chunk);
 
-        memset(m_chunks, 0, m_chunkSpace * getSizeOf!b2Chunk);
+        memset(m_chunks, 0, m_chunkSpace * b2memSizeOf!b2Chunk);
         memset(m_freeLists.ptr, 0, m_freeLists.sizeof);
     }
 
@@ -92,9 +92,9 @@ struct b2BlockAllocator
             {
                 b2Chunk* oldChunks = m_chunks;
                 m_chunkSpace += b2_chunkArrayIncrement;
-                m_chunks      = cast(b2Chunk*)b2Alloc(m_chunkSpace * getSizeOf!b2Chunk);
-                memcpy(m_chunks, oldChunks, m_chunkCount * getSizeOf!b2Chunk);
-                memset(m_chunks + m_chunkCount, 0, b2_chunkArrayIncrement * getSizeOf!b2Chunk);
+                m_chunks      = cast(b2Chunk*)b2Alloc(m_chunkSpace * b2memSizeOf!b2Chunk);
+                memcpy(m_chunks, oldChunks, m_chunkCount * b2memSizeOf!b2Chunk);
+                memset(m_chunks + m_chunkCount, 0, b2_chunkArrayIncrement * b2memSizeOf!b2Chunk);
                 b2Free(oldChunks);
             }
 
@@ -192,7 +192,7 @@ struct b2BlockAllocator
         }
 
         m_chunkCount = 0;
-        memset(m_chunks, 0, m_chunkSpace * getSizeOf!b2Chunk);
+        memset(m_chunks, 0, m_chunkSpace * b2memSizeOf!b2Chunk);
         memset(m_freeLists.ptr, 0, m_freeLists.sizeof);
     }
 

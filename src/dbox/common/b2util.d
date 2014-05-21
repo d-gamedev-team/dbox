@@ -21,39 +21,39 @@ import std.conv;
 
 /// Generic .sizeof alternative which works with both class and non-class types,
 /// which makes allocating the proper amount of memory for type instances safer.
-template getSizeOf(T) if (is(T == class))
+template b2memSizeOf(T) if (is(T == class))
 {
-    enum getSizeOf = __traits(classInstanceSize, T);
+    enum b2memSizeOf = __traits(classInstanceSize, T);
 }
 
 /// ditto.
-template getSizeOf(T) if (!is(T == class))
+template b2memSizeOf(T) if (!is(T == class))
 {
-    enum getSizeOf = T.sizeof;
+    enum b2memSizeOf = T.sizeof;
 }
 
 /// Emplace alternative which works with void* rather than void[].
 T b2emplace(T)(void* chunk) if (is(T == class))
 {
-    return emplace!T(chunk[0 .. getSizeOf!T]);
+    return emplace!T(chunk[0 .. b2memSizeOf!T]);
 }
 
 /// ditto
 T* b2emplace(T)(void* chunk) if (!is(T == class))
 {
-    return emplace!T(chunk[0 .. getSizeOf!T]);
+    return emplace!T(chunk[0 .. b2memSizeOf!T]);
 }
 
 /// ditto
 T b2emplace(T, Args...)(void* chunk, Args args) if (is(T == class))
 {
-    return emplace!T(chunk[0 .. getSizeOf!T], args);
+    return emplace!T(chunk[0 .. b2memSizeOf!T], args);
 }
 
 /// ditto
 T* b2emplace(T, Args...)(void* chunk, Args args) if (!is(T == class))
 {
-    return emplace!T(chunk[0 .. getSizeOf!T], args);
+    return emplace!T(chunk[0 .. b2memSizeOf!T], args);
 }
 
 /**

@@ -275,7 +275,7 @@ struct b2Body
 
         b2BlockAllocator* allocator = &m_world.m_blockAllocator;
 
-        void* mem = allocator.Allocate(getSizeOf!b2Fixture);
+        void* mem = allocator.Allocate(b2memSizeOf!b2Fixture);
         b2Fixture* fixture = b2emplace!b2Fixture(mem);
         fixture.Create(allocator, &this, def);
 
@@ -374,7 +374,7 @@ struct b2Body
         fixture.m_body = null;
         fixture.m_next = null;
         typeid(fixture).destroy(&fixture);
-        allocator.Free(cast(void*)fixture, getSizeOf!b2Fixture);
+        allocator.Free(cast(void*)fixture, b2memSizeOf!b2Fixture);
 
         --m_fixtureCount;
 

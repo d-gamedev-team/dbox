@@ -252,8 +252,8 @@ struct b2ContactSolver
         m_step      = def.step;
         m_allocator = def.allocator;
         m_count     = def.count;
-        m_positionConstraints = cast(b2ContactPositionConstraint*)m_allocator.Allocate(m_count * getSizeOf!b2ContactPositionConstraint);
-        m_velocityConstraints = cast(b2ContactVelocityConstraint*)m_allocator.Allocate(m_count * getSizeOf!b2ContactVelocityConstraint);
+        m_positionConstraints = cast(b2ContactPositionConstraint*)m_allocator.Allocate(m_count * b2memSizeOf!b2ContactPositionConstraint);
+        m_velocityConstraints = cast(b2ContactVelocityConstraint*)m_allocator.Allocate(m_count * b2memSizeOf!b2ContactVelocityConstraint);
         m_positions  = def.positions;
         m_velocities = def.velocities;
         m_contacts   = def.contacts;

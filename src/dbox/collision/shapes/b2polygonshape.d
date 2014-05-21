@@ -43,7 +43,7 @@ class b2PolygonShape : b2Shape
     /// Implement b2Shape.
     override b2Shape Clone(b2BlockAllocator* allocator) const
     {
-        void* mem = allocator.Allocate(getSizeOf!b2PolygonShape);
+        void* mem = allocator.Allocate(b2memSizeOf!b2PolygonShape);
         b2PolygonShape clone = b2emplace!b2PolygonShape(mem);
         clone.tupleof = this.tupleof;
         return clone;

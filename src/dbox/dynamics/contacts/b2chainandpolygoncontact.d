@@ -16,7 +16,7 @@ class b2ChainAndPolygonContact : b2Contact
 {
     static b2Contact Create(b2Fixture* fixtureA, int32 indexA, b2Fixture* fixtureB, int32 indexB, b2BlockAllocator* allocator)
     {
-        //~ void* mem = allocator.Allocate(getSizeOf!b2ChainAndPolygonContact);
+        //~ void* mem = allocator.Allocate(b2memSizeOf!b2ChainAndPolygonContact);
         //~ return emplace!b2ChainAndPolygonContact(mem, fixtureA, indexA, fixtureB, indexB);
 
         return new b2ChainAndPolygonContact(fixtureA, indexA, fixtureB, indexB);
@@ -25,7 +25,7 @@ class b2ChainAndPolygonContact : b2Contact
     static void Destroy(b2Contact contact, b2BlockAllocator* allocator)
     {
         typeid(cast(b2ChainAndPolygonContact)contact).destroy(&contact);
-        allocator.Free(cast(void*)contact, getSizeOf!b2ChainAndPolygonContact);
+        allocator.Free(cast(void*)contact, b2memSizeOf!b2ChainAndPolygonContact);
     }
 
     this(b2Fixture* fixtureA, int32 indexA, b2Fixture* fixtureB, int32 indexB)

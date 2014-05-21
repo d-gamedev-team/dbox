@@ -59,11 +59,11 @@ struct b2BroadPhase
 
         m_pairCapacity = 16;
         m_pairCount    = 0;
-        m_pairBuffer   = cast(b2Pair*)b2Alloc(m_pairCapacity * getSizeOf!b2Pair);
+        m_pairBuffer   = cast(b2Pair*)b2Alloc(m_pairCapacity * b2memSizeOf!b2Pair);
 
         m_moveCapacity = 16;
         m_moveCount    = 0;
-        m_moveBuffer   = cast(int32*)b2Alloc(m_moveCapacity * getSizeOf!int32);
+        m_moveBuffer   = cast(int32*)b2Alloc(m_moveCapacity * b2memSizeOf!int32);
     }
 
     ///
@@ -247,8 +247,8 @@ package:
         {
             int32* oldBuffer = m_moveBuffer;
             m_moveCapacity *= 2;
-            m_moveBuffer    = cast(int32*)b2Alloc(m_moveCapacity * getSizeOf!int32);
-            memcpy(m_moveBuffer, oldBuffer, m_moveCount * getSizeOf!int32);
+            m_moveBuffer    = cast(int32*)b2Alloc(m_moveCapacity * b2memSizeOf!int32);
+            memcpy(m_moveBuffer, oldBuffer, m_moveCount * b2memSizeOf!int32);
             b2Free(oldBuffer);
         }
 
@@ -281,8 +281,8 @@ package:
         {
             b2Pair* oldBuffer = m_pairBuffer;
             m_pairCapacity *= 2;
-            m_pairBuffer    = cast(b2Pair*)b2Alloc(m_pairCapacity * getSizeOf!b2Pair);
-            memcpy(m_pairBuffer, oldBuffer, m_pairCount * getSizeOf!b2Pair);
+            m_pairBuffer    = cast(b2Pair*)b2Alloc(m_pairCapacity * b2memSizeOf!b2Pair);
+            memcpy(m_pairBuffer, oldBuffer, m_pairCount * b2memSizeOf!b2Pair);
             b2Free(oldBuffer);
         }
 

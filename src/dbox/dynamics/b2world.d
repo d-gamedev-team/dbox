@@ -76,7 +76,7 @@ struct b2World
         m_contactManager = b2ContactManager(1);
         m_contactManager.m_allocator = &m_blockAllocator;
 
-        memset(&m_profile, 0, getSizeOf!b2Profile);
+        memset(&m_profile, 0, b2memSizeOf!b2Profile);
     }
 
     b2Body* GetBodyList()
@@ -219,7 +219,7 @@ struct b2World
             return null;
         }
 
-        void* mem = m_blockAllocator.Allocate(getSizeOf!b2Body);
+        void* mem = m_blockAllocator.Allocate(b2memSizeOf!b2Body);
         b2Body* b = b2emplace!b2Body(mem, def, &this);
 
         // Add to world doubly linked list.
@@ -294,7 +294,7 @@ struct b2World
             f0.DestroyProxies(&m_contactManager.m_broadPhase);
             f0.Destroy(&m_blockAllocator);
             typeid(f0).destroy(&f0);
-            m_blockAllocator.Free(cast(void*)f0, getSizeOf!b2Fixture);
+            m_blockAllocator.Free(cast(void*)f0, b2memSizeOf!b2Fixture);
 
             b.m_fixtureList   = f;
             b.m_fixtureCount -= 1;
@@ -321,7 +321,7 @@ struct b2World
 
         --m_bodyCount;
         typeid(b).destroy(&b);
-        m_blockAllocator.Free(cast(void*)b, getSizeOf!b2Body);
+        m_blockAllocator.Free(cast(void*)b, b2memSizeOf!b2Body);
     }
 
     b2Joint CreateJoint(const(b2JointDef) def)
@@ -539,7 +539,7 @@ struct b2World
 
         // Build and simulate all awake islands.
         int32 stackSize = m_bodyCount;
-        b2Body** stack  = cast(b2Body**)m_stackAllocator.Allocate(stackSize * getSizeOf!b2Body);
+        b2Body** stack  = cast(b2Body**)m_stackAllocator.Allocate(stackSize * b2memSizeOf!b2Body);
 
         for (b2Body* seed = m_bodyList; seed; seed = seed.m_next)
         {

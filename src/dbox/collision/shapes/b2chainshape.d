@@ -76,8 +76,8 @@ class b2ChainShape : b2Shape
         }
 
         m_count    = count + 1;
-        m_vertices = cast(b2Vec2*)b2Alloc(m_count * getSizeOf!b2Vec2);
-        memcpy(m_vertices, vertices, count * getSizeOf!b2Vec2);
+        m_vertices = cast(b2Vec2*)b2Alloc(m_count * b2memSizeOf!b2Vec2);
+        memcpy(m_vertices, vertices, count * b2memSizeOf!b2Vec2);
         m_vertices[count] = m_vertices[0];
         m_prevVertex      = m_vertices[m_count - 2];
         m_nextVertex      = m_vertices[1];
@@ -100,8 +100,8 @@ class b2ChainShape : b2Shape
         }
 
         m_count    = count;
-        m_vertices = cast(b2Vec2*)b2Alloc(count * getSizeOf!b2Vec2);
-        memcpy(m_vertices, vertices, m_count * getSizeOf!b2Vec2);
+        m_vertices = cast(b2Vec2*)b2Alloc(count * b2memSizeOf!b2Vec2);
+        memcpy(m_vertices, vertices, m_count * b2memSizeOf!b2Vec2);
 
         m_hasPrevVertex = false;
         m_hasNextVertex = false;
@@ -129,7 +129,7 @@ class b2ChainShape : b2Shape
     /// Implement b2Shape. Vertices are cloned using b2Alloc.
     override b2Shape Clone(b2BlockAllocator* allocator) const
     {
-        void* mem = allocator.Allocate(getSizeOf!b2ChainShape);
+        void* mem = allocator.Allocate(b2memSizeOf!b2ChainShape);
         b2ChainShape clone = b2emplace!b2ChainShape(mem);
         clone.CreateChain(m_vertices, m_count);
         clone.m_prevVertex    = m_prevVertex;

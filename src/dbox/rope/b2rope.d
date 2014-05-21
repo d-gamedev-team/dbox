@@ -73,10 +73,10 @@ struct b2Rope
     {
         assert(def.count >= 3);
         m_count = def.count;
-        m_ps    = cast(b2Vec2*)b2Alloc(m_count * getSizeOf!b2Vec2);
-        m_p0s   = cast(b2Vec2*)b2Alloc(m_count * getSizeOf!b2Vec2);
-        m_vs    = cast(b2Vec2*)b2Alloc(m_count * getSizeOf!b2Vec2);
-        m_ims   = cast(float32*)b2Alloc(m_count * getSizeOf!float32);
+        m_ps    = cast(b2Vec2*)b2Alloc(m_count * b2memSizeOf!b2Vec2);
+        m_p0s   = cast(b2Vec2*)b2Alloc(m_count * b2memSizeOf!b2Vec2);
+        m_vs    = cast(b2Vec2*)b2Alloc(m_count * b2memSizeOf!b2Vec2);
+        m_ims   = cast(float32*)b2Alloc(m_count * b2memSizeOf!float32);
 
         for (int32 i = 0; i < m_count; ++i)
         {
@@ -98,8 +98,8 @@ struct b2Rope
 
         int32 count2 = m_count - 1;
         int32 count3 = m_count - 2;
-        m_Ls = cast(float32*)b2Alloc(count2 * getSizeOf!float32);
-        m_as = cast(float32*)b2Alloc(count3 * getSizeOf!float32);
+        m_Ls = cast(float32*)b2Alloc(count2 * b2memSizeOf!float32);
+        m_as = cast(float32*)b2Alloc(count3 * b2memSizeOf!float32);
 
         for (int32 i = 0; i < count2; ++i)
         {

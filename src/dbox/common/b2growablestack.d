@@ -61,9 +61,9 @@ struct b2GrowableStack(T, int32 N)
             m_capacity *= 2;
 
             static if (is(T == class))
-                enum size = getSizeOf!T;
+                enum size = b2memSizeOf!T;
             else
-                enum size = getSizeOf!T;
+                enum size = b2memSizeOf!T;
 
             m_stack = cast(T*)b2Alloc(m_capacity * size);
             memcpy(m_stack, old, m_count * size);

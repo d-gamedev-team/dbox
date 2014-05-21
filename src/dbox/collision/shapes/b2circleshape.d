@@ -36,7 +36,7 @@ class b2CircleShape : b2Shape
     /// Implement b2Shape.
     override b2Shape Clone(b2BlockAllocator* allocator) const
     {
-        void* mem = allocator.Allocate(getSizeOf!b2CircleShape);
+        void* mem = allocator.Allocate(b2memSizeOf!b2CircleShape);
         b2CircleShape clone = b2emplace!b2CircleShape(mem);
         clone.tupleof = this.tupleof;
         return clone;

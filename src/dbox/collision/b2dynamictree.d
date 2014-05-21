@@ -77,8 +77,8 @@ struct b2DynamicTree
 
         m_nodeCapacity = 16;
         m_nodeCount    = 0;
-        m_nodes        = cast(b2TreeNode*)b2Alloc(m_nodeCapacity * getSizeOf!b2TreeNode);
-        memset(m_nodes, 0, m_nodeCapacity * getSizeOf!b2TreeNode);
+        m_nodes        = cast(b2TreeNode*)b2Alloc(m_nodeCapacity * b2memSizeOf!b2TreeNode);
+        memset(m_nodes, 0, m_nodeCapacity * b2memSizeOf!b2TreeNode);
 
         // Build a linked list for the free list.
         for (int32 i = 0; i < m_nodeCapacity - 1; ++i)
@@ -421,7 +421,7 @@ struct b2DynamicTree
     /// Build an optimal tree. Very expensive. For testing.
     void RebuildBottomUp()
     {
-        int32* nodes = cast(int32*)b2Alloc(m_nodeCount * getSizeOf!int32);
+        int32* nodes = cast(int32*)b2Alloc(m_nodeCount * b2memSizeOf!int32);
         int32  count = 0;
 
         // Build array of leaves. Free the rest.
@@ -523,8 +523,8 @@ private:
             // The free list is empty. Rebuild a bigger pool.
             b2TreeNode* oldNodes = m_nodes;
             m_nodeCapacity *= 2;
-            m_nodes         = cast(b2TreeNode*)b2Alloc(m_nodeCapacity * getSizeOf!b2TreeNode);
-            memcpy(m_nodes, oldNodes, m_nodeCount * getSizeOf!b2TreeNode);
+            m_nodes         = cast(b2TreeNode*)b2Alloc(m_nodeCapacity * b2memSizeOf!b2TreeNode);
+            memcpy(m_nodes, oldNodes, m_nodeCount * b2memSizeOf!b2TreeNode);
             b2Free(oldNodes);
 
             // Build a linked list for the free list. The parent

@@ -54,12 +54,12 @@ struct b2Island
         m_allocator = allocator;
         m_listener  = listener;
 
-        m_bodies   = cast(b2Body**)m_allocator.Allocate(bodyCapacity * getSizeOf!b2Body);
-        m_contacts = cast(b2Contact*)m_allocator.Allocate(contactCapacity * getSizeOf!b2Contact);
-        m_joints   = cast(b2Joint*)m_allocator.Allocate(jointCapacity * getSizeOf!b2Joint);
+        m_bodies   = cast(b2Body**)m_allocator.Allocate(bodyCapacity * b2memSizeOf!b2Body);
+        m_contacts = cast(b2Contact*)m_allocator.Allocate(contactCapacity * b2memSizeOf!b2Contact);
+        m_joints   = cast(b2Joint*)m_allocator.Allocate(jointCapacity * b2memSizeOf!b2Joint);
 
-        m_velocities = cast(b2Velocity*)m_allocator.Allocate(m_bodyCapacity * getSizeOf!b2Velocity);
-        m_positions  = cast(b2Position*)m_allocator.Allocate(m_bodyCapacity * getSizeOf!b2Position);
+        m_velocities = cast(b2Velocity*)m_allocator.Allocate(m_bodyCapacity * b2memSizeOf!b2Velocity);
+        m_positions  = cast(b2Position*)m_allocator.Allocate(m_bodyCapacity * b2memSizeOf!b2Position);
     }
 
     ~this()
