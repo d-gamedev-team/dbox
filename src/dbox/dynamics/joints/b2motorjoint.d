@@ -1,12 +1,3 @@
-module dbox.dynamics.joints.b2motorjoint;
-
-import core.stdc.float_;
-import core.stdc.stdlib;
-import core.stdc.string;
-
-import dbox.common;
-import dbox.dynamics;
-
 /*
  * Copyright (c) 2006-2012 Erin Catto http://www.box2d.org
  *
@@ -24,15 +15,20 @@ import dbox.dynamics;
  * misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
  */
+module dbox.dynamics.joints.b2motorjoint;
 
-// #ifndef B2_MOTOR_JOINT_H
-// #define B2_MOTOR_JOINT_H
+import core.stdc.float_;
+import core.stdc.stdlib;
+import core.stdc.string;
 
-import dbox.dynamics.joints.b2joint;
+import dbox.common;
+import dbox.dynamics;
+import dbox.dynamics.joints;
 
 /// Motor joint definition.
 class b2MotorJointDef : b2JointDef
 {
+    ///
     this()
     {
         type = e_motorJoint;
@@ -43,6 +39,19 @@ class b2MotorJointDef : b2JointDef
         correctionFactor = 0.3f;
     }
 
+    // Point-to-point constraint
+    // Cdot = v2 - v1
+    // = v2 + cross(w2, r2) - v1 - cross(w1, r1)
+    // J = [-I -r1_skew I r2_skew ]
+    // Identity used:
+    // w k % (rx i + ry j) = w * (-ry i + rx j)
+
+    // Angle constraint
+    // Cdot = w2 - w1
+    // J = [0 0 -1 0 0 1]
+    // K = invI1 + invI2
+
+    /// Initialize the bodies and offsets using the current transforms.
     void Initialize(b2Body* bA, b2Body* bB)
     {
         bodyA = bA;
@@ -54,9 +63,6 @@ class b2MotorJointDef : b2JointDef
         float32 angleB = bodyB.GetAngle();
         angularOffset = angleB - angleA;
     }
-
-    /// Initialize the bodies and offsets using the current transforms.
-    void Initialize(b2Body* bodyA, b2Body* bodyB);
 
     /// Position of bodyB minus the position of bodyA, in bodyA's frame, in meters.
     b2Vec2 linearOffset;
@@ -79,7 +85,7 @@ class b2MotorJointDef : b2JointDef
 /// of a dynamic body with respect to the ground.
 class b2MotorJoint : b2Joint
 {
-
+    ///
     this(const(b2MotorJointDef) def)
     {
         super(def);
@@ -93,6 +99,126 @@ class b2MotorJoint : b2Joint
         m_maxTorque        = def.maxTorque;
         m_correctionFactor = def.correctionFactor;
     }
+
+    ///
+    override b2Vec2 GetAnchorA() const
+    {
+        return m_bodyA.GetPosition();
+    }
+
+    ///
+    override b2Vec2 GetAnchorB() const
+    {
+        return m_bodyB.GetPosition();
+    }
+
+    ///
+    override b2Vec2 GetReactionForce(float32 inv_dt) const
+    {
+        return inv_dt * m_linearImpulse;
+    }
+
+    ///
+    override float32 GetReactionTorque(float32 inv_dt) const
+    {
+        return inv_dt * m_angularImpulse;
+    }
+
+    /// Get/set the target linear offset, in frame A, in meters.
+    b2Vec2 GetLinearOffset() const
+    {
+        return m_linearOffset;
+    }
+
+    /// ditto
+    void SetLinearOffset(b2Vec2 linearOffset)
+    {
+        if (linearOffset.x != m_linearOffset.x || linearOffset.y != m_linearOffset.y)
+        {
+            m_bodyA.SetAwake(true);
+            m_bodyB.SetAwake(true);
+            m_linearOffset = linearOffset;
+        }
+    }
+
+    /// Get/set the target angular offset, in radians.
+    float32 GetAngularOffset() const
+    {
+        return m_angularOffset;
+    }
+
+    ///
+    void SetAngularOffset(float32 angularOffset)
+    {
+        if (angularOffset != m_angularOffset)
+        {
+            m_bodyA.SetAwake(true);
+            m_bodyB.SetAwake(true);
+            m_angularOffset = angularOffset;
+        }
+    }
+
+    /// Get the maximum friction force in N.
+    float32 GetMaxForce() const
+    {
+        return m_maxForce;
+    }
+
+    /// Set the maximum friction force in N.
+    void SetMaxForce(float32 force)
+    {
+        assert(b2IsValid(force) && force >= 0.0f);
+        m_maxForce = force;
+    }
+
+    /// Get the maximum friction torque in N*m.
+    float32 GetMaxTorque() const
+    {
+        return m_maxTorque;
+    }
+
+    /// Set the maximum friction torque in N*m.
+    void SetMaxTorque(float32 torque)
+    {
+        assert(b2IsValid(torque) && torque >= 0.0f);
+        m_maxTorque = torque;
+    }
+
+    /// Get the position correction factor in the range [0,1].
+    float32 GetCorrectionFactor() const
+    {
+        return m_correctionFactor;
+    }
+
+    /// Set the position correction factor in the range [0,1].
+    void SetCorrectionFactor(float32 factor)
+    {
+        assert(b2IsValid(factor) && 0.0f <= factor && factor <= 1.0f);
+        m_correctionFactor = factor;
+    }
+
+    /// Dump to b2Log
+    override void Dump()
+    {
+        int32 indexA = m_bodyA.m_islandIndex;
+        int32 indexB = m_bodyB.m_islandIndex;
+
+        b2Log("  b2MotorJointDef jd;\n");
+        b2Log("  jd.bodyA = bodies[%d];\n", indexA);
+        b2Log("  jd.bodyB = bodies[%d];\n", indexB);
+        b2Log("  jd.collideConnected = bool(%d);\n", m_collideConnected);
+        b2Log("  jd.linearOffset.Set(%.15lef, %.15lef);\n", m_linearOffset.x, m_linearOffset.y);
+        b2Log("  jd.angularOffset = %.15lef;\n", m_angularOffset);
+        b2Log("  jd.maxForce = %.15lef;\n", m_maxForce);
+        b2Log("  jd.maxTorque = %.15lef;\n", m_maxTorque);
+        b2Log("  jd.correctionFactor = %.15lef;\n", m_correctionFactor);
+        b2Log("  joints[%d] = m_world.CreateJoint(&jd);\n", m_index);
+    }
+
+// note: this should be package but D's access implementation is lacking.
+// do not use in user code.
+/* package: */
+public:
 
     override void InitVelocityConstraints(b2SolverData data)
     {
@@ -241,108 +367,6 @@ class b2MotorJoint : b2Joint
         return true;
     }
 
-    override b2Vec2 GetAnchorA() const
-    {
-        return m_bodyA.GetPosition();
-    }
-
-    override b2Vec2 GetAnchorB() const
-    {
-        return m_bodyB.GetPosition();
-    }
-
-    override b2Vec2 GetReactionForce(float32 inv_dt) const
-    {
-        return inv_dt * m_linearImpulse;
-    }
-
-    override float32 GetReactionTorque(float32 inv_dt) const
-    {
-        return inv_dt * m_angularImpulse;
-    }
-
-    void SetMaxForce(float32 force)
-    {
-        assert(b2IsValid(force) && force >= 0.0f);
-        m_maxForce = force;
-    }
-
-    float32 GetMaxForce() const
-    {
-        return m_maxForce;
-    }
-
-    void SetMaxTorque(float32 torque)
-    {
-        assert(b2IsValid(torque) && torque >= 0.0f);
-        m_maxTorque = torque;
-    }
-
-    float32 GetMaxTorque() const
-    {
-        return m_maxTorque;
-    }
-
-    void SetCorrectionFactor(float32 factor)
-    {
-        assert(b2IsValid(factor) && 0.0f <= factor && factor <= 1.0f);
-        m_correctionFactor = factor;
-    }
-
-    float32 GetCorrectionFactor() const
-    {
-        return m_correctionFactor;
-    }
-
-    void SetLinearOffset(b2Vec2 linearOffset)
-    {
-        if (linearOffset.x != m_linearOffset.x || linearOffset.y != m_linearOffset.y)
-        {
-            m_bodyA.SetAwake(true);
-            m_bodyB.SetAwake(true);
-            m_linearOffset = linearOffset;
-        }
-    }
-
-    b2Vec2 GetLinearOffset() const
-    {
-        return m_linearOffset;
-    }
-
-    void SetAngularOffset(float32 angularOffset)
-    {
-        if (angularOffset != m_angularOffset)
-        {
-            m_bodyA.SetAwake(true);
-            m_bodyB.SetAwake(true);
-            m_angularOffset = angularOffset;
-        }
-    }
-
-    float32 GetAngularOffset() const
-    {
-        return m_angularOffset;
-    }
-
-    override void Dump()
-    {
-        int32 indexA = m_bodyA.m_islandIndex;
-        int32 indexB = m_bodyB.m_islandIndex;
-
-        b2Log("  b2MotorJointDef jd;\n");
-        b2Log("  jd.bodyA = bodies[%d];\n", indexA);
-        b2Log("  jd.bodyB = bodies[%d];\n", indexB);
-        b2Log("  jd.collideConnected = bool(%d);\n", m_collideConnected);
-        b2Log("  jd.linearOffset.Set(%.15lef, %.15lef);\n", m_linearOffset.x, m_linearOffset.y);
-        b2Log("  jd.angularOffset = %.15lef;\n", m_angularOffset);
-        b2Log("  jd.maxForce = %.15lef;\n", m_maxForce);
-        b2Log("  jd.maxTorque = %.15lef;\n", m_maxTorque);
-        b2Log("  jd.correctionFactor = %.15lef;\n", m_correctionFactor);
-        b2Log("  joints[%d] = m_world.CreateJoint(&jd);\n", m_index);
-    }
-
-
-
     // Solver shared
     b2Vec2  m_linearOffset;
     float32 m_angularOffset = 0;
@@ -368,38 +392,3 @@ class b2MotorJoint : b2Joint
     b2Mat22 m_linearMass;
     float32 m_angularMass = 0;
 }
-
-// #endif
-/*
- * Copyright (c) 2006-2012 Erin Catto http://www.box2d.org
- *
- * This software is provided 'as-is', without any express or implied
- * warranty.  In no event will the authors be held liable for any damages
- * arising from the use of this software.
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
- * 1. The origin of this software must not be misrepresented; you must not
- * claim that you wrote the original software. If you use this software
- * in a product, an acknowledgment in the product documentation would be
- * appreciated but is not required.
- * 2. Altered source versions must be plainly marked as such, and must not be
- * misrepresented as being the original software.
- * 3. This notice may not be removed or altered from any source distribution.
- */
-
-import dbox.dynamics.joints.b2motorjoint;
-import dbox.dynamics.b2body;
-import dbox.dynamics.b2timestep;
-
-// Point-to-point constraint
-// Cdot = v2 - v1
-// = v2 + cross(w2, r2) - v1 - cross(w1, r1)
-// J = [-I -r1_skew I r2_skew ]
-// Identity used:
-// w k % (rx i + ry j) = w * (-ry i + rx j)
-
-// Angle constraint
-// Cdot = w2 - w1
-// J = [0 0 -1 0 0 1]
-// K = invI1 + invI2
