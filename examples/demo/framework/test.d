@@ -15,7 +15,6 @@
  * misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
  */
-
 module framework.test;
 
 import core.stdc.stdlib;
@@ -227,8 +226,8 @@ class Test : b2ContactListener
         {
             b2Body* body_ = callback.m_fixture.GetBody();
             b2MouseJointDef md = new b2MouseJointDef;
-            md.body_A     = m_groundBody;
-            md.body_B     = body_;
+            md.bodyA     = m_groundBody;
+            md.bodyB     = body_;
             md.target    = p;
             md.maxForce  = 1000.0f * body_.GetMass();
             m_mouseJoint = cast(b2MouseJoint)m_world.CreateJoint(md);

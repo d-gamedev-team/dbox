@@ -796,7 +796,7 @@ struct b2ContactSolver
     int m_count;
 }
 
-private __gshared bool g_blockSolve = true;
+public __gshared bool g_blockSolve = true;
 
 struct b2ContactPositionConstraint
 {
