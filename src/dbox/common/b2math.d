@@ -1,13 +1,26 @@
+/*
+ * Copyright (c) 2006-2009 Erin Catto http://www.box2d.org
+ *
+ * This software is provided 'as-is', without any express or implied
+ * warranty.  In no event will the authors be held liable for any damages
+ * arising from the use of this software.
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ * 1. The origin of this software must not be misrepresented; you must not
+ * claim that you wrote the original software. If you use this software
+ * in a product, an acknowledgment in the product documentation would be
+ * appreciated but is not required.
+ * 2. Altered source versions must be plainly marked as such, and must not be
+ * misrepresented as being the original software.
+ * 3. This notice may not be removed or altered from any source distribution.
+ */
 module dbox.common.b2math;
 
 import core.stdc.float_;
+import core.stdc.math;
 import core.stdc.stdlib;
 import core.stdc.string;
-
-import dbox.common;
-import dbox.common.b2math;
-
-import core.stdc.math;
 
 import dbox.common;
 
@@ -37,8 +50,8 @@ float32 b2InvSqrt(float32 x)
     return x;
 }
 
-auto b2Sqrt(X)(X x)            { return sqrtf(x); }
-auto b2Atan2(Y, X)(Y y, X x)   { return atan2f(y, x); }
+alias b2Sqrt = sqrtf;
+alias b2Atan2 = atan2f;
 
 /// A 2D column vector.
 struct b2Vec2
@@ -72,7 +85,7 @@ struct b2Vec2
         return v;
     }
 
-    /// Read from and indexed element.
+    /// Read from an indexed element.
     float32 opCall(int32 i) const
     {
         return (&x)[i];
@@ -84,7 +97,30 @@ struct b2Vec2
         return (&x)[i];
     }
 
-    /// Add / Subtract / Multiply a vector to this vector.
+    /// Return a new vector which is a result of this vector
+    /// added / subtracted / multiplied component-wise with another vector.
+    b2Vec2 opBinary(string op)(b2Vec2 b) const
+        if (op == "+" || op == "-" || op == "*")
+    {
+        mixin("return b2Vec2(this.x " ~ op ~ " b.x, this.y " ~ op ~ " b.y);");
+    }
+
+    /// Return a new vector which is a result of this vector
+    /// added / subtracted / multiplied component-wise with a scalar.
+    b2Vec2 opBinary(string op)(float32 s) const
+        if (op == "+" || op == "-" || op == "*")
+    {
+        mixin("return b2Vec2(s " ~ op ~ " this.x, s " ~ op ~ " this.y);");
+    }
+
+    /// ditto
+    b2Vec2 opBinaryRight(string op)(float32 s) const
+        if (op == "+" || op == "-" || op == "*")
+    {
+        return opBinary!op(s);
+    }
+
+    /// Add / Subtract / Multiply this vector with another vector.
     void opOpAssign(string op)(b2Vec2 v)
         if (op == "+" || op == "-" || op == "*")
     {
@@ -92,7 +128,7 @@ struct b2Vec2
         mixin("y " ~ op ~ "= v.y;");
     }
 
-    /// Add / Subtract / Multiply a vector to this vector.
+    /// Add / Subtract / Multiply this vector with a scalar.
     void opOpAssign(string op)(float32 v)
         if (op == "+" || op == "-" || op == "*")
     {
@@ -100,25 +136,7 @@ struct b2Vec2
         mixin("y " ~ op ~ "= v;");
     }
 
-    /// Add / Subtract / Multiply two vectors component-wise.
-    b2Vec2 opBinary(string op)(b2Vec2 b) const
-        if (op == "+" || op == "-" || op == "*")
-    {
-        mixin("return b2Vec2(this.x " ~ op ~ " b.x, this.y " ~ op ~ " b.y);");
-    }
-
-    b2Vec2 opBinary(string op)(float32 s) const
-        if (op == "+" || op == "-" || op == "*")
-    {
-        mixin("return s " ~ op ~ " this;");
-    }
-
-    b2Vec2 opBinaryRight(string op)(float32 s) const
-        if (op == "+" || op == "-" || op == "*")
-    {
-        mixin("return b2Vec2(s " ~ op ~ " this.x, s " ~ op ~ " this.y);");
-    }
-
+    /// Return true whether this vector is equal to another vector.
     bool opEquals(b2Vec2 b) const
     {
         return this.x == b.x && this.y == b.y;
@@ -131,7 +149,7 @@ struct b2Vec2
     }
 
     /// Get the length squared. For performance, use this instead of
-    /// b2Vec2::Length (if possible).
+    /// b2Vec2.Length (if possible).
     float32 LengthSquared() const
     {
         return x * x + y * y;
@@ -153,13 +171,13 @@ struct b2Vec2
         return length;
     }
 
-    /// Does this vector contain finite coordinates?
+    /// Return true if this vector contains finite coordinates.
     bool IsValid() const
     {
         return b2IsValid(x) && b2IsValid(y);
     }
 
-    /// Get the skew vector such that dot(skew_vec, other) == cross(vec, other)
+    /// Get the skew vector such that dot(skew_vec, other) == cross(vec, other).
     b2Vec2 Skew() const
     {
         return b2Vec2(-y, x);
@@ -203,40 +221,45 @@ struct b2Vec3
         return v;
     }
 
-    /// Add / Subtract / Multiply a vector to this vector.
-    void opOpAssign(string op)(const(b2Vec3) v)
-        if (op == "+" || op == "-" || op == "=")
+    /// Return a new vector which is a result of this vector
+    /// added / subtracted / multiplied component-wise with another vector.
+    b2Vec3 opBinary(string op)(b2Vec3 b) const
+        if (op == "+" || op == "-" || op == "*")
+    {
+        mixin("return b2Vec3(this.x " ~ op ~ " b.x, this.y " ~ op ~ " b.y, this.z " ~ op ~ " b.z);");
+    }
+
+    /// Return a new vector which is a result of this vector
+    /// added / subtracted / multiplied component-wise with a scalar.
+    b2Vec3 opBinary(string op)(float32 s) const
+        if (op == "+" || op == "-" || op == "*")
+    {
+        mixin("return b2Vec3(s " ~ op ~ " this.x, s " ~ op ~ " this.y, s " ~ op ~ " this.z);");
+    }
+
+    /// ditto
+    b2Vec3 opBinaryRight(string op)(float32 s) const
+        if (op == "+" || op == "-" || op == "*")
+    {
+        return opBinary!op(s);
+    }
+
+    /// Add / Subtract / Multiply this vector with another vector.
+    void opOpAssign(string op)(b2Vec3 v)
+        if (op == "+" || op == "-" || op == "*")
     {
         mixin("x " ~ op ~ "= v.x;");
         mixin("y " ~ op ~ "= v.y;");
         mixin("z " ~ op ~ "= v.z;");
     }
 
-    /// Multiply this vector by a scalar.
-    void opOpAssign(string op : "*")(float32 s)
+    /// Add / Subtract / Multiply this vector by a scalar.
+    void opOpAssign(string op)(float32 s)
+        if (op == "+" || op == "-" || op == "*")
     {
-        x *= s;
-        y *= s;
-        z *= s;
-    }
-
-    /// Multiply this vector with a scalar and return a new one.
-    b2Vec3 opBinary(string op : "*")(float32 s) const
-    {
-        return b2Vec3(s * this.x, s * this.y, s * this.z);
-    }
-
-    /// Multiply this vector with a scalar and return a new one.
-    b2Vec3 opBinaryRight(string op : "*")(float32 s) const
-    {
-        return s * this;
-    }
-
-    /// Add two vectors component-wise.
-    b2Vec3 opBinary(string op)(const(b2Vec3) b) const
-        if (op == "+" || op == "-")
-    {
-        mixin("return b2Vec3(this.x " ~ op ~ " b.x, this.y " ~ op ~ " b.y, this.z " ~ op ~ " b.z);");
+        mixin("x " ~ op ~ "= s;");
+        mixin("y " ~ op ~ "= s;");
+        mixin("z " ~ op ~ "= s;");
     }
 
     float32 x = 0, y = 0, z = 0;
@@ -332,7 +355,7 @@ struct b2Mat22
 struct b2Mat33
 {
     /// Construct this matrix using columns.
-    this(const(b2Vec3) c1, const(b2Vec3) c2, const(b2Vec3) c3)
+    this(b2Vec3 c1, b2Vec3 c2, b2Vec3 c3)
     {
         ex = c1;
         ey = c2;
@@ -349,7 +372,7 @@ struct b2Mat33
 
     /// Solve A * x = b, where b is a column vector. This is more efficient
     /// than computing the inverse in one-shot cases.
-    b2Vec3 Solve33(const(b2Vec3) b) const
+    b2Vec3 Solve33(b2Vec3 b) const
     {
         float32 det = b2Dot(ex, b2Cross(ey, ez));
 
@@ -612,13 +635,13 @@ float32 b2DistanceSquared(b2Vec2 a, b2Vec2 b)
 }
 
 /// Perform the dot product on two vectors.
-float32 b2Dot(const(b2Vec3) a, const(b2Vec3) b)
+float32 b2Dot(b2Vec3 a, b2Vec3 b)
 {
     return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
 /// Perform the cross product on two vectors.
-b2Vec3 b2Cross(const(b2Vec3) a, const(b2Vec3) b)
+b2Vec3 b2Cross(b2Vec3 a, b2Vec3 b)
 {
     return b2Vec3(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x);
 }
@@ -638,7 +661,7 @@ b2Mat22 b2MulT(const(b2Mat22) A, const(b2Mat22) B)
 }
 
 /// Multiply a matrix times a vector.
-b2Vec3 b2Mul(const(b2Mat33) A, const(b2Vec3) v)
+b2Vec3 b2Mul(const(b2Mat33) A, b2Vec3 v)
 {
     return v.x * A.ex + v.y * A.ey + v.z * A.ez;
 }
