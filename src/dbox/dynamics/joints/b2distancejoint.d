@@ -1,12 +1,3 @@
-module dbox.dynamics.joints.b2distancejoint;
-
-import core.stdc.float_;
-import core.stdc.stdlib;
-import core.stdc.string;
-
-import dbox.common;
-import dbox.dynamics;
-
 /*
  * Copyright (c) 2006-2007 Erin Catto http://www.box2d.org
  *
@@ -24,11 +15,15 @@ import dbox.dynamics;
  * misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
  */
+module dbox.dynamics.joints.b2distancejoint;
 
-// #ifndef B2_DISTANCE_JOINT_H
-// #define B2_DISTANCE_JOINT_H
+import core.stdc.float_;
+import core.stdc.stdlib;
+import core.stdc.string;
 
-import dbox.dynamics.joints.b2joint;
+import dbox.common;
+import dbox.dynamics;
+import dbox.dynamics.joints;
 
 /// Distance joint definition. This requires defining an
 /// anchor point on both bodies and the non-zero length of the
@@ -38,6 +33,7 @@ import dbox.dynamics.joints.b2joint;
 /// @warning Do not use a zero or short length.
 class b2DistanceJointDef : b2JointDef
 {
+    ///
     this()
     {
         type = e_distanceJoint;
@@ -48,11 +44,25 @@ class b2DistanceJointDef : b2JointDef
         dampingRatio = 0.0f;
     }
 
+    // 1-D constrained system
+    // m (v2 - v1) = lambda
+    // v2 + (beta/h) * x1 + gamma * lambda = 0, gamma has units of inverse mass.
+    // x2 = x1 + h * v2
+
+    // 1-D mass-damper-spring system
+    // m (v2 - v1) + h * d * v2 + h * k *
+
+    // C = norm(p2 - p1) - L
+    // u = (p2 - p1) / norm(p2 - p1)
+    // Cdot = dot(u, v2 + cross(w2, r2) - v1 - cross(w1, r1))
+    // J = [-u -cross(r1, u) u cross(r2, u)]
+    // K = J * invM * JT
+    // = invMass1 + invI1 * cross(r1, u)^2 + invMass2 + invI2 * cross(r2, u)^2
+
     /// Initialize the bodies, anchors, and length using the world
     /// anchors.
-
     void Initialize(b2Body* b1, b2Body* b2,
-                                        b2Vec2 anchor1, b2Vec2 anchor2)
+                    b2Vec2 anchor1, b2Vec2 anchor2)
     {
         body_A        = b1;
         body_B        = b2;
@@ -84,18 +94,7 @@ class b2DistanceJointDef : b2JointDef
 /// this as a massless, rigid rod.
 class b2DistanceJoint : b2Joint
 {
-    /// The local anchor point relative to body_A's origin.
-    b2Vec2 GetLocalAnchorA() const
-    {
-        return m_localAnchorA;
-    }
-
-    /// The local anchor point relative to body_B's origin.
-    b2Vec2 GetLocalAnchorB() const
-    {
-        return m_localAnchorB;
-    }
-
+    ///
     this(const(b2DistanceJointDef) def)
     {
         super(def);
@@ -108,6 +107,106 @@ class b2DistanceJoint : b2Joint
         m_gamma        = 0.0f;
         m_bias         = 0.0f;
     }
+
+    ///
+    override b2Vec2 GetAnchorA() const
+    {
+        return m_body_A.GetWorldPoint(m_localAnchorA);
+    }
+
+    ///
+    override b2Vec2 GetAnchorB() const
+    {
+        return m_body_B.GetWorldPoint(m_localAnchorB);
+    }
+
+    /// Get the reaction force given the inverse time step.
+    /// Unit is N.
+    override b2Vec2 GetReactionForce(float32 inv_dt) const
+    {
+        b2Vec2 F = (inv_dt * m_impulse) * m_u;
+        return F;
+    }
+
+    /// Get the reaction torque given the inverse time step.
+    /// Unit is N*m. This is always zero for a distance joint.
+    override float32 GetReactionTorque(float32 inv_dt) const
+    {
+        B2_NOT_USED(inv_dt);
+        return 0.0f;
+    }
+
+    /// The local anchor point relative to body_A's origin.
+    b2Vec2 GetLocalAnchorA() const
+    {
+        return m_localAnchorA;
+    }
+
+    /// The local anchor point relative to body_B's origin.
+    b2Vec2 GetLocalAnchorB() const
+    {
+        return m_localAnchorB;
+    }
+
+    /// Get/set the natural length.
+    /// Manipulating the length can lead to non-physical
+    /// behavior when the frequency is zero.
+    float32 GetLength() const
+    {
+        return m_length;
+    }
+
+    /// ditto
+    void SetLength(float32 length)
+    {
+        m_length = length;
+    }
+
+    /// Get/set frequency in Hz.
+    float32 GetFrequency() const
+    {
+        return m_frequencyHz;
+    }
+
+    /// ditto
+    void SetFrequency(float32 hz)
+    {
+        m_frequencyHz = hz;
+    }
+
+    /// Get/set damping ratio.
+    float32 GetDampingRatio() const
+    {
+        return m_dampingRatio;
+    }
+
+    /// ditto
+    void SetDampingRatio(float32 ratio)
+    {
+        m_dampingRatio = ratio;
+    }
+
+    override void Dump()
+    {
+        int32 indexA = m_body_A.m_islandIndex;
+        int32 indexB = m_body_B.m_islandIndex;
+
+        b2Log("  b2DistanceJointDef jd;\n");
+        b2Log("  jd.body_A = bodies[%d];\n", indexA);
+        b2Log("  jd.body_B = bodies[%d];\n", indexB);
+        b2Log("  jd.collideConnected = bool(%d);\n", m_collideConnected);
+        b2Log("  jd.localAnchorA.Set(%.15lef, %.15lef);\n", m_localAnchorA.x, m_localAnchorA.y);
+        b2Log("  jd.localAnchorB.Set(%.15lef, %.15lef);\n", m_localAnchorB.x, m_localAnchorB.y);
+        b2Log("  jd.length = %.15lef;\n", m_length);
+        b2Log("  jd.frequencyHz = %.15lef;\n", m_frequencyHz);
+        b2Log("  jd.dampingRatio = %.15lef;\n", m_dampingRatio);
+        b2Log("  joints[%d] = m_world.CreateJoint(&jd);\n", m_index);
+    }
+
+// note: this should be package but D's access implementation is lacking.
+// do not use in user code.
+/* package: */
+public:
 
     override void InitVelocityConstraints(b2SolverData data)
     {
@@ -273,75 +372,6 @@ class b2DistanceJoint : b2Joint
         return b2Abs(C) < b2_linearSlop;
     }
 
-    override b2Vec2 GetAnchorA() const
-    {
-        return m_body_A.GetWorldPoint(m_localAnchorA);
-    }
-
-    override b2Vec2 GetAnchorB() const
-    {
-        return m_body_B.GetWorldPoint(m_localAnchorB);
-    }
-
-    override b2Vec2 GetReactionForce(float32 inv_dt) const
-    {
-        b2Vec2 F = (inv_dt * m_impulse) * m_u;
-        return F;
-    }
-
-    override float32 GetReactionTorque(float32 inv_dt) const
-    {
-        B2_NOT_USED(inv_dt);
-        return 0.0f;
-    }
-
-    override void Dump()
-    {
-        int32 indexA = m_body_A.m_islandIndex;
-        int32 indexB = m_body_B.m_islandIndex;
-
-        b2Log("  b2DistanceJointDef jd;\n");
-        b2Log("  jd.body_A = bodies[%d];\n", indexA);
-        b2Log("  jd.body_B = bodies[%d];\n", indexB);
-        b2Log("  jd.collideConnected = bool(%d);\n", m_collideConnected);
-        b2Log("  jd.localAnchorA.Set(%.15lef, %.15lef);\n", m_localAnchorA.x, m_localAnchorA.y);
-        b2Log("  jd.localAnchorB.Set(%.15lef, %.15lef);\n", m_localAnchorB.x, m_localAnchorB.y);
-        b2Log("  jd.length = %.15lef;\n", m_length);
-        b2Log("  jd.frequencyHz = %.15lef;\n", m_frequencyHz);
-        b2Log("  jd.dampingRatio = %.15lef;\n", m_dampingRatio);
-        b2Log("  joints[%d] = m_world.CreateJoint(&jd);\n", m_index);
-    }
-
-    void SetLength(float32 length)
-    {
-        m_length = length;
-    }
-
-    float32 GetLength() const
-    {
-        return m_length;
-    }
-
-    void SetFrequency(float32 hz)
-    {
-        m_frequencyHz = hz;
-    }
-
-    float32 GetFrequency() const
-    {
-        return m_frequencyHz;
-    }
-
-    void SetDampingRatio(float32 ratio)
-    {
-        m_dampingRatio = ratio;
-    }
-
-    float32 GetDampingRatio() const
-    {
-        return m_dampingRatio;
-    }
-
     float32 m_frequencyHz = 0;
     float32 m_dampingRatio = 0;
     float32 m_bias = 0;
@@ -367,41 +397,3 @@ class b2DistanceJoint : b2Joint
     float32 m_invIB = 0;
     float32 m_mass = 0;
 }
-
-// #endif
-/*
- * Copyright (c) 2006-2011 Erin Catto http://www.box2d.org
- *
- * This software is provided 'as-is', without any express or implied
- * warranty.  In no event will the authors be held liable for any damages
- * arising from the use of this software.
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
- * 1. The origin of this software must not be misrepresented; you must not
- * claim that you wrote the original software. If you use this software
- * in a product, an acknowledgment in the product documentation would be
- * appreciated but is not required.
- * 2. Altered source versions must be plainly marked as such, and must not be
- * misrepresented as being the original software.
- * 3. This notice may not be removed or altered from any source distribution.
- */
-
-import dbox.dynamics.joints.b2distancejoint;
-import dbox.dynamics.b2body;
-import dbox.dynamics.b2timestep;
-
-// 1-D constrained system
-// m (v2 - v1) = lambda
-// v2 + (beta/h) * x1 + gamma * lambda = 0, gamma has units of inverse mass.
-// x2 = x1 + h * v2
-
-// 1-D mass-damper-spring system
-// m (v2 - v1) + h * d * v2 + h * k *
-
-// C = norm(p2 - p1) - L
-// u = (p2 - p1) / norm(p2 - p1)
-// Cdot = dot(u, v2 + cross(w2, r2) - v1 - cross(w1, r1))
-// J = [-u -cross(r1, u) u cross(r2, u)]
-// K = J * invM * JT
-// = invMass1 + invI1 * cross(r1, u)^2 + invMass2 + invI2 * cross(r2, u)^2
