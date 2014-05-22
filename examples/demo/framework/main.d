@@ -52,6 +52,8 @@ enum BLUE   = RGBA(  0,   0, 255, 255);
 enum WHITE  = RGBA(255, 255, 255, 255);
 enum SILVER = RGBA(220, 220, 220, 255);
 
+const entryTestName = "Basic Slider Crank";
+
 //
 struct UIState
 {
@@ -65,7 +67,6 @@ struct UIState
 GLFWwindow* mainWindow;
 UIState ui;
 
-const entryTestName = "Bridge";
 int32 testIndex;
 int32 testSelection;
 TestEntry* entry;
@@ -419,11 +420,16 @@ void sInterface()
 
         imguiCheck("Profile", &settings.drawProfile, Enabled.yes);
 
-        if (imguiButton("Pause", Enabled.yes))
+        if (imguiButton(settings.pause ? "Resume" : "Pause", Enabled.yes))
             settings.pause = !settings.pause;
 
         if (imguiButton("Single Step", Enabled.yes))
+        {
+            if (!settings.pause)
+                settings.pause = true;
+
             settings.singleStep = !settings.singleStep;
+        }
 
         if (imguiButton("Restart", Enabled.yes))
             sRestart();

@@ -21,7 +21,7 @@ import framework.test;
 
 import tests.addpair;
 import tests.applyforce;
-//~ import tests.basicslidercrank;
+import tests.basicslidercrank;
 //~ import tests.bodytypes;
 import tests.breakable;
 import tests.bridge;
@@ -82,7 +82,7 @@ shared static this()
         TestEntry("Heavy on Light", &HeavyOnLight.Create),
         //~ TestEntry("Heavy on Light Two", &HeavyOnLightTwo.Create),
         TestEntry("Vertical Stack", &VerticalStack.Create),
-        //~ TestEntry("Basic Slider Crank", &BasicSliderCrank.Create),
+        TestEntry("Basic Slider Crank", &BasicSliderCrank.Create),
         //~ TestEntry("Slider Crank", &SliderCrank.Create),
         //~ TestEntry("Sphere Stack", &SphereStack.Create),
         //~ TestEntry("Convex Hull", &ConvexHull.Create),
