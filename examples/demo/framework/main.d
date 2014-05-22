@@ -501,13 +501,7 @@ void runTests()
 
     sCreateUI();
 
-    testCount = 0;
-
-    while (g_testEntries[testCount].createFcn !is null)
-    {
-        ++testCount;
-    }
-
+    testCount = g_testEntries.length;
     testIndex     = b2Clamp(testIndex, 0, testCount - 1);
     testSelection = testIndex;
 
