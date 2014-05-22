@@ -418,9 +418,11 @@ void sInterface()
 
         imguiCheck("Profile", &settings.drawProfile, Enabled.yes);
 
-        imguiButton("Pause", Enabled.yes);
+        if (imguiButton("Pause", Enabled.yes))
+            settings.pause = !settings.pause;
 
-        imguiButton("Single Step", Enabled.yes);
+        if (imguiButton("Single Step", Enabled.yes))
+            settings.singleStep = !settings.singleStep;
 
         if (imguiButton("Restart", Enabled.yes))
             sRestart();
