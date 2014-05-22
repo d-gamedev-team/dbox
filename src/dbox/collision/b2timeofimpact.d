@@ -301,9 +301,9 @@ void b2TimeOfImpact(b2TOIOutput* output, const(b2TOIInput)* input)
     b2_toiTime   += time;
 }
 
-private __gshared float32 b2_toiTime = 0, b2_toiMaxTime = 0;
-private __gshared int32 b2_toiCalls, b2_toiIters, b2_toiMaxIters;
-private __gshared int32 b2_toiRootIters, b2_toiMaxRootIters;
+public __gshared float32 b2_toiTime = 0, b2_toiMaxTime = 0;
+public __gshared int32 b2_toiCalls, b2_toiIters, b2_toiMaxIters;
+public __gshared int32 b2_toiRootIters, b2_toiMaxRootIters;
 
 //
 struct b2SeparationFunction

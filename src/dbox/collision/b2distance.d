@@ -349,7 +349,7 @@ void b2Distance(b2DistanceOutput* output,
 //////////////////////////////////////////////////////////////////////////
 
 // GJK using Voronoi regions (Christer Ericson) and Barycentric coordinates.
-private __gshared int32 b2_gjkCalls, b2_gjkIters, b2_gjkMaxIters;
+public __gshared int32 b2_gjkCalls, b2_gjkIters, b2_gjkMaxIters;
 
 struct b2SimplexVertex
 {
