@@ -165,5 +165,5 @@ class BodyTypes : Test
 
     b2Body* m_attachment;
     b2Body* m_platform;
-    float32 m_speed;
+    float32 m_speed = 0;
 }

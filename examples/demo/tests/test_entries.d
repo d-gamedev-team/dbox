@@ -25,7 +25,7 @@ import tests.basicslidercrank;
 import tests.bodytypes;
 import tests.breakable;
 import tests.bridge;
-//~ import tests.bullettest;
+import tests.bullettest;
 //~ import tests.cantilever;
 //~ import tests.car;
 //~ import tests.continuoustest;
@@ -112,7 +112,7 @@ shared static this()
         //~ TestEntry("Web", &Web.Create),
         //~ TestEntry("RopeJoint", &RopeJoint.Create),
         //~ TestEntry("Pinball", &Pinball.Create),
-        //~ TestEntry("Bullet Test", &BulletTest.Create),
+        TestEntry("Bullet Test", &BulletTest.Create),
         //~ TestEntry("Confined", &Confined.Create),
         //~ TestEntry("Pyramid", &Pyramid.Create),
         //~ TestEntry("Theo Jansen's Walker", &TheoJansen.Create),

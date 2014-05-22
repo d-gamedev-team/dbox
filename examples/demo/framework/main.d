@@ -52,7 +52,7 @@ enum BLUE   = RGBA(  0,   0, 255, 255);
 enum WHITE  = RGBA(255, 255, 255, 255);
 enum SILVER = RGBA(220, 220, 220, 255);
 
-const entryTestName = "Body Types";
+const entryTestName = "bullet test";
 
 //
 struct UIState
@@ -508,7 +508,7 @@ void runTests()
 
     sCreateUI();
 
-    testIndex = g_testEntries.countUntil!(a => a.name == entryTestName);
+    testIndex = g_testEntries.countUntil!(a => a.name.toLower == entryTestName.toLower);
     if (testIndex == -1)
         testIndex = 0;
 

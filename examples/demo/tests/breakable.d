@@ -143,7 +143,7 @@ class Breakable : Test
 
     b2Body* m_body1;
     b2Vec2  m_velocity;
-    float32 m_angularVelocity;
+    float32 m_angularVelocity = 0;
     b2PolygonShape m_shape1;
     b2PolygonShape m_shape2;
     b2Fixture* m_piece1;
