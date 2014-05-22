@@ -46,7 +46,7 @@ class VerticalStack : Test
             b2BodyDef bd;
             b2Body* ground = m_world.CreateBody(&bd);
 
-            auto shape = scoped!b2EdgeShape();
+            auto shape = new b2EdgeShape();
             shape.Set(b2Vec2(-40.0f, 0.0f), b2Vec2(40.0f, 0.0f));
             ground.CreateFixture(shape, 0.0f);
 
@@ -57,7 +57,7 @@ class VerticalStack : Test
         float32 xs[5] = [0.0f, -10.0f, -5.0f, 5.0f, 10.0f];
         for (int32 j = 0; j < e_columnCount; ++j)
         {
-            auto shape = scoped!b2PolygonShape();
+            auto shape = new b2PolygonShape();
             shape.SetAsBox(0.5f, 0.5f);
 
             b2FixtureDef fd;
@@ -91,7 +91,7 @@ class VerticalStack : Test
         m_bullet = null;
     }
 
-    void Keyboard(int key)
+    override void Keyboard(int key)
     {
         switch (key)
         {
@@ -104,7 +104,7 @@ class VerticalStack : Test
                 }
 
                 {
-                    auto shape = scoped!b2CircleShape();
+                    auto shape = new b2CircleShape();
                     shape.m_radius = 0.25f;
 
                     b2FixtureDef fd;
@@ -132,7 +132,7 @@ class VerticalStack : Test
         }
     }
 
-    void Step(Settings* settings)
+    override void Step(Settings* settings)
     {
         Test.Step(settings);
         g_debugDraw.DrawString(5, m_textLine, "Press: (,) to launch a bullet.");

@@ -19,8 +19,8 @@ module tests.test_entries;
 
 import framework.test;
 
-//~ import tests.addpair;
-//~ import tests.applyforce;
+import tests.addpair;
+import tests.applyforce;
 //~ import tests.basicslidercrank;
 //~ import tests.bodytypes;
 import tests.breakable;
@@ -85,7 +85,7 @@ TestEntry[] g_testEntries =
     //~ TestEntry("Tumbler", &Tumbler.Create),
     //~ TestEntry("Ray-Cast", &RayCast.Create),
     //~ TestEntry("Dump Shell", &DumpShell.Create),
-    //~ TestEntry("Apply Force", &ApplyForce.Create),
+    TestEntry("Apply Force", &ApplyForce.Create),
     //~ TestEntry("Continuous Test", &ContinuousTest.Create),
     //~ TestEntry("Time of Impact", &TimeOfImpact.Create),
     //~ TestEntry("Motor Joint", &MotorJoint.Create),
@@ -99,7 +99,7 @@ TestEntry[] g_testEntries =
     //~ TestEntry("Character Collision", &CharacterCollision.Create),
     //~ TestEntry("Edge Test", &EdgeTest.Create),
     //~ TestEntry("Body Types", &BodyTypes.Create),
-    //~ TestEntry("Shape Editing", &ShapeEditing.Create),
+    //~ TestEntry("Shape Editing", shapeEditing.Create),
     //~ TestEntry("Car", &Car.Create),
     //~ TestEntry("Prismatic", &Prismatic.Create),
     //~ TestEntry("Revolute", &Revolute.Create),
@@ -125,6 +125,6 @@ TestEntry[] g_testEntries =
     //~ TestEntry("Dynamic Tree", &DynamicTreeTest.Create),
     //~ TestEntry("Sensor Test", &SensorTest.Create),
     //~ TestEntry("Varying Friction", &VaryingFriction.Create),
-    //~ TestEntry("Add Pair Stress Test", &AddPair.Create),
+    TestEntry("Add Pair Stress Test", &AddPair.Create),
     TestEntry(null, null),
 ];

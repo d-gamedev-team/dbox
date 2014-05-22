@@ -163,9 +163,20 @@ class Test : b2ContactListener
         memset(&m_totalProfile, 0, b2Profile.sizeof);
     }
 
-    void PreSolve(b2Contact* contact, const b2Manifold* oldManifold)
+    // Callbacks for derived classes.
+    override void BeginContact(b2Contact contact)
     {
-        const b2Manifold* manifold = contact.GetManifold();
+        B2_NOT_USED(contact);
+    }
+
+    override void EndContact(b2Contact contact)
+    {
+        B2_NOT_USED(contact);
+    }
+
+    override void PreSolve(b2Contact contact, const(b2Manifold)* oldManifold)
+    {
+        const(b2Manifold)* manifold = contact.GetManifold();
 
         if (manifold.pointCount == 0)
         {
@@ -194,6 +205,12 @@ class Test : b2ContactListener
             cp.separation     = worldManifold.separations[i];
             ++m_pointCount;
         }
+    }
+
+    override void PostSolve(b2Contact contact, const(b2ContactImpulse)* impulse)
+    {
+        B2_NOT_USED(contact);
+        B2_NOT_USED(impulse);
     }
 
     void DrawTitle(string str)
@@ -549,26 +566,6 @@ class Test : b2ContactListener
     {
         B2_NOT_USED(joint);
     }
-
-    // Callbacks for derived classes.
-    void BeginContact(b2Contact* contact)
-    {
-        B2_NOT_USED(contact);
-    }
-
-    void EndContact(b2Contact* contact)
-    {
-        B2_NOT_USED(contact);
-    }
-
-    void PreSolve(b2Contact* contact, const b2Manifold* oldManifold);
-    void PostSolve(b2Contact* contact, const b2ContactImpulse* impulse)
-    {
-        B2_NOT_USED(contact);
-        B2_NOT_USED(impulse);
-    }
-
-    void ShiftOrigin(b2Vec2 newOrigin);
 
 protected:
     b2Body* m_groundBody;

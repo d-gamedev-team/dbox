@@ -58,7 +58,7 @@ class Tiles : Test
 
                 for (int32 i = 0; i < N; ++i)
                 {
-                    auto shape = scoped!b2PolygonShape();
+                    auto shape = new b2PolygonShape();
                     shape.SetAsBox(a, a, position, 0.0f);
                     ground.CreateFixture(shape, 0.0f);
                     ++m_fixtureCount;
@@ -71,7 +71,7 @@ class Tiles : Test
 
         {
             float32 a = 0.5f;
-            auto shape = scoped!b2PolygonShape();
+            auto shape = new b2PolygonShape();
             shape.SetAsBox(a, a);
 
             b2Vec2 x = b2Vec2(-7.0f, 0.75f);

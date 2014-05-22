@@ -14,9 +14,7 @@
 
     "license": "zlib",
 
-    "buildOptions": ["debugInfo"],
-
-    "buildRequirements": ["silenceDeprecations"],
+    "buildOptions": ["debugInfo", "warningsAsErrors"],
 
     "targetName" : "demo",
 

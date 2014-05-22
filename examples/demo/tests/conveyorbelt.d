@@ -79,7 +79,7 @@ class ConveyorBelt : Test
         }
     }
 
-    void PreSolve(b2Contact* contact, const b2Manifold* oldManifold)
+    override void PreSolve(b2Contact contact, const(b2Manifold)* oldManifold)
     {
         Test.PreSolve(contact, oldManifold);
 
@@ -97,7 +97,7 @@ class ConveyorBelt : Test
         }
     }
 
-    void Step(Settings* settings)
+    override void Step(Settings* settings)
     {
         Test.Step(settings);
     }

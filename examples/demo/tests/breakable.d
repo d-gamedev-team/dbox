@@ -39,7 +39,7 @@ class Breakable : Test
             b2BodyDef bd;
             b2Body* ground = m_world.CreateBody(&bd);
 
-            auto shape = scoped!b2EdgeShape;
+            auto shape = new b2EdgeShape();
             shape.Set(b2Vec2(-40.0f, 0.0f), b2Vec2(40.0f, 0.0f));
             ground.CreateFixture(shape, 0.0f);
         }
@@ -65,7 +65,7 @@ class Breakable : Test
         m_broke = false;
     }
 
-    void PostSolve(b2Contact* contact, const b2ContactImpulse* impulse)
+    override void PostSolve(b2Contact contact, const(b2ContactImpulse)* impulse)
     {
         if (m_broke)
         {
@@ -122,7 +122,7 @@ class Breakable : Test
         body2.SetLinearVelocity(velocity2);
     }
 
-    void Step(Settings* settings)
+    override void Step(Settings* settings)
     {
         if (m_break)
         {

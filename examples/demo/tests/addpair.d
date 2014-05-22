@@ -15,46 +15,56 @@
  * misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
  */
-module tests.heavyonlight;
+module tests.addpair;
 
 import core.stdc.math;
 
 import std.string;
 import std.typecons;
 
+import deimos.glfw.glfw3;
+
 import dbox;
 
 import framework.debug_draw;
 import framework.test;
 
-/// This stress tests the dynamic tree broad-phase. This also shows that tile
-/// based collision is _not_ smooth due to Box2D not knowing about adjacency.
-class HeavyOnLight : Test
+class AddPair : Test
 {
     this()
     {
+        m_world.SetGravity(b2Vec2(0.0f, 0.0f));
         {
-            b2BodyDef bd;
-            b2Body* ground = m_world.CreateBody(&bd);
+            auto shape = new b2CircleShape();
+            shape.m_p.SetZero();
+            shape.m_radius = 0.1f;
 
-            auto shape = new b2EdgeShape();
-            shape.Set(b2Vec2(-40.0f, 0.0f), b2Vec2(40.0f, 0.0f));
-            ground.CreateFixture(shape, 0.0f);
+            float minX = -6.0f;
+            float maxX = 0.0f;
+            float minY = 4.0f;
+            float maxY = 6.0f;
+
+            for (int32 i = 0; i < 400; ++i)
+            {
+                b2BodyDef bd;
+                bd.type     = b2_dynamicBody;
+                bd.position = b2Vec2(RandomFloat(minX, maxX), RandomFloat(minY, maxY));
+                b2Body* body_ = m_world.CreateBody(&bd);
+                body_.CreateFixture(shape, 0.01f);
+            }
         }
 
-        b2BodyDef bd;
-        bd.type = b2_dynamicBody;
-        bd.position.Set(0.0f, 0.5f);
-        b2Body* body_ = m_world.CreateBody(&bd);
-
-        auto shape = new b2CircleShape();
-        shape.m_radius = 0.5f;
-        body_.CreateFixture(shape, 10.0f);
-
-        bd.position.Set(0.0f, 6.0f);
-        body_ = m_world.CreateBody(&bd);
-        shape.m_radius = 5.0f;
-        body_.CreateFixture(shape, 10.0f);
+        {
+            auto shape = new b2PolygonShape();
+            shape.SetAsBox(1.5f, 1.5f);
+            b2BodyDef bd;
+            bd.type = b2_dynamicBody;
+            bd.position.Set(-40.0f, 5.0f);
+            bd.bullet = true;
+            b2Body* body_ = m_world.CreateBody(&bd);
+            body_.CreateFixture(shape, 1.0f);
+            body_.SetLinearVelocity(b2Vec2(150.0f, 0.0f));
+        }
     }
 
     static Test Create()
