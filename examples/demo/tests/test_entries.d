@@ -26,7 +26,7 @@ import tests.bodytypes;
 import tests.breakable;
 import tests.bridge;
 import tests.bullettest;
-//~ import tests.cantilever;
+import tests.cantilever;
 //~ import tests.car;
 //~ import tests.continuoustest;
 //~ import tests.chain;
@@ -99,7 +99,7 @@ shared static this()
         TestEntry("Conveyor Belt", &ConveyorBelt.Create),
         //~ TestEntry("Gears", &Gears.Create),
         //~ TestEntry("Varying Restitution", &VaryingRestitution.Create),
-        //~ TestEntry("Cantilever", &Cantilever.Create),
+        TestEntry("Cantilever", &Cantilever.Create),
         //~ TestEntry("Character Collision", &CharacterCollision.Create),
         //~ TestEntry("Edge Test", &EdgeTest.Create),
         TestEntry("Body Types", &BodyTypes.Create),
