@@ -41,6 +41,10 @@ import dbox;
 import imgui;
 import imgui.engine;
 
+struct WinSize { int width, height; }
+
+enum winSize = WinSize(1024, 768);
+
 //
 struct Camera
 {
@@ -123,8 +127,8 @@ struct Camera
     b2Vec2 m_center = b2Vec2(0, 0);
     float32 m_extent = 25.0;
     float32 m_zoom = 1.0;
-    int32 m_width = 800;
-    int32 m_height = 600;
+    int32 m_width  = winSize.width;
+    int32 m_height = winSize.height;
 }
 
 // This class implements debug drawing callbacks that are invoked

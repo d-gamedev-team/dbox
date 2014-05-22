@@ -17,6 +17,7 @@
  */
 module framework.main;
 
+import std.algorithm;
 import std.exception;
 import std.file;
 import std.path;
@@ -43,6 +44,7 @@ import tests.test_entries;
 
 import framework.debug_draw;
 import framework.test;
+import framework.window;
 
 enum RED    = RGBA(255,   0,   0, 255);
 enum GREEN  = RGBA(  0, 255,   0, 255);
@@ -63,9 +65,9 @@ struct UIState
 GLFWwindow* mainWindow;
 UIState ui;
 
+const entryTestName = "Bridge";
 int32 testIndex;
 int32 testSelection;
-int32 testCount;
 TestEntry* entry;
 Test test;
 Settings settings;
@@ -214,7 +216,7 @@ extern(C) void sKeyCallback(GLFWwindow*, int key, int scancode, int action, int 
 
                 if (testSelection < 0)
                 {
-                    testSelection = testCount - 1;
+                    testSelection = g_testEntries.length - 1;
                 }
                 break;
 
@@ -223,7 +225,7 @@ extern(C) void sKeyCallback(GLFWwindow*, int key, int scancode, int action, int 
                 // Switch to next test
                 ++testSelection;
 
-                if (testSelection == testCount)
+                if (testSelection == g_testEntries.length)
                 {
                     testSelection = 0;
                 }
@@ -335,7 +337,6 @@ extern(C) void sScrollCallback(GLFWwindow*, double, double dy)
 //
 void sRestart()
 {
-
     entry = &g_testEntries[testIndex];
     test  = entry.createFcn();
 }
@@ -443,11 +444,10 @@ void sInterface()
         if (over)
             ui.mouseOverMenu = true;
 
-        for (int i = 0; i < testCount; ++i)
+        for (int i = 0; i < g_testEntries.length; ++i)
         {
             if (imguiItem(g_testEntries[i].name, Enabled.yes))
             {
-
                 entry         = &g_testEntries[i];
                 test          = entry.createFcn();
                 ui.chooseTest = false;
@@ -463,8 +463,8 @@ void sInterface()
 void runTests()
 {
     g_debugDraw = new DebugDraw();
-    g_camera.m_width  = 800;
-    g_camera.m_height = 600;
+    g_camera.m_width  = winSize.width;
+    g_camera.m_height = winSize.height;
 
     auto res = glfwInit();
     enforce(res, format("glfwInit call failed with return code: '%s'", res));
@@ -474,7 +474,8 @@ void runTests()
     char title[64];
     sprintf(title.ptr, "Box2D Testbed Version %d.%d.%d", b2_version.major, b2_version.minor, b2_version.revision);
 
-    mainWindow = glfwCreateWindow(g_camera.m_width, g_camera.m_height, title.ptr, null, null);
+    auto window = createWindow("imgui", WindowMode.windowed, winSize.width, winSize.height);
+    mainWindow = window.window;
 
     if (mainWindow is null)
     {
@@ -501,8 +502,10 @@ void runTests()
 
     sCreateUI();
 
-    testCount = g_testEntries.length;
-    testIndex     = b2Clamp(testIndex, 0, testCount - 1);
+    testIndex = g_testEntries.countUntil!(a => a.name == entryTestName);
+    if (testIndex == -1)
+        testIndex = 0;
+
     testSelection = testIndex;
 
     entry = &g_testEntries[testIndex];

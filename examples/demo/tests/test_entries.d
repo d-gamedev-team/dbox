@@ -24,7 +24,7 @@ import tests.applyforce;
 //~ import tests.basicslidercrank;
 //~ import tests.bodytypes;
 import tests.breakable;
-//~ import tests.bridge;
+import tests.bridge;
 //~ import tests.bullettest;
 //~ import tests.cantilever;
 //~ import tests.car;
@@ -118,7 +118,7 @@ shared static this()
         //~ TestEntry("Theo Jansen's Walker", &TheoJansen.Create),
         //~ TestEntry("Edge Shapes", &EdgeShapes.Create),
         //~ TestEntry("PolyCollision", &PolyCollision.Create),
-        //~ TestEntry("Bridge", &Bridge.Create),
+        TestEntry("Bridge", &Bridge.Create),
         TestEntry("Breakable", &Breakable.Create),
         //~ TestEntry("Chain", &Chain.Create),
         //~ TestEntry("Collision Filtering", &CollisionFiltering.Create),
