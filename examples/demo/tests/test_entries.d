@@ -22,7 +22,7 @@ import framework.test;
 import tests.addpair;
 import tests.applyforce;
 import tests.basicslidercrank;
-//~ import tests.bodytypes;
+import tests.bodytypes;
 import tests.breakable;
 import tests.bridge;
 //~ import tests.bullettest;
@@ -102,7 +102,7 @@ shared static this()
         //~ TestEntry("Cantilever", &Cantilever.Create),
         //~ TestEntry("Character Collision", &CharacterCollision.Create),
         //~ TestEntry("Edge Test", &EdgeTest.Create),
-        //~ TestEntry("Body Types", &BodyTypes.Create),
+        TestEntry("Body Types", &BodyTypes.Create),
         //~ TestEntry("Shape Editing", shapeEditing.Create),
         //~ TestEntry("Car", &Car.Create),
         //~ TestEntry("Prismatic", &Prismatic.Create),
