@@ -34,7 +34,7 @@ import tests.charactercollision;
 import tests.collisionfiltering;
 import tests.collisionprocessing;
 import tests.compoundshapes;
-//~ import tests.confined;
+import tests.confined;
 //~ import tests.convexhull;
 import tests.conveyorbelt;
 //~ import tests.distancetest;
@@ -104,7 +104,7 @@ shared static this()
         //~ TestEntry("Edge Test", &EdgeTest.Create),
         TestEntry("Body Types", &BodyTypes.Create),
         //~ TestEntry("Shape Editing", shapeEditing.Create),
-        TestEntry("Car", &Car.Create),
+        TestEntry("Car", &Car.Create),  // broken
         //~ TestEntry("Prismatic", &Prismatic.Create),
         //~ TestEntry("Revolute", &Revolute.Create),
         //~ TestEntry("Pulleys", &Pulleys.Create),
@@ -113,7 +113,7 @@ shared static this()
         //~ TestEntry("RopeJoint", &RopeJoint.Create),
         //~ TestEntry("Pinball", &Pinball.Create),
         TestEntry("Bullet Test", &BulletTest.Create),
-        //~ TestEntry("Confined", &Confined.Create),
+        TestEntry("Confined", &Confined.Create),  // broken
         //~ TestEntry("Pyramid", &Pyramid.Create),
         //~ TestEntry("Theo Jansen's Walker", &TheoJansen.Create),
         //~ TestEntry("Edge Shapes", &EdgeShapes.Create),
