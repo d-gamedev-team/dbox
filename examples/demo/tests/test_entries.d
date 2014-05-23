@@ -59,7 +59,7 @@ import tests.pyramid;
 import tests.raycast;
 import tests.revolute;
 import tests.ropejoint;
-//~ import tests.sensortest;
+import tests.sensortest;
 //~ import tests.shapeediting;
 //~ import tests.slidercrank;
 //~ import tests.spherestack;
@@ -127,7 +127,7 @@ shared static this()
         TestEntry("Distance Test", &DistanceTest.Create),
         TestEntry("Dominos", &Dominos.Create),
         TestEntry("Dynamic Tree", &DynamicTreeTest.Create),
-        //~ TestEntry("Sensor Test", &SensorTest.Create),
+        TestEntry("Sensor Test", &SensorTest.Create),
         //~ TestEntry("Varying Friction", &VaryingFriction.Create),
         TestEntry("Performance: Add Pair Stress Test", &AddPair.Create),
     ];

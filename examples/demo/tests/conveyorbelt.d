@@ -81,7 +81,7 @@ class ConveyorBelt : Test
 
     override void PreSolve(b2Contact contact, const(b2Manifold)* oldManifold)
     {
-        Test.PreSolve(contact, oldManifold);
+        super.PreSolve(contact, oldManifold);
 
         b2Fixture* fixtureA = contact.GetFixtureA();
         b2Fixture* fixtureB = contact.GetFixtureB();

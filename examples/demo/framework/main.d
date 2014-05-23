@@ -17,7 +17,7 @@
  */
 module framework.main;
 
-enum entryTestName = "ropejoint";
+enum entryTestName = "Sensor Test";
 
 import std.algorithm;
 import std.exception;

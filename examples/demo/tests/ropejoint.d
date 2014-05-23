@@ -135,7 +135,7 @@ class RopeJoint : Test
 
     override void Step(Settings* settings)
     {
-        Test.Step(settings);
+        super.Step(settings);
         g_debugDraw.DrawString(5, m_textLine, "Press (j) to toggle the rope joint.");
         m_textLine += DRAW_STRING_NEW_LINE;
 
