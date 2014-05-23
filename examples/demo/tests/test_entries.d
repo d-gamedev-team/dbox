@@ -38,7 +38,7 @@ import tests.confined;
 import tests.convexhull;
 import tests.conveyorbelt;
 import tests.distancetest;
-//~ import tests.dominos;
+import tests.dominos;
 //~ import tests.dumpshell;
 //~ import tests.dynamictreetest;
 //~ import tests.edgeshapes;
@@ -125,7 +125,7 @@ shared static this()
         TestEntry("Collision Processing", &CollisionProcessing.Create),
         TestEntry("Compound Shapes", &CompoundShapes.Create),
         TestEntry("Distance Test", &DistanceTest.Create),
-        //~ TestEntry("Dominos", &Dominos.Create),
+        TestEntry("Dominos", &Dominos.Create),
         //~ TestEntry("Dynamic Tree", &DynamicTreeTest.Create),
         //~ TestEntry("Sensor Test", &SensorTest.Create),
         //~ TestEntry("Varying Friction", &VaryingFriction.Create),
