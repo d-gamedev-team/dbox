@@ -31,7 +31,7 @@ import tests.car;
 import tests.continuoustest;
 import tests.chain;
 import tests.charactercollision;
-//~ import tests.collisionfiltering;
+import tests.collisionfiltering;
 //~ import tests.collisionprocessing;
 //~ import tests.compoundshapes;
 //~ import tests.confined;
@@ -121,7 +121,7 @@ shared static this()
         TestEntry("Bridge", &Bridge.Create),
         TestEntry("Breakable", &Breakable.Create),
         TestEntry("Chain", &Chain.Create),
-        //~ TestEntry("Collision Filtering", &CollisionFiltering.Create),
+        TestEntry("Collision Filtering", &CollisionFiltering.Create),
         //~ TestEntry("Collision Processing", &CollisionProcessing.Create),
         //~ TestEntry("Compound Shapes", &CompoundShapes.Create),
         //~ TestEntry("Distance Test", &DistanceTest.Create),
