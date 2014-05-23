@@ -63,7 +63,7 @@ import tests.sensortest;
 import tests.shapeediting;
 import tests.slidercrank;
 import tests.spherestack;
-//~ import tests.theojansen;
+import tests.theojansen;
 import tests.tiles;
 //~ import tests.timeofimpact;
 //~ import tests.tumbler;
@@ -115,7 +115,7 @@ shared static this()
         TestEntry("Bullet Test", &BulletTest.Create),
         TestEntry("Confined", &Confined.Create),  // broken
         TestEntry("Pyramid", &Pyramid.Create),
-        //~ TestEntry("Theo Jansen's Walker", &TheoJansen.Create),
+        TestEntry("Theo Jansen's Walker", &TheoJansen.Create),
         TestEntry("Edge Shapes", &EdgeShapes.Create),
         TestEntry("PolyCollision", &PolyCollision.Create),
         TestEntry("Bridge", &Bridge.Create),
