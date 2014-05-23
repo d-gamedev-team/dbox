@@ -17,7 +17,7 @@
  */
 module framework.main;
 
-enum entryTestName = "Varying Friction";
+enum entryTestName = "Varying Restitution";
 
 import std.algorithm;
 import std.exception;

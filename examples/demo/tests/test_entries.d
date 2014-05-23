@@ -68,7 +68,7 @@ import tests.tiles;
 import tests.timeofimpact;
 import tests.tumbler;
 import tests.varyingfriction;
-//~ import tests.varyingrestitution;
+import tests.varyingrestitution;
 import tests.verticalstack;
 //~ import tests.web;
 
@@ -98,7 +98,7 @@ shared static this()
         TestEntry("MobileBalanced", &MobileBalanced.Create),
         TestEntry("Conveyor Belt", &ConveyorBelt.Create),
         TestEntry("Gears", &Gears.Create),
-        //~ TestEntry("Varying Restitution", &VaryingRestitution.Create),
+        TestEntry("Varying Restitution", &VaryingRestitution.Create),
         TestEntry("Cantilever", &Cantilever.Create),
         TestEntry("Character Collision", &CharacterCollision.Create),
         TestEntry("Edge Test", &EdgeTest.Create),
