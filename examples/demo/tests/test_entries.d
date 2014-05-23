@@ -53,7 +53,7 @@ import tests.onesidedplatform;
 import tests.pinball;
 import tests.polycollision;
 import tests.polyshapes;
-//~ import tests.prismatic;
+import tests.prismatic;
 //~ import tests.pulleys;
 //~ import tests.pyramid;
 //~ import tests.raycast;
@@ -105,7 +105,7 @@ shared static this()
         TestEntry("Body Types", &BodyTypes.Create),
         //~ TestEntry("Shape Editing", shapeEditing.Create),
         TestEntry("Car", &Car.Create),  // broken
-        //~ TestEntry("Prismatic", &Prismatic.Create),
+        TestEntry("Prismatic", &Prismatic.Create),
         //~ TestEntry("Revolute", &Revolute.Create),
         //~ TestEntry("Pulleys", &Pulleys.Create),
         TestEntry("Polygon Shapes", &PolyShapes.Create),

@@ -17,7 +17,7 @@
  */
 module framework.main;
 
-enum entryTestName = "Polygon Shapes";
+enum entryTestName = "prismatic";
 
 import std.algorithm;
 import std.exception;

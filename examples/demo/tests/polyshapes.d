@@ -279,7 +279,7 @@ class PolyShapes : Test
 
     override void Step(Settings* settings)
     {
-        Test.Step(settings);
+        super.Step(settings);
 
         PolyShapesCallback callback = new PolyShapesCallback();
         callback.m_circle.m_radius = 2.0f;
