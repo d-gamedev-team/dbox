@@ -17,7 +17,8 @@
  */
 module framework.main;
 
-enum entryTestName = "web";
+// initial test
+enum entryTestName = "Bridge";
 
 import std.algorithm;
 import std.exception;
@@ -67,8 +68,8 @@ struct UIState
 GLFWwindow* mainWindow;
 UIState ui;
 
-int32 testIndex;
-int32 testSelection;
+size_t testIndex;
+size_t testSelection;
 TestEntry* entry;
 Test test;
 Settings settings;

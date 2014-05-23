@@ -29,7 +29,7 @@ const int32 b2_maxStackEntries = 32;
 struct b2StackEntry
 {
     byte* data;
-    int32 size;
+    size_t size;
     bool usedMalloc;
 }
 
@@ -46,7 +46,7 @@ struct b2StackAllocator
     }
 
     ///
-    void* Allocate(int32 size)
+    void* Allocate(size_t size)
     {
         assert(m_entryCount < b2_maxStackEntries);
 

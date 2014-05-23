@@ -119,7 +119,7 @@ class Tiles : Test
         int32 height = cm.m_broadPhase.GetTreeHeight();
         int32 leafCount        = cm.m_broadPhase.GetProxyCount();
         int32 minimumNodeCount = 2 * leafCount - 1;
-        float32 minimumHeight  = ceilf(logf(float32(minimumNodeCount)) / logf(2.0f));
+        float32 minimumHeight  = ceilf(logf(cast(float32)minimumNodeCount) / logf(2.0f));
         g_debugDraw.DrawString(5, m_textLine, format("dynamic tree height = %d, min = %d", height, cast(int32)minimumHeight));
         m_textLine += DRAW_STRING_NEW_LINE;
 

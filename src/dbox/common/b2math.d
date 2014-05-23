@@ -792,7 +792,7 @@ b2Mat22 b2Abs(b2Mat22 A)
 }
 
 ///
-T b2Min(T)(T a, T b)
+auto b2Min(T1, T2)(T1 a, T2 b)
 {
     return a < b ? a : b;
 }
@@ -804,7 +804,7 @@ b2Vec2 b2Min(b2Vec2 a, b2Vec2 b)
 }
 
 ///
-T b2Max(T)(T a, T b)
+auto b2Max(T1, T2)(T1 a, T2 b)
 {
     return a > b ? a : b;
 }
@@ -816,7 +816,7 @@ b2Vec2 b2Max(b2Vec2 a, b2Vec2 b)
 }
 
 ///
-T b2Clamp(T)(T a, T low, T high)
+auto b2Clamp(T1, T2, T3)(T1 a, T2 low, T3 high)
 {
     return b2Max(low, b2Min(a, high));
 }

@@ -66,7 +66,7 @@ class Chain : Test
                 b2Body* body_ = m_world.CreateBody(&bd);
                 body_.CreateFixture(&fd);
 
-                b2Vec2 anchor = b2Vec2(float32(i), y);
+                b2Vec2 anchor = b2Vec2(cast(float32)i, y);
                 jd.Initialize(prevBody, body_, anchor);
                 m_world.CreateJoint(jd);
 

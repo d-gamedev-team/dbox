@@ -51,8 +51,8 @@ struct Camera
     //
     b2Vec2 ConvertScreenToWorld(b2Vec2 ps)
     {
-        float32 w = float32(m_width);
-        float32 h = float32(m_height);
+        float32 w = cast(float32)m_width;
+        float32 h = cast(float32)m_height;
         float32 u = ps.x / w;
         float32 v = (h - ps.y) / h;
 
@@ -72,8 +72,8 @@ struct Camera
     //
     b2Vec2 ConvertWorldToScreen(b2Vec2 pw)
     {
-        float32 w     = float32(m_width);
-        float32 h     = float32(m_height);
+        float32 w     = cast(float32)m_width;
+        float32 h     = cast(float32)m_height;
         float32 ratio = w / h;
         b2Vec2  extents = b2Vec2(ratio * 25.0f, 25.0f);
         extents *= m_zoom;
@@ -94,8 +94,8 @@ struct Camera
     // http://www.songho.ca/opengl/gl_projectionmatrix.html
     void BuildProjectionMatrix(float32* m, float32 zBias)
     {
-        float32 w     = float32(m_width);
-        float32 h     = float32(m_height);
+        float32 w     = cast(float32)m_width;
+        float32 h     = cast(float32)m_height;
         float32 ratio = w / h;
         b2Vec2  extents = b2Vec2(ratio * 25.0f, 25.0f);
         extents *= m_zoom;

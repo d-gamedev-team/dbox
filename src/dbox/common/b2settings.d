@@ -161,7 +161,7 @@ struct b2Version
 enum b2Version b2_version = { 2, 3, 1 };
 
 // Memory allocators. Modify these to use your own allocator.
-void* b2Alloc(int32 size)
+void* b2Alloc(size_t size)
 {
     return malloc(size);
 }

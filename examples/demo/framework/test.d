@@ -350,7 +350,7 @@ class Test : b2ContactListener
 
     void Step(Settings* settings)
     {
-        float32 timeStep = settings.hz > 0.0f ? 1.0f / settings.hz : float32(0.0f);
+        float32 timeStep = settings.hz > 0.0f ? 1.0f / settings.hz : cast(float32)0.0f;
 
         if (settings.pause)
         {

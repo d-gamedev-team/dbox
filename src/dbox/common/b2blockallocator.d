@@ -65,7 +65,7 @@ struct b2BlockAllocator
     }
 
     /// Allocate memory. This will use b2Alloc if the size is larger than b2_maxBlockSize.
-    void* Allocate(int32 size)
+    void* Allocate(size_t size)
     {
         if (size == 0)
             return null;
@@ -129,7 +129,7 @@ struct b2BlockAllocator
     }
 
     /// Free memory. This will use b2Free if the size is larger than b2_maxBlockSize.
-    void Free(void* p, int32 size)
+    void Free(void* p, size_t size)
     {
         if (size == 0)
         {
