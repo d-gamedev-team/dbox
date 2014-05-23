@@ -550,15 +550,7 @@ class Test : b2ContactListener
         B2_NOT_USED(key);
     }
 
-    void ShiftMouseDown(b2Vec2 p);
-    void MouseDown(b2Vec2 p);
-    void MouseUp(b2Vec2 p);
-    void MouseMove(b2Vec2 p);
-    void LaunchBomb();
     void LaunchBomb(b2Vec2 position, b2Vec2 velocity);
-
-    void SpawnBomb(b2Vec2 worldPt);
-    void CompleteBombSpawn(b2Vec2 p);
 
     // Let derived tests know that a joint was destroyed.
     void JointDestroyed(b2Joint joint)

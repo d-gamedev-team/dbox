@@ -455,6 +455,7 @@ void sInterface()
         {
             if (imguiItem(g_testEntries[i].name, Enabled.yes))
             {
+                testSelection = i;
                 entry         = &g_testEntries[i];
                 test          = entry.createFcn();
                 ui.chooseTest = false;
@@ -481,7 +482,7 @@ void runTests()
     char title[64];
     sprintf(title.ptr, "Box2D Testbed Version %d.%d.%d", b2_version.major, b2_version.minor, b2_version.revision);
 
-    auto window = createWindow("imgui", WindowMode.windowed, winSize.width, winSize.height);
+    auto window = createWindow("dbox", WindowMode.windowed, winSize.width, winSize.height);
     mainWindow = window.window;
 
     if (mainWindow is null)
