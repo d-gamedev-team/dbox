@@ -1,10 +1,6 @@
 # dbox
 
-![dbox](https://raw.github.com/d-gamedev-team/dbox/master/screenshot/work_in_progress.png)
-
 ![dbox](https://raw.github.com/d-gamedev-team/dbox/master/screenshot/dbox.png)
-
-**This is a work in progress, don't use yet until all runtime issues are resolved.**
 
 This is a D port of the [Box2D] game physics library.
 
@@ -14,21 +10,27 @@ Currently dbox targets Box2D version **2.3.1**.
 
 Homepage: https://github.com/d-gamedev-team/dbox
 
+## Supported compiler versions
+
+Compilers based on the **v2.065+** front-end can be used to build and run dbox.
+
 ## Examples
 
 Use [dub] to build and run the examples:
 
 ```
+# A console example of the physics engine being run.
 $ dub run dbox:hello_world
 
+# An interactive GUI test-suite containing dozens of examples.
 $ dub run dbox:demo
 ```
 
-Note: You will need to install the [glfw] shared library in order to run the example.
+Note: You will need to install the [glfw] shared library in order to run the demo.
 
 ## Documentation
 
-Documentation will be generated soon.
+Documentation is coming soon.
 
 ## Building dbox as a static library
 
