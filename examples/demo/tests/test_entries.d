@@ -45,7 +45,7 @@ import tests.edgeshapes;
 import tests.edgetest;
 import tests.gears;
 import tests.heavyonlight;
-//~ import tests.heavyonlighttwo;
+import tests.heavyonlighttwo;
 //~ import tests.mobile;
 //~ import tests.mobilebalanced;
 //~ import tests.motorjoint;
@@ -82,7 +82,7 @@ shared static this()
     [
         TestEntry("Tiles", &Tiles.Create),
         TestEntry("Heavy on Light", &HeavyOnLight.Create),
-        //~ TestEntry("Heavy on Light Two", &HeavyOnLightTwo.Create),
+        TestEntry("Heavy on Light Two", &HeavyOnLightTwo.Create),
         TestEntry("Vertical Stack", &VerticalStack.Create),
         TestEntry("Basic Slider Crank", &BasicSliderCrank.Create),
         //~ TestEntry("Slider Crank", &SliderCrank.Create),
