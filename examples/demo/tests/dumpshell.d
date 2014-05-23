@@ -46,8 +46,8 @@ class DumpShell : Test
 
         b2Vec2 g = b2Vec2(0.000000000000000e+00f, -1.000000000000000e+01f);
         m_world.SetGravity(g);
-        b2Body ** bodies = cast(b2Body**)b2Alloc(3  * b2memSizeOf!(b2Body*));
-        b2Joint** joints = cast(b2Joint**)b2Alloc(0 * b2memSizeOf!(b2Joint*));
+        b2Body ** bodies = cast(b2Body * *) b2Alloc(3* b2memSizeOf!(b2Body*));
+        b2Joint** joints = cast(b2Joint * *) b2Alloc(0* b2memSizeOf!(b2Joint*));
         {
             b2BodyDef bd;
             bd.position.Set(2.587699890136719e-02f, 5.515012264251709e+00f);
@@ -57,16 +57,16 @@ class DumpShell : Test
             bd.linearDamping   = 0.000000000000000e+00f;
             bd.angularDamping  = 0.000000000000000e+00f;
             bd.allowSleep      = true;
-            bd.awake         = true;
-            bd.fixedRotation = false;
-            bd.bullet        = false;
-            bd.active        = true;
-            bd.gravityScale  = 1.000000000000000e+00f;
-            bodies[0]        = m_world.CreateBody(&bd);
+            bd.awake           = true;
+            bd.fixedRotation   = false;
+            bd.bullet          = false;
+            bd.active          = true;
+            bd.gravityScale    = 1.000000000000000e+00f;
+            bodies[0]          = m_world.CreateBody(&bd);
 
             {
                 b2FixtureDef fd;
-                fd.friction            = 2.000000029802322e-01f;
+                fd.friction = 2.000000029802322e-01f;
                 fd.restitution         = 0.000000000000000e+00f;
                 fd.density             = 1.000000000000000e+00f;
                 fd.isSensor            = bool(0);
@@ -96,16 +96,16 @@ class DumpShell : Test
             bd.linearDamping   = 0.000000000000000e+00f;
             bd.angularDamping  = 0.000000000000000e+00f;
             bd.allowSleep      = true;
-            bd.awake         = true;
-            bd.fixedRotation = false;
-            bd.bullet        = false;
-            bd.active        = true;
-            bd.gravityScale  = 1.000000000000000e+00f;
-            bodies[1]        = m_world.CreateBody(&bd);
+            bd.awake           = true;
+            bd.fixedRotation   = false;
+            bd.bullet          = false;
+            bd.active          = true;
+            bd.gravityScale    = 1.000000000000000e+00f;
+            bodies[1]          = m_world.CreateBody(&bd);
 
             {
                 b2FixtureDef fd;
-                fd.friction            = 5.000000000000000e-01f;
+                fd.friction = 5.000000000000000e-01f;
                 fd.restitution         = 0.000000000000000e+00f;
                 fd.density             = 5.000000000000000e+00f;
                 fd.isSensor            = bool(0);
@@ -137,16 +137,16 @@ class DumpShell : Test
             bd.linearDamping   = 0.000000000000000e+00f;
             bd.angularDamping  = 0.000000000000000e+00f;
             bd.allowSleep      = true;
-            bd.awake         = true;
-            bd.fixedRotation = false;
-            bd.bullet        = false;
-            bd.active        = true;
-            bd.gravityScale  = 1.000000000000000e+00f;
-            bodies[2]        = m_world.CreateBody(&bd);
+            bd.awake           = true;
+            bd.fixedRotation   = false;
+            bd.bullet          = false;
+            bd.active          = true;
+            bd.gravityScale    = 1.000000000000000e+00f;
+            bodies[2]          = m_world.CreateBody(&bd);
 
             {
                 b2FixtureDef fd;
-                fd.friction            = 9.499999880790710e-01f;
+                fd.friction = 9.499999880790710e-01f;
                 fd.restitution         = 0.000000000000000e+00f;
                 fd.density             = 1.000000000000000e+01f;
                 fd.isSensor            = bool(0);

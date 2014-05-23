@@ -118,8 +118,8 @@ class Car : Test
 
         // Bridge
         {
-            int32 N = 20;
-            auto shape = new b2PolygonShape();
+            int32 N     = 20;
+            auto  shape = new b2PolygonShape();
             shape.SetAsBox(1.0f, 0.125f);
 
             b2FixtureDef fd;
@@ -216,7 +216,7 @@ class Car : Test
             m_wheel2.CreateFixture(&fd);
 
             b2WheelJointDef jd = new b2WheelJointDef();
-            b2Vec2 axis = b2Vec2(0.0f, 1.0f);
+            b2Vec2 axis        = b2Vec2(0.0f, 1.0f);
 
             jd.Initialize(m_car, m_wheel1, m_wheel1.GetPosition(), axis);
             jd.motorSpeed     = 0.0f;
@@ -289,8 +289,8 @@ class Car : Test
     b2Body* m_wheel1;
     b2Body* m_wheel2;
 
-    float32 m_hz = 0;
-    float32 m_zeta = 0;
+    float32 m_hz    = 0;
+    float32 m_zeta  = 0;
     float32 m_speed = 0;
     b2WheelJoint m_spring1;
     b2WheelJoint m_spring2;

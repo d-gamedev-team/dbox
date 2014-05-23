@@ -36,6 +36,7 @@ class Cantilever : Test
         e_count = 8,
     }
 
+
     this()
     {
         b2Body* ground = null;

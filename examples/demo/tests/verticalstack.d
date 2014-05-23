@@ -40,6 +40,7 @@ class VerticalStack : Test
                         // e_rowCount = 1
     }
 
+
     this()
     {
         {
@@ -55,6 +56,7 @@ class VerticalStack : Test
         }
 
         float32 xs[5] = [0.0f, -10.0f, -5.0f, 5.0f, 10.0f];
+
         for (int32 j = 0; j < e_columnCount; ++j)
         {
             auto shape = new b2PolygonShape();

@@ -37,6 +37,7 @@ class ConvexHull : Test
         e_count = b2_maxPolygonVertices
     }
 
+
     this()
     {
         Generate();

@@ -36,6 +36,7 @@ class Bridge : Test
         e_count = 30,
     }
 
+
     this()
     {
         b2Body* ground = null;

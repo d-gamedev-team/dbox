@@ -70,7 +70,7 @@ class Tiles : Test
         }
 
         {
-            float32 a = 0.5f;
+            float32 a  = 0.5f;
             auto shape = new b2PolygonShape();
             shape.SetAsBox(a, a);
 
@@ -113,8 +113,8 @@ class Tiles : Test
 
     override void Step(Settings* settings)
     {
-        auto cm = m_world.GetContactManager();
-        int32 height           = cm.m_broadPhase.GetTreeHeight();
+        auto  cm = m_world.GetContactManager();
+        int32 height = cm.m_broadPhase.GetTreeHeight();
         int32 leafCount        = cm.m_broadPhase.GetProxyCount();
         int32 minimumNodeCount = 2 * leafCount - 1;
         float32 minimumHeight  = ceilf(logf(float32(minimumNodeCount)) / logf(2.0f));
@@ -124,7 +124,7 @@ class Tiles : Test
         Test.Step(settings);
 
         g_debugDraw.DrawString(5, m_textLine, format("create time = %6.2f ms, fixture count = %d",
-                               m_createTime, m_fixtureCount));
+                                                     m_createTime, m_fixtureCount));
         m_textLine += DRAW_STRING_NEW_LINE;
 
         // b2DynamicTree* tree = &m_world.m_contactManager.m_broadPhase.m_tree;

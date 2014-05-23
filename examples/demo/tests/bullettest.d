@@ -73,7 +73,6 @@ class BulletTest : Test
         }
     }
 
-
     void Launch()
     {
         m_body.SetTransform(b2Vec2(0.0f, 4.0f), 0.0f);
@@ -103,18 +102,18 @@ class BulletTest : Test
         if (b2_gjkCalls > 0)
         {
             g_debugDraw.DrawString(5, m_textLine, format("gjk calls = %d, ave gjk iters = %3.1f, max gjk iters = %d",
-                                   b2_gjkCalls, b2_gjkIters / float32(b2_gjkCalls), b2_gjkMaxIters));
+                                                         b2_gjkCalls, b2_gjkIters / float32(b2_gjkCalls), b2_gjkMaxIters));
             m_textLine += DRAW_STRING_NEW_LINE;
         }
 
         if (b2_toiCalls > 0)
         {
             g_debugDraw.DrawString(5, m_textLine, format("toi calls = %d, ave toi iters = %3.1f, max toi iters = %d",
-                                   b2_toiCalls, b2_toiIters / float32(b2_toiCalls), b2_toiMaxRootIters));
+                                                         b2_toiCalls, b2_toiIters / float32(b2_toiCalls), b2_toiMaxRootIters));
             m_textLine += DRAW_STRING_NEW_LINE;
 
             g_debugDraw.DrawString(5, m_textLine, format("ave toi root iters = %3.1f, max toi root iters = %d",
-                                   b2_toiRootIters / float32(b2_toiCalls), b2_toiMaxRootIters));
+                                                         b2_toiRootIters / float32(b2_toiCalls), b2_toiMaxRootIters));
             m_textLine += DRAW_STRING_NEW_LINE;
         }
 

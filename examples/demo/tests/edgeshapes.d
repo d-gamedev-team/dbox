@@ -15,7 +15,7 @@
  * misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
  */
-module tests.dynamictreetest;
+module tests.edgeshapes;
 
 import core.stdc.math;
 import core.stdc.stdlib;
@@ -31,44 +31,107 @@ import dbox;
 import framework.debug_draw;
 import framework.test;
 
-class DynamicTreeTest : Test
+class EdgeShapesCallback : public b2RayCastCallback
+{
+public:
+    EdgeShapesCallback()
+    {
+        m_fixture = NULL;
+    }
+
+    float32 ReportFixture(b2Fixture* fixture, const b2Vec2& point,
+                          const b2Vec2& normal, float32 fraction)
+    {
+        m_fixture = fixture;
+        m_point   = point;
+        m_normal  = normal;
+
+        return fraction;
+    }
+
+    b2Fixture* m_fixture;
+    b2Vec2 m_point;
+    b2Vec2 m_normal;
+};
+
+class EdgeShapes : Test
 {
     enum
     {
-        e_actorCount = 128
+        e_maxBodies = 256
     }
 
 
     this()
     {
-        m_tree = b2DynamicTree(1);
-
-        m_worldExtent = 15.0f;
-        m_proxyExtent = 0.5f;
-
-        srand(888);
-
-        for (int32 i = 0; i < e_actorCount; ++i)
+        // Ground body_
         {
-            Actor* actor = m_actors.ptr + i;
-            GetRandomAABB(&actor.aabb);
-            actor.proxyId = m_tree.CreateProxy(actor.aabb, actor);
+            b2BodyDef bd;
+            b2Body* ground = m_world.CreateBody(&bd);
+
+            float32 x1 = -20.0f;
+            float32 y1 = 2.0f * cosf(x1 / 10.0f * b2_pi);
+
+            for (int32 i = 0; i < 80; ++i)
+            {
+                float32 x2 = x1 + 0.5f;
+                float32 y2 = 2.0f * cosf(x2 / 10.0f * b2_pi);
+
+                auto shape = new b2EdgeShape();
+                shape.Set(b2Vec2(x1, y1), b2Vec2(x2, y2));
+                ground.CreateFixture(shape, 0.0f);
+
+                x1 = x2;
+                y1 = y2;
+            }
         }
 
-        m_stepCount = 0;
+        {
+            b2Vec2 vertices[3];
+            vertices[0].Set(-0.5f, 0.0f);
+            vertices[1].Set(0.5f, 0.0f);
+            vertices[2].Set(0.0f, 1.5f);
+            m_polygons[0].Set(vertices, 3);
+        }
 
-        float32 h = m_worldExtent;
-        m_queryAABB.lowerBound.Set(-3.0f, -4.0f + h);
-        m_queryAABB.upperBound.Set(5.0f, 6.0f + h);
+        {
+            b2Vec2 vertices[3];
+            vertices[0].Set(-0.1f, 0.0f);
+            vertices[1].Set(0.1f, 0.0f);
+            vertices[2].Set(0.0f, 1.5f);
+            m_polygons[1].Set(vertices, 3);
+        }
 
-        m_rayCastInput.p1.Set(-5.0, 5.0f + h);
-        m_rayCastInput.p2.Set(7.0f, -4.0f + h);
+        {
+            float32 w = 1.0f;
+            float32 b = w / (2.0f + b2Sqrt(2.0f));
+            float32 s = b2Sqrt(2.0f) * b;
 
-        // m_rayCastInput.p1.Set(0.0f, 2.0f + h);
-        // m_rayCastInput.p2.Set(0.0f, -2.0f + h);
-        m_rayCastInput.maxFraction = 1.0f;
+            b2Vec2 vertices[8];
+            vertices[0].Set(0.5f * s, 0.0f);
+            vertices[1].Set(0.5f * w, b);
+            vertices[2].Set(0.5f * w, b + s);
+            vertices[3].Set(0.5f * s, w);
+            vertices[4].Set(-0.5f * s, w);
+            vertices[5].Set(-0.5f * w, b + s);
+            vertices[6].Set(-0.5f * w, b);
+            vertices[7].Set(-0.5f * s, 0.0f);
 
-        m_automated = false;
+            m_polygons[2].Set(vertices, 8);
+        }
+
+        {
+            m_polygons[3].SetAsBox(0.5f, 0.5f);
+        }
+
+        {
+            m_circle.m_radius = 0.5f;
+        }
+
+        m_bodyIndex = 0;
+        memset(m_bodies, 0, sizeof(m_bodies));
+
+        m_angle = 0.0f;
     }
 
     static Test Create()
