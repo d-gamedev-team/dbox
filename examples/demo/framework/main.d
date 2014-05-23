@@ -72,7 +72,7 @@ int32 testSelection;
 TestEntry* entry;
 Test test;
 Settings settings;
-bool rightMouseDown;
+bool moveCamera;
 b2Vec2 lastp;
 
 //
@@ -283,17 +283,18 @@ extern(C) void sMouseButton(GLFWwindow*, int32 button, int32 action, int32 mods)
             test.MouseUp(pw);
         }
     }
-    else if (button == GLFW_MOUSE_BUTTON_2)
+    else
+    if (button == GLFW_MOUSE_BUTTON_2 || button == GLFW_MOUSE_BUTTON_3)
     {
         if (action == GLFW_PRESS)
         {
             lastp = g_camera.ConvertScreenToWorld(ps);
-            rightMouseDown = true;
+            moveCamera = true;
         }
 
         if (action == GLFW_RELEASE)
         {
-            rightMouseDown = false;
+            moveCamera = false;
         }
     }
 }
@@ -306,7 +307,7 @@ extern(C) void sMouseMotion(GLFWwindow*, double xd, double yd)
     b2Vec2 pw = g_camera.ConvertScreenToWorld(ps);
     test.MouseMove(pw);
 
-    if (rightMouseDown)
+    if (moveCamera)
     {
         b2Vec2 diff = pw - lastp;
         g_camera.m_center.x -= diff.x;
