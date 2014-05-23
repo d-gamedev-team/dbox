@@ -17,7 +17,7 @@
  */
 module framework.main;
 
-enum entryTestName = "prismatic";
+enum entryTestName = "pulleys";
 
 import std.algorithm;
 import std.exception;

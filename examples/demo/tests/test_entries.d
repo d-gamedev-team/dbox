@@ -54,7 +54,7 @@ import tests.pinball;
 import tests.polycollision;
 import tests.polyshapes;
 import tests.prismatic;
-//~ import tests.pulleys;
+import tests.pulleys;
 //~ import tests.pyramid;
 //~ import tests.raycast;
 //~ import tests.revolute;
@@ -107,7 +107,7 @@ shared static this()
         TestEntry("Car", &Car.Create),  // broken
         TestEntry("Prismatic", &Prismatic.Create),
         //~ TestEntry("Revolute", &Revolute.Create),
-        //~ TestEntry("Pulleys", &Pulleys.Create),
+        TestEntry("Pulleys", &Pulleys.Create),
         TestEntry("Polygon Shapes", &PolyShapes.Create),
         //~ TestEntry("Web", &Web.Create),
         //~ TestEntry("RopeJoint", &RopeJoint.Create),
