@@ -35,7 +35,7 @@ import tests.collisionfiltering;
 import tests.collisionprocessing;
 import tests.compoundshapes;
 import tests.confined;
-//~ import tests.convexhull;
+import tests.convexhull;
 import tests.conveyorbelt;
 //~ import tests.distancetest;
 //~ import tests.dominos;
@@ -85,7 +85,7 @@ shared static this()
         TestEntry("Basic Slider Crank", &BasicSliderCrank.Create),
         //~ TestEntry("Slider Crank", &SliderCrank.Create),
         //~ TestEntry("Sphere Stack", &SphereStack.Create),
-        //~ TestEntry("Convex Hull", &ConvexHull.Create),
+        TestEntry("Convex Hull", &ConvexHull.Create),
         //~ TestEntry("Tumbler", &Tumbler.Create),
         //~ TestEntry("Ray-Cast", &RayCast.Create),
         //~ TestEntry("Dump Shell", &DumpShell.Create),
