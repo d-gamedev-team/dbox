@@ -41,11 +41,22 @@ class b2PolygonShape : b2Shape
     }
 
     /// Implement b2Shape.
-    override b2Shape Clone(b2BlockAllocator* allocator) const
+    override b2PolygonShape Clone(b2BlockAllocator* allocator) const
     {
         void* mem = allocator.Allocate(b2memSizeOf!b2PolygonShape);
         b2PolygonShape clone = b2emplace!b2PolygonShape(mem);
-        clone.tupleof = this.tupleof;
+
+        // clone.tupleof = this.tupleof;
+        // Note: see Issue 12791: .tupleof does not take base class fields into account
+        // https://issues.dlang.org/show_bug.cgi?id=12791
+        clone.m_type = this.m_type;
+        clone.m_radius = this.m_radius;
+
+        clone.m_centroid = this.m_centroid;
+        clone.m_vertices[] = this.m_vertices[];
+        clone.m_normals[] = this.m_normals[];
+        clone.m_count = this.m_count;
+
         return clone;
     }
 

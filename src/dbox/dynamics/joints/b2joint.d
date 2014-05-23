@@ -77,7 +77,7 @@ struct b2JointEdge
 class b2JointDef
 {
     /// The joint type is set automatically for concrete joint types.
-    b2JointType type = b2JointType.e_unknownJoint;
+    b2JointType type;
 
     /// Use this to attach application specific data to your joints.
     void* userData;

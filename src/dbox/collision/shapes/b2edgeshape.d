@@ -53,11 +53,24 @@ class b2EdgeShape : b2Shape
     }
 
     /// Implement b2Shape.
-    override b2Shape Clone(b2BlockAllocator* allocator) const
+    override b2EdgeShape Clone(b2BlockAllocator* allocator) const
     {
         void* mem = allocator.Allocate(b2memSizeOf!b2EdgeShape);
         auto clone = b2emplace!b2EdgeShape(mem);
-        clone.tupleof = this.tupleof;
+
+        // clone.tupleof = this.tupleof;
+        // Note: see Issue 12791: .tupleof does not take base class fields into account
+        // https://issues.dlang.org/show_bug.cgi?id=12791
+        clone.m_type = this.m_type;
+        clone.m_radius = this.m_radius;
+
+        clone.m_vertex0 = this.m_vertex0;
+        clone.m_vertex1 = this.m_vertex1;
+        clone.m_vertex2 = this.m_vertex2;
+        clone.m_vertex3 = this.m_vertex3;
+        clone.m_hasVertex0 = this.m_hasVertex0;
+        clone.m_hasVertex3 = this.m_hasVertex3;
+
         return clone;
     }
 
