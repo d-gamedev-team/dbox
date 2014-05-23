@@ -17,7 +17,7 @@
  */
 module framework.main;
 
-enum entryTestName = "Theo Jansen's Walker";
+enum entryTestName = "tumbler";
 
 import std.algorithm;
 import std.exception;

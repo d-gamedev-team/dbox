@@ -65,8 +65,8 @@ import tests.slidercrank;
 import tests.spherestack;
 import tests.theojansen;
 import tests.tiles;
-//~ import tests.timeofimpact;
-//~ import tests.tumbler;
+import tests.timeofimpact;
+import tests.tumbler;
 //~ import tests.varyingfriction;
 //~ import tests.varyingrestitution;
 import tests.verticalstack;
@@ -86,12 +86,12 @@ shared static this()
         TestEntry("Slider Crank", &SliderCrank.Create),
         TestEntry("Sphere Stack", &SphereStack.Create),
         TestEntry("Convex Hull", &ConvexHull.Create),
-        //~ TestEntry("Tumbler", &Tumbler.Create),
+        TestEntry("Tumbler", &Tumbler.Create),
         TestEntry("Ray-Cast", &RayCast.Create),
         TestEntry("Dump Shell", &DumpShell.Create),
         TestEntry("Apply Force", &ApplyForce.Create),
         TestEntry("Continuous Test", &ContinuousTest.Create),
-        //~ TestEntry("Time of Impact", &TimeOfImpact.Create),
+        TestEntry("Time of Impact", &TimeOfImpact.Create),
         TestEntry("Motor Joint", &MotorJoint.Create),
         TestEntry("One-Sided Platform", &OneSidedPlatform.Create),
         TestEntry("Mobile", &Mobile.Create),
