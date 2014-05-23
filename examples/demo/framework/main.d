@@ -52,7 +52,7 @@ enum BLUE   = RGBA(  0,   0, 255, 255);
 enum WHITE  = RGBA(255, 255, 255, 255);
 enum SILVER = RGBA(220, 220, 220, 255);
 
-const entryTestName = "dump shell";
+const entryTestName = "dynamic tree";
 
 //
 struct UIState

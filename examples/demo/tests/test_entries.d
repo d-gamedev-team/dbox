@@ -40,7 +40,7 @@ import tests.conveyorbelt;
 import tests.distancetest;
 import tests.dominos;
 import tests.dumpshell;
-//~ import tests.dynamictreetest;
+import tests.dynamictreetest;
 //~ import tests.edgeshapes;
 //~ import tests.edgetest;
 //~ import tests.gears;
@@ -126,7 +126,7 @@ shared static this()
         TestEntry("Compound Shapes", &CompoundShapes.Create),
         TestEntry("Distance Test", &DistanceTest.Create),
         TestEntry("Dominos", &Dominos.Create),
-        //~ TestEntry("Dynamic Tree", &DynamicTreeTest.Create),
+        TestEntry("Dynamic Tree", &DynamicTreeTest.Create),
         //~ TestEntry("Sensor Test", &SensorTest.Create),
         //~ TestEntry("Varying Friction", &VaryingFriction.Create),
         TestEntry("Add Pair Stress Test", &AddPair.Create),
