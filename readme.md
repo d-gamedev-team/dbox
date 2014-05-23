@@ -4,7 +4,7 @@
 
 This is a D port of the [Box2D] game physics library.
 
-Currently dbox targets Box2D version **2.3.1**.
+Currently **dbox** targets Box2D version **2.3.1**.
 
 [Box2D] was created by [Erin Catto].
 
