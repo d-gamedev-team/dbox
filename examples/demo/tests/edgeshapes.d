@@ -31,16 +31,14 @@ import dbox;
 import framework.debug_draw;
 import framework.test;
 
-class EdgeShapesCallback : public b2RayCastCallback
+class EdgeShapesCallback : b2RayCastCallback
 {
-public:
-    EdgeShapesCallback()
+    this()
     {
-        m_fixture = NULL;
+        m_fixture = null;
     }
 
-    float32 ReportFixture(b2Fixture* fixture, const b2Vec2& point,
-                          const b2Vec2& normal, float32 fraction)
+    override float32 ReportFixture(b2Fixture* fixture, b2Vec2 point, b2Vec2 normal, float32 fraction)
     {
         m_fixture = fixture;
         m_point   = point;
@@ -52,7 +50,7 @@ public:
     b2Fixture* m_fixture;
     b2Vec2 m_point;
     b2Vec2 m_normal;
-};
+}
 
 class EdgeShapes : Test
 {
@@ -61,9 +59,13 @@ class EdgeShapes : Test
         e_maxBodies = 256
     }
 
-
     this()
     {
+        m_circle = new typeof(m_circle);
+
+        foreach (ref poly; m_polygons)
+            poly = new typeof(poly);
+
         // Ground body_
         {
             b2BodyDef bd;
@@ -91,7 +93,7 @@ class EdgeShapes : Test
             vertices[0].Set(-0.5f, 0.0f);
             vertices[1].Set(0.5f, 0.0f);
             vertices[2].Set(0.0f, 1.5f);
-            m_polygons[0].Set(vertices, 3);
+            m_polygons[0].Set(vertices);
         }
 
         {
@@ -99,7 +101,7 @@ class EdgeShapes : Test
             vertices[0].Set(-0.1f, 0.0f);
             vertices[1].Set(0.1f, 0.0f);
             vertices[2].Set(0.0f, 1.5f);
-            m_polygons[1].Set(vertices, 3);
+            m_polygons[1].Set(vertices);
         }
 
         {
@@ -117,7 +119,7 @@ class EdgeShapes : Test
             vertices[6].Set(-0.5f * w, b);
             vertices[7].Set(-0.5f * s, 0.0f);
 
-            m_polygons[2].Set(vertices, 8);
+            m_polygons[2].Set(vertices);
         }
 
         {
@@ -129,7 +131,7 @@ class EdgeShapes : Test
         }
 
         m_bodyIndex = 0;
-        memset(m_bodies, 0, sizeof(m_bodies));
+        m_bodies[] = null;
 
         m_angle = 0.0f;
     }
@@ -139,310 +141,122 @@ class EdgeShapes : Test
         return new typeof(this);
     }
 
-    override void Step(Settings* settings)
+    void Create(int32 index)
     {
-        B2_NOT_USED(settings);
-
-        m_rayActor = null;
-
-        for (int32 i = 0; i < e_actorCount; ++i)
+        if (m_bodies[m_bodyIndex] != null)
         {
-            m_actors[i].fraction = 1.0f;
-            m_actors[i].overlap  = false;
+            m_world.DestroyBody(m_bodies[m_bodyIndex]);
+            m_bodies[m_bodyIndex] = null;
         }
 
-        if (m_automated == true)
-        {
-            int32 actionCount = b2Max(1, e_actorCount >> 2);
+        b2BodyDef bd;
 
-            for (int32 i = 0; i < actionCount; ++i)
+        float32 x = RandomFloat(-10.0f, 10.0f);
+        float32 y = RandomFloat(10.0f, 20.0f);
+        bd.position.Set(x, y);
+        bd.angle = RandomFloat(-b2_pi, b2_pi);
+        bd.type  = b2_dynamicBody;
+
+        if (index == 4)
+        {
+            bd.angularDamping = 0.02f;
+        }
+
+        m_bodies[m_bodyIndex] = m_world.CreateBody(&bd);
+
+        if (index < 4)
+        {
+            b2FixtureDef fd;
+            fd.shape    = m_polygons[index];
+            fd.friction = 0.3f;
+            fd.density  = 20.0f;
+            m_bodies[m_bodyIndex].CreateFixture(&fd);
+        }
+        else
+        {
+            b2FixtureDef fd;
+            fd.shape    = m_circle;
+            fd.friction = 0.3f;
+            fd.density  = 20.0f;
+            m_bodies[m_bodyIndex].CreateFixture(&fd);
+        }
+
+        m_bodyIndex = (m_bodyIndex + 1) % e_maxBodies;
+    }
+
+    void DestroyBody()
+    {
+        for (int32 i = 0; i < e_maxBodies; ++i)
+        {
+            if (m_bodies[i] != null)
             {
-                Action();
+                m_world.DestroyBody(m_bodies[i]);
+                m_bodies[i] = null;
+                return;
             }
         }
-
-        Query();
-        RayCast();
-
-        for (int32 i = 0; i < e_actorCount; ++i)
-        {
-            Actor* actor = m_actors.ptr + i;
-
-            if (actor.proxyId == b2_nullNode)
-                continue;
-
-            b2Color c = b2Color(0.9f, 0.9f, 0.9f);
-
-            if (actor == m_rayActor && actor.overlap)
-            {
-                c.Set(0.9f, 0.6f, 0.6f);
-            }
-            else if (actor == m_rayActor)
-            {
-                c.Set(0.6f, 0.9f, 0.6f);
-            }
-            else if (actor.overlap)
-            {
-                c.Set(0.6f, 0.6f, 0.9f);
-            }
-
-            g_debugDraw.DrawAABB(&actor.aabb, c);
-        }
-
-        b2Color c = b2Color(0.7f, 0.7f, 0.7f);
-        g_debugDraw.DrawAABB(&m_queryAABB, c);
-
-        g_debugDraw.DrawSegment(m_rayCastInput.p1, m_rayCastInput.p2, c);
-
-        b2Color c1 = b2Color(0.2f, 0.9f, 0.2f);
-        b2Color c2 = b2Color(0.9f, 0.2f, 0.2f);
-        g_debugDraw.DrawPoint(m_rayCastInput.p1, 6.0f, c1);
-        g_debugDraw.DrawPoint(m_rayCastInput.p2, 6.0f, c2);
-
-        if (m_rayActor)
-        {
-            b2Color cr = b2Color(0.2f, 0.2f, 0.9f);
-            b2Vec2  p  = m_rayCastInput.p1 + m_rayActor.fraction * (m_rayCastInput.p2 - m_rayCastInput.p1);
-            g_debugDraw.DrawPoint(p, 6.0f, cr);
-        }
-
-        {
-            int32 height = m_tree.GetHeight();
-            g_debugDraw.DrawString(5, m_textLine, format("dynamic tree height = %d", height));
-            m_textLine += DRAW_STRING_NEW_LINE;
-        }
-
-        ++m_stepCount;
     }
 
     override void Keyboard(int key)
     {
         switch (key)
         {
-            case GLFW_KEY_A:
-                m_automated = !m_automated;
-                break;
-
-            case GLFW_KEY_C:
-                CreateProxy();
+            case GLFW_KEY_1:
+            case GLFW_KEY_2:
+            case GLFW_KEY_3:
+            case GLFW_KEY_4:
+            case GLFW_KEY_5:
+                Create(key - GLFW_KEY_1);
                 break;
 
             case GLFW_KEY_D:
-                DestroyProxy();
-                break;
-
-            case GLFW_KEY_M:
-                MoveProxy();
+                DestroyBody();
                 break;
 
             default:
-                break;
         }
     }
 
-    bool QueryCallback(int32 proxyId)
+    override void Step(Settings* settings)
     {
-        Actor* actor = cast(Actor*)m_tree.GetUserData(proxyId);
-        actor.overlap = b2TestOverlap(m_queryAABB, actor.aabb);
-        return true;
-    }
+        bool advanceRay = settings.pause == 0 || settings.singleStep;
 
-    float32 RayCastCallback(b2RayCastInput input, int32 proxyId)
-    {
-        Actor* actor = cast(Actor*)m_tree.GetUserData(proxyId);
+        Test.Step(settings);
+        g_debugDraw.DrawString(5, m_textLine, "Press 1-5 to drop stuff");
+        m_textLine += DRAW_STRING_NEW_LINE;
 
-        b2RayCastOutput output;
-        bool hit = actor.aabb.RayCast(&output, input);
+        float32 L = 25.0f;
+        b2Vec2 point1 = b2Vec2(0.0f, 10.0f);
+        b2Vec2 d = b2Vec2(L * cosf(m_angle), -L * b2Abs(sinf(m_angle)));
+        b2Vec2 point2 = point1 + d;
 
-        if (hit)
+        EdgeShapesCallback callback = new EdgeShapesCallback();
+        m_world.RayCast(callback, point1, point2);
+
+        if (callback.m_fixture)
         {
-            m_rayCastOutput     = output;
-            m_rayActor          = actor;
-            m_rayActor.fraction = output.fraction;
-            return output.fraction;
+            g_debugDraw.DrawPoint(callback.m_point, 5.0f, b2Color(0.4f, 0.9f, 0.4f));
+
+            g_debugDraw.DrawSegment(point1, callback.m_point, b2Color(0.8f, 0.8f, 0.8f));
+
+            b2Vec2 head = callback.m_point + 0.5f * callback.m_normal;
+            g_debugDraw.DrawSegment(callback.m_point, head, b2Color(0.9f, 0.9f, 0.4f));
         }
-
-        return input.maxFraction;
-    }
-
-private:
-
-    struct Actor
-    {
-        b2AABB aabb;
-        float32 fraction;
-        bool overlap;
-        int32 proxyId;
-    };
-
-    void GetRandomAABB(b2AABB* aabb)
-    {
-        b2Vec2 w;
-        w.Set(2.0f * m_proxyExtent, 2.0f * m_proxyExtent);
-
-        // aabb.lowerBound.x = -m_proxyExtent;
-        // aabb.lowerBound.y = -m_proxyExtent + m_worldExtent;
-        aabb.lowerBound.x = RandomFloat(-m_worldExtent, m_worldExtent);
-        aabb.lowerBound.y = RandomFloat(0.0f, 2.0f * m_worldExtent);
-        aabb.upperBound   = aabb.lowerBound + w;
-    }
-
-    void MoveAABB(b2AABB* aabb)
-    {
-        b2Vec2 d;
-        d.x = RandomFloat(-0.5f, 0.5f);
-        d.y = RandomFloat(-0.5f, 0.5f);
-
-        // d.x = 2.0f;
-        // d.y = 0.0f;
-        aabb.lowerBound += d;
-        aabb.upperBound += d;
-
-        b2Vec2 c0 = 0.5f * (aabb.lowerBound + aabb.upperBound);
-        b2Vec2 min;
-        min.Set(-m_worldExtent, 0.0f);
-        b2Vec2 max;
-        max.Set(m_worldExtent, 2.0f * m_worldExtent);
-        b2Vec2 c = b2Clamp(c0, min, max);
-
-        aabb.lowerBound += c - c0;
-        aabb.upperBound += c - c0;
-    }
-
-    void CreateProxy()
-    {
-        for (int32 i = 0; i < e_actorCount; ++i)
+        else
         {
-            int32  j     = rand() % e_actorCount;
-            Actor* actor = m_actors.ptr + j;
+            g_debugDraw.DrawSegment(point1, point2, b2Color(0.8f, 0.8f, 0.8f));
+        }
 
-            if (actor.proxyId == b2_nullNode)
-            {
-                GetRandomAABB(&actor.aabb);
-                actor.proxyId = m_tree.CreateProxy(actor.aabb, actor);
-                return;
-            }
+        if (advanceRay)
+        {
+            m_angle += 0.25f * b2_pi / 180.0f;
         }
     }
 
-    void DestroyProxy()
-    {
-        for (int32 i = 0; i < e_actorCount; ++i)
-        {
-            int32  j     = rand() % e_actorCount;
-            Actor* actor = m_actors.ptr + j;
+    int32 m_bodyIndex;
+    b2Body* m_bodies[e_maxBodies];
+    b2PolygonShape m_polygons[4];
+    b2CircleShape  m_circle;
 
-            if (actor.proxyId != b2_nullNode)
-            {
-                m_tree.DestroyProxy(actor.proxyId);
-                actor.proxyId = b2_nullNode;
-                return;
-            }
-        }
-    }
-
-    void MoveProxy()
-    {
-        for (int32 i = 0; i < e_actorCount; ++i)
-        {
-            int32  j     = rand() % e_actorCount;
-            Actor* actor = m_actors.ptr + j;
-
-            if (actor.proxyId == b2_nullNode)
-            {
-                continue;
-            }
-
-            b2AABB aabb0 = actor.aabb;
-            MoveAABB(&actor.aabb);
-            b2Vec2 displacement = actor.aabb.GetCenter() - aabb0.GetCenter();
-            m_tree.MoveProxy(actor.proxyId, actor.aabb, displacement);
-            return;
-        }
-    }
-
-    void Action()
-    {
-        int32 choice = rand() % 20;
-
-        switch (choice)
-        {
-            case 0:
-                CreateProxy();
-                break;
-
-            case 1:
-                DestroyProxy();
-                break;
-
-            default:
-                MoveProxy();
-        }
-    }
-
-    void Query()
-    {
-        m_tree.Query(this, m_queryAABB);
-
-        for (int32 i = 0; i < e_actorCount; ++i)
-        {
-            if (m_actors[i].proxyId == b2_nullNode)
-            {
-                continue;
-            }
-
-            bool overlap = b2TestOverlap(m_queryAABB, m_actors[i].aabb);
-            B2_NOT_USED(overlap);
-            assert(overlap == m_actors[i].overlap);
-        }
-    }
-
-    void RayCast()
-    {
-        m_rayActor = null;
-
-        b2RayCastInput input = m_rayCastInput;
-
-        // Ray cast against the dynamic tree.
-        m_tree.RayCast(this, input);
-
-        // Brute force ray cast.
-        Actor* bruteActor = null;
-        b2RayCastOutput bruteOutput;
-
-        for (int32 i = 0; i < e_actorCount; ++i)
-        {
-            if (m_actors[i].proxyId == b2_nullNode)
-            {
-                continue;
-            }
-
-            b2RayCastOutput output;
-            bool hit = m_actors[i].aabb.RayCast(&output, input);
-
-            if (hit)
-            {
-                bruteActor        = m_actors.ptr + i;
-                bruteOutput       = output;
-                input.maxFraction = output.fraction;
-            }
-        }
-
-        if (bruteActor !is null)
-        {
-            assert(bruteOutput.fraction == m_rayCastOutput.fraction);
-        }
-    }
-
-    float32 m_worldExtent = 0;
-    float32 m_proxyExtent = 0;
-
-    b2DynamicTree m_tree;
-    b2AABB m_queryAABB;
-    b2RayCastInput  m_rayCastInput;
-    b2RayCastOutput m_rayCastOutput;
-    Actor* m_rayActor;
-    Actor  m_actors[e_actorCount];
-    int32  m_stepCount;
-    bool m_automated;
+    float32 m_angle;
 }
