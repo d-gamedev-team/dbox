@@ -78,7 +78,7 @@ class ApplyForce : Test
             vertices[2] = b2Mul(xf1, b2Vec2(0.0f, 0.5f));
 
             b2PolygonShape poly1 = new b2PolygonShape();
-            poly1.Set(vertices.ptr, 3);
+            poly1.Set(vertices);
 
             b2FixtureDef sd1;
             sd1.shape   = poly1;
@@ -93,7 +93,7 @@ class ApplyForce : Test
             vertices[2] = b2Mul(xf2, b2Vec2(0.0f, 0.5f));
 
             b2PolygonShape poly2 = new b2PolygonShape();
-            poly2.Set(vertices.ptr, 3);
+            poly2.Set(vertices);
 
             b2FixtureDef sd2;
             sd2.shape   = poly2;

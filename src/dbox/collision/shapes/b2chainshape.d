@@ -85,6 +85,12 @@ class b2ChainShape : b2Shape
         m_hasNextVertex   = true;
     }
 
+    /// Convenience overload that takes a slice.
+    void CreateLoop(const(b2Vec2)[] vertices)
+    {
+        CreateLoop(vertices.ptr, cast(int32)vertices.length);
+    }
+
     /// Create a chain with isolated end vertices.
     /// @param vertices an array of vertices, these are copied
     /// @param count the vertex count
@@ -108,6 +114,12 @@ class b2ChainShape : b2Shape
 
         m_prevVertex.SetZero();
         m_nextVertex.SetZero();
+    }
+
+    /// Convenience overload that takes a slice.
+    void CreateChain(const(b2Vec2)[] vertices)
+    {
+        CreateChain(vertices.ptr, cast(int32)vertices.length);
     }
 
     /// Establish connectivity to a vertex that precedes the first vertex.

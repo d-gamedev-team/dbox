@@ -191,7 +191,7 @@ class Car : Test
             vertices[3].Set(0.0f, 0.9f);
             vertices[4].Set(-1.15f, 0.9f);
             vertices[5].Set(-1.5f, 0.2f);
-            chassis.Set(vertices.ptr, 6);
+            chassis.Set(vertices[0 .. 6]);
 
             b2CircleShape circle = new b2CircleShape();
             circle.m_radius = 0.4f;

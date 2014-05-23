@@ -32,7 +32,7 @@ import tests.continuoustest;
 import tests.chain;
 import tests.charactercollision;
 import tests.collisionfiltering;
-//~ import tests.collisionprocessing;
+import tests.collisionprocessing;
 //~ import tests.compoundshapes;
 //~ import tests.confined;
 //~ import tests.convexhull;
@@ -122,7 +122,7 @@ shared static this()
         TestEntry("Breakable", &Breakable.Create),
         TestEntry("Chain", &Chain.Create),
         TestEntry("Collision Filtering", &CollisionFiltering.Create),
-        //~ TestEntry("Collision Processing", &CollisionProcessing.Create),
+        TestEntry("Collision Processing", &CollisionProcessing.Create),
         //~ TestEntry("Compound Shapes", &CompoundShapes.Create),
         //~ TestEntry("Distance Test", &DistanceTest.Create),
         //~ TestEntry("Dominos", &Dominos.Create),

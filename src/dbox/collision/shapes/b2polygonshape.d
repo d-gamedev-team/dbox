@@ -197,6 +197,12 @@ class b2PolygonShape : b2Shape
         m_centroid = ComputeCentroid(m_vertices.ptr, m);
     }
 
+    /// Convenience overload that takes a slice.
+    void Set(const(b2Vec2)[] vertices)
+    {
+        Set(vertices.ptr, cast(int32)vertices.length);
+    }
+
     /// Build vertices to represent an axis-aligned box centered on the local origin.
     /// @param hx the half-width.
     /// @param hy the half-height.
@@ -533,6 +539,12 @@ class b2PolygonShape : b2Shape
         assert(area > b2_epsilon);
         c *= 1.0f / area;
         return c;
+    }
+
+    /// Convenience overload that takes a slice.
+    static b2Vec2 ComputeCentroid(const(b2Vec2)[] vertices)
+    {
+        return ComputeCentroid(vertices.ptr, cast(int32)vertices.length);
     }
 
     b2Vec2 m_centroid;

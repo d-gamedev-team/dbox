@@ -178,7 +178,7 @@ class Cantilever : Test
             vertices[2].Set(0.0f, 1.5f);
 
             auto shape = new b2PolygonShape();
-            shape.Set(vertices.ptr, 3);
+            shape.Set(vertices);
 
             b2FixtureDef fd;
             fd.shape   = shape;

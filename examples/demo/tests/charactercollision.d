@@ -71,7 +71,7 @@ class CharacterCollision : Test
             vs[2].Set(7.0f, 8.0f);
             vs[3].Set(8.0f, 7.0f);
             b2ChainShape shape = new b2ChainShape();
-            shape.CreateChain(vs.ptr, 4);
+            shape.CreateChain(vs);
             ground.CreateFixture(shape, 0.0f);
         }
 
@@ -102,7 +102,7 @@ class CharacterCollision : Test
             vs[2].Set(1.0f, 5.0f);
             vs[3].Set(-1.0f, 5.0f);
             b2ChainShape shape = new b2ChainShape();
-            shape.CreateLoop(vs.ptr, 4);
+            shape.CreateLoop(vs);
             ground.CreateFixture(shape, 0.0f);
         }
 
@@ -124,7 +124,7 @@ class CharacterCollision : Test
             vs[8].Set(-6.0f, 2.0f);
             vs[9].Set(-6.0f, 0.0f);
             b2ChainShape shape = new b2ChainShape();
-            shape.CreateLoop(vs.ptr, 10);
+            shape.CreateLoop(vs);
             ground.CreateFixture(shape, 0.0f);
         }
 
@@ -187,7 +187,7 @@ class CharacterCollision : Test
             }
 
             auto shape = new b2PolygonShape();
-            shape.Set(vertices.ptr, 6);
+            shape.Set(vertices[0 .. 6]);
 
             b2FixtureDef fd;
             fd.shape   = shape;
