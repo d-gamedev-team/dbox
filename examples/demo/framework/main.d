@@ -17,6 +17,8 @@
  */
 module framework.main;
 
+enum entryTestName = "gears";
+
 import std.algorithm;
 import std.exception;
 import std.file;
@@ -51,8 +53,6 @@ enum GREEN  = RGBA(  0, 255,   0, 255);
 enum BLUE   = RGBA(  0,   0, 255, 255);
 enum WHITE  = RGBA(255, 255, 255, 255);
 enum SILVER = RGBA(220, 220, 220, 255);
-
-const entryTestName = "Edge Test";
 
 //
 struct UIState
