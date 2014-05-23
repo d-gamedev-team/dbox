@@ -139,6 +139,8 @@ class BodyTypes : Test
 
     override void Step(Settings* settings)
     {
+        super.Step(settings);
+
         // Drive the kinematic body_.
         if (m_platform.GetType() == b2_kinematicBody)
         {
@@ -153,7 +155,6 @@ class BodyTypes : Test
             }
         }
 
-        Test.Step(settings);
         g_debugDraw.DrawString(5, m_textLine, "Keys: (d) dynamic, (s) static, (k) kinematic");
         m_textLine += DRAW_STRING_NEW_LINE;
     }

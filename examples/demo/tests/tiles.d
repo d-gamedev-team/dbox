@@ -113,6 +113,8 @@ class Tiles : Test
 
     override void Step(Settings* settings)
     {
+        super.Step(settings);
+
         auto  cm = m_world.GetContactManager();
         int32 height = cm.m_broadPhase.GetTreeHeight();
         int32 leafCount        = cm.m_broadPhase.GetProxyCount();
@@ -120,8 +122,6 @@ class Tiles : Test
         float32 minimumHeight  = ceilf(logf(float32(minimumNodeCount)) / logf(2.0f));
         g_debugDraw.DrawString(5, m_textLine, format("dynamic tree height = %d, min = %d", height, cast(int32)minimumHeight));
         m_textLine += DRAW_STRING_NEW_LINE;
-
-        Test.Step(settings);
 
         g_debugDraw.DrawString(5, m_textLine, format("create time = %6.2f ms, fixture count = %d",
                                                      m_createTime, m_fixtureCount));

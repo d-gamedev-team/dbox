@@ -127,7 +127,7 @@ class CollisionProcessing : Test
 
     override void Step(Settings* settings)
     {
-        Test.Step(settings);
+        super.Step(settings);
 
         // We are going to destroy some bodies according to contact
         // points. We must buffer the bodies that should be destroyed

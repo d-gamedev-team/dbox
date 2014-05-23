@@ -124,6 +124,8 @@ class Breakable : Test
 
     override void Step(Settings* settings)
     {
+        super.Step(settings);
+
         if (m_break)
         {
             Break();
@@ -137,8 +139,6 @@ class Breakable : Test
             m_velocity        = m_body1.GetLinearVelocity();
             m_angularVelocity = m_body1.GetAngularVelocity();
         }
-
-        Test.Step(settings);
     }
 
     b2Body* m_body1;

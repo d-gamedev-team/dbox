@@ -15,12 +15,10 @@
  * misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
  */
-module tests.edgeshapes;
+module tests.polyshapes;
 
 import core.stdc.math;
-import core.stdc.stdlib;
 
-import std.algorithm;
 import std.string;
 import std.typecons;
 
@@ -31,28 +29,94 @@ import dbox;
 import framework.debug_draw;
 import framework.test;
 
-class EdgeShapesCallback : b2RayCastCallback
+/// This tests stacking. It also shows how to use b2World.Query
+/// and b2TestOverlap.
+
+/// This callback is called by b2World.QueryAABB. We find all the fixtures
+/// that overlap an AABB. Of those, we use b2TestOverlap to determine which fixtures
+/// overlap a circle. Up to 4 overlapped fixtures will be highlighted with a yellow border.
+class PolyShapesCallback : b2QueryCallback
 {
+    enum
+    {
+        e_maxCount = 4
+    }
+
     this()
     {
-        m_fixture = null;
+        m_count = 0;
+        m_circle = new typeof(m_circle);
     }
 
-    override float32 ReportFixture(b2Fixture* fixture, b2Vec2 point, b2Vec2 normal, float32 fraction)
+    void DrawFixture(b2Fixture* fixture)
     {
-        m_fixture = fixture;
-        m_point   = point;
-        m_normal  = normal;
+        b2Color color = b2Color(0.95f, 0.95f, 0.6f);
+        b2Transform xf = fixture.GetBody().GetTransform();
 
-        return fraction;
+        switch (fixture.GetType())
+        {
+            case b2Shape.e_circle:
+            {
+                b2CircleShape circle = cast(b2CircleShape)fixture.GetShape();
+
+                b2Vec2  center = b2Mul(xf, circle.m_p);
+                float32 radius = circle.m_radius;
+
+                g_debugDraw.DrawCircle(center, radius, color);
+            }
+            break;
+
+            case b2Shape.e_polygon:
+            {
+                b2PolygonShape poly = cast(b2PolygonShape)fixture.GetShape();
+                int32 vertexCount    = poly.m_count;
+                assert(vertexCount <= b2_maxPolygonVertices);
+                b2Vec2 vertices[b2_maxPolygonVertices];
+
+                for (int32 i = 0; i < vertexCount; ++i)
+                {
+                    vertices[i] = b2Mul(xf, poly.m_vertices[i]);
+                }
+
+                g_debugDraw.DrawPolygon(vertices.ptr, vertexCount, color);
+            }
+            break;
+
+            default:
+                break;
+        }
     }
 
-    b2Fixture* m_fixture;
-    b2Vec2 m_point;
-    b2Vec2 m_normal;
+    /// Called for each fixture found in the query AABB.
+    /// @return false to terminate the query.
+    override bool ReportFixture(b2Fixture* fixture)
+    {
+        if (m_count == e_maxCount)
+        {
+            return false;
+        }
+
+        b2Body* body_  = fixture.GetBody();
+        b2Shape shape = fixture.GetShape();
+
+        bool overlap = b2TestOverlap(shape, 0, m_circle, 0, body_.GetTransform(), m_transform);
+
+        if (overlap)
+        {
+            DrawFixture(fixture);
+            ++m_count;
+        }
+
+        return true;
+    }
+
+    b2CircleShape m_circle;
+    b2Transform m_transform;
+    b2Draw g_debugDraw;
+    int32 m_count;
 }
 
-class EdgeShapes : Test
+class PolyShapes : Test
 {
     enum
     {
@@ -66,26 +130,15 @@ class EdgeShapes : Test
         foreach (ref poly; m_polygons)
             poly = new typeof(poly);
 
-        // Ground body_
+
+        // Ground body
         {
             b2BodyDef bd;
             b2Body* ground = m_world.CreateBody(&bd);
 
-            float32 x1 = -20.0f;
-            float32 y1 = 2.0f * cosf(x1 / 10.0f * b2_pi);
-
-            for (int32 i = 0; i < 80; ++i)
-            {
-                float32 x2 = x1 + 0.5f;
-                float32 y2 = 2.0f * cosf(x2 / 10.0f * b2_pi);
-
-                auto shape = new b2EdgeShape();
-                shape.Set(b2Vec2(x1, y1), b2Vec2(x2, y2));
-                ground.CreateFixture(shape, 0.0f);
-
-                x1 = x2;
-                y1 = y2;
-            }
+            b2EdgeShape shape = new b2EdgeShape();
+            shape.Set(b2Vec2(-40.0f, 0.0f), b2Vec2(40.0f, 0.0f));
+            ground.CreateFixture(shape, 0.0f);
         }
 
         {
@@ -132,13 +185,6 @@ class EdgeShapes : Test
 
         m_bodyIndex = 0;
         m_bodies[] = null;
-
-        m_angle = 0.0f;
-    }
-
-    static Test Create()
-    {
-        return new typeof(this);
     }
 
     void Create(int32 index)
@@ -150,12 +196,11 @@ class EdgeShapes : Test
         }
 
         b2BodyDef bd;
+        bd.type = b2_dynamicBody;
 
-        float32 x = RandomFloat(-10.0f, 10.0f);
-        float32 y = RandomFloat(10.0f, 20.0f);
-        bd.position.Set(x, y);
+        float32 x = RandomFloat(-2.0f, 2.0f);
+        bd.position.Set(x, 10.0f);
         bd.angle = RandomFloat(-b2_pi, b2_pi);
-        bd.type  = b2_dynamicBody;
 
         if (index == 4)
         {
@@ -168,16 +213,17 @@ class EdgeShapes : Test
         {
             b2FixtureDef fd;
             fd.shape    = m_polygons[index];
+            fd.density  = 1.0f;
             fd.friction = 0.3f;
-            fd.density  = 20.0f;
             m_bodies[m_bodyIndex].CreateFixture(&fd);
         }
         else
         {
             b2FixtureDef fd;
             fd.shape    = m_circle;
+            fd.density  = 1.0f;
             fd.friction = 0.3f;
-            fd.density  = 20.0f;
+
             m_bodies[m_bodyIndex].CreateFixture(&fd);
         }
 
@@ -209,49 +255,52 @@ class EdgeShapes : Test
                 Create(key - GLFW_KEY_1);
                 break;
 
+            case GLFW_KEY_A:
+
+                for (int32 i = 0; i < e_maxBodies; i += 2)
+                {
+                    if (m_bodies[i])
+                    {
+                        bool active = m_bodies[i].IsActive();
+                        m_bodies[i].SetActive(!active);
+                    }
+                }
+
+                break;
+
             case GLFW_KEY_D:
                 DestroyBody();
                 break;
 
             default:
+                break;
         }
     }
 
     override void Step(Settings* settings)
     {
-        super.Step(settings);
+        Test.Step(settings);
 
-        bool advanceRay = settings.pause == 0 || settings.singleStep;
+        PolyShapesCallback callback = new PolyShapesCallback();
+        callback.m_circle.m_radius = 2.0f;
+        callback.m_circle.m_p.Set(0.0f, 1.1f);
+        callback.m_transform.SetIdentity();
+        callback.g_debugDraw = g_debugDraw;
+
+        b2AABB aabb;
+        callback.m_circle.ComputeAABB(&aabb, callback.m_transform, 0);
+
+        m_world.QueryAABB(callback, aabb);
+
+        b2Color color = b2Color(0.4f, 0.7f, 0.8f);
+        g_debugDraw.DrawCircle(callback.m_circle.m_p, callback.m_circle.m_radius, color);
 
         g_debugDraw.DrawString(5, m_textLine, "Press 1-5 to drop stuff");
         m_textLine += DRAW_STRING_NEW_LINE;
-
-        float32 L = 25.0f;
-        b2Vec2 point1 = b2Vec2(0.0f, 10.0f);
-        b2Vec2 d = b2Vec2(L * cosf(m_angle), -L * b2Abs(sinf(m_angle)));
-        b2Vec2 point2 = point1 + d;
-
-        EdgeShapesCallback callback = new EdgeShapesCallback();
-        m_world.RayCast(callback, point1, point2);
-
-        if (callback.m_fixture)
-        {
-            g_debugDraw.DrawPoint(callback.m_point, 5.0f, b2Color(0.4f, 0.9f, 0.4f));
-
-            g_debugDraw.DrawSegment(point1, callback.m_point, b2Color(0.8f, 0.8f, 0.8f));
-
-            b2Vec2 head = callback.m_point + 0.5f * callback.m_normal;
-            g_debugDraw.DrawSegment(callback.m_point, head, b2Color(0.9f, 0.9f, 0.4f));
-        }
-        else
-        {
-            g_debugDraw.DrawSegment(point1, point2, b2Color(0.8f, 0.8f, 0.8f));
-        }
-
-        if (advanceRay)
-        {
-            m_angle += 0.25f * b2_pi / 180.0f;
-        }
+        g_debugDraw.DrawString(5, m_textLine, "Press 'a' to (de)activate some bodies");
+        m_textLine += DRAW_STRING_NEW_LINE;
+        g_debugDraw.DrawString(5, m_textLine, "Press 'd' to destroy a body_");
+        m_textLine += DRAW_STRING_NEW_LINE;
     }
 
     int32 m_bodyIndex;
@@ -259,5 +308,8 @@ class EdgeShapes : Test
     b2PolygonShape m_polygons[4];
     b2CircleShape  m_circle;
 
-    float32 m_angle;
+    static Test Create()
+    {
+        return new typeof(this);
+    }
 }

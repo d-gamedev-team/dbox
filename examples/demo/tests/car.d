@@ -271,13 +271,14 @@ class Car : Test
 
     override void Step(Settings* settings)
     {
+        super.Step(settings);
+
         g_debugDraw.DrawString(5, m_textLine, "Keys: left = a, brake = s, right = d, hz down = q, hz up = e");
         m_textLine += DRAW_STRING_NEW_LINE;
         g_debugDraw.DrawString(5, m_textLine, format("frequency = %g hz, damping ratio = %g", m_hz, m_zeta));
         m_textLine += DRAW_STRING_NEW_LINE;
 
         g_camera.m_center.x = m_car.GetPosition().x;
-        Test.Step(settings);
     }
 
     static Test Create()

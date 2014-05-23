@@ -47,12 +47,12 @@ import tests.gears;
 import tests.heavyonlight;
 import tests.heavyonlighttwo;
 import tests.mobile;
-//~ import tests.mobilebalanced;
-//~ import tests.motorjoint;
-//~ import tests.onesidedplatform;
-//~ import tests.pinball;
-//~ import tests.polycollision;
-//~ import tests.polyshapes;
+import tests.mobilebalanced;
+import tests.motorjoint;
+import tests.onesidedplatform;
+import tests.pinball;
+import tests.polycollision;
+import tests.polyshapes;
 //~ import tests.prismatic;
 //~ import tests.pulleys;
 //~ import tests.pyramid;
@@ -65,13 +65,11 @@ import tests.mobile;
 //~ import tests.spherestack;
 //~ import tests.theojansen;
 import tests.tiles;
-
 //~ import tests.timeofimpact;
 //~ import tests.tumbler;
 //~ import tests.varyingfriction;
 //~ import tests.varyingrestitution;
 import tests.verticalstack;
-
 //~ import tests.web;
 
 TestEntry[] g_testEntries;
@@ -94,10 +92,10 @@ shared static this()
         TestEntry("Apply Force", &ApplyForce.Create),
         TestEntry("Continuous Test", &ContinuousTest.Create),
         //~ TestEntry("Time of Impact", &TimeOfImpact.Create),
-        //~ TestEntry("Motor Joint", &MotorJoint.Create),
-        //~ TestEntry("One-Sided Platform", &OneSidedPlatform.Create),
+        TestEntry("Motor Joint", &MotorJoint.Create),
+        TestEntry("One-Sided Platform", &OneSidedPlatform.Create),
         TestEntry("Mobile", &Mobile.Create),
-        //~ TestEntry("MobileBalanced", &MobileBalanced.Create),
+        TestEntry("MobileBalanced", &MobileBalanced.Create),
         TestEntry("Conveyor Belt", &ConveyorBelt.Create),
         TestEntry("Gears", &Gears.Create),
         //~ TestEntry("Varying Restitution", &VaryingRestitution.Create),
@@ -110,16 +108,16 @@ shared static this()
         //~ TestEntry("Prismatic", &Prismatic.Create),
         //~ TestEntry("Revolute", &Revolute.Create),
         //~ TestEntry("Pulleys", &Pulleys.Create),
-        //~ TestEntry("Polygon Shapes", &PolyShapes.Create),
+        TestEntry("Polygon Shapes", &PolyShapes.Create),
         //~ TestEntry("Web", &Web.Create),
         //~ TestEntry("RopeJoint", &RopeJoint.Create),
-        //~ TestEntry("Pinball", &Pinball.Create),
+        TestEntry("Pinball", &Pinball.Create),
         TestEntry("Bullet Test", &BulletTest.Create),
         TestEntry("Confined", &Confined.Create),  // broken
         //~ TestEntry("Pyramid", &Pyramid.Create),
         //~ TestEntry("Theo Jansen's Walker", &TheoJansen.Create),
         TestEntry("Edge Shapes", &EdgeShapes.Create),
-        //~ TestEntry("PolyCollision", &PolyCollision.Create),
+        TestEntry("PolyCollision", &PolyCollision.Create),
         TestEntry("Bridge", &Bridge.Create),
         TestEntry("Breakable", &Breakable.Create),
         TestEntry("Chain", &Chain.Create),
@@ -131,7 +129,7 @@ shared static this()
         TestEntry("Dynamic Tree", &DynamicTreeTest.Create),
         //~ TestEntry("Sensor Test", &SensorTest.Create),
         //~ TestEntry("Varying Friction", &VaryingFriction.Create),
-        TestEntry("Add Pair Stress Test", &AddPair.Create),
+        TestEntry("Performance: Add Pair Stress Test", &AddPair.Create),
     ];
 
     import std.algorithm;

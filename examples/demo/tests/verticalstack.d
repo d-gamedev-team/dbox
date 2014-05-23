@@ -136,7 +136,8 @@ class VerticalStack : Test
 
     override void Step(Settings* settings)
     {
-        Test.Step(settings);
+        super.Step(settings);
+
         g_debugDraw.DrawString(5, m_textLine, "Press: (,) to launch a bullet.");
         m_textLine += DRAW_STRING_NEW_LINE;
         g_debugDraw.DrawString(5, m_textLine, format("Blocksolve = %d", g_blockSolve));

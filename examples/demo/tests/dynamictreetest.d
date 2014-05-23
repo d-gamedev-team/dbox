@@ -78,7 +78,7 @@ class DynamicTreeTest : Test
 
     override void Step(Settings* settings)
     {
-        B2_NOT_USED(settings);
+        super.Step(settings);
 
         m_rayActor = null;
 

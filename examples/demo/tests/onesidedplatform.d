@@ -15,7 +15,7 @@
  * misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
  */
-module tests.conveyorbelt;
+module tests.onesidedplatform;
 
 import core.stdc.math;
 
@@ -29,11 +29,15 @@ import dbox;
 import framework.debug_draw;
 import framework.test;
 
-class ConveyorBelt : Test
+class OneSidedPlatform : Test
 {
-    b2EdgeShape shape1;
-    b2PolygonShape shape2;
-    b2PolygonShape shape3;
+    alias State = int;
+    enum : State
+    {
+        e_unknown,
+        e_above,
+        e_below
+    }
 
     this()
     {
@@ -42,8 +46,7 @@ class ConveyorBelt : Test
             b2BodyDef bd;
             b2Body* ground = m_world.CreateBody(&bd);
 
-            shape1 = new b2EdgeShape();
-            alias shape = shape1;
+            auto shape = new b2EdgeShape();
             shape.Set(b2Vec2(-20.0f, 0.0f), b2Vec2(20.0f, 0.0f));
             ground.CreateFixture(shape, 0.0f);
         }
@@ -51,31 +54,32 @@ class ConveyorBelt : Test
         // Platform
         {
             b2BodyDef bd;
-            bd.position.Set(-5.0f, 5.0f);
+            bd.position.Set(0.0f, 10.0f);
             b2Body* body_ = m_world.CreateBody(&bd);
 
-            shape2 = new b2PolygonShape();
-            alias shape = shape2;
-            shape.SetAsBox(10.0f, 0.5f);
+            auto shape = new b2PolygonShape();
+            shape.SetAsBox(3.0f, 0.5f);
+            m_platform = body_.CreateFixture(shape, 0.0f);
 
-            b2FixtureDef fd;
-            fd.shape    = shape;
-            fd.friction = 0.8f;
-            m_platform  = body_.CreateFixture(&fd);
+            m_bottom = 10.0f - 0.5f;
+            m_top    = 10.0f + 0.5f;
         }
 
-        // Boxes
-        for (int32 i = 0; i < 5; ++i)
+        // Actor
         {
             b2BodyDef bd;
             bd.type = b2_dynamicBody;
-            bd.position.Set(-10.0f + 2.0f * i, 7.0f);
+            bd.position.Set(0.0f, 12.0f);
             b2Body* body_ = m_world.CreateBody(&bd);
 
-            shape3 = new b2PolygonShape();
-            alias shape = shape3;
-            shape.SetAsBox(0.5f, 0.5f);
-            body_.CreateFixture(shape, 20.0f);
+            m_radius = 0.5f;
+            b2CircleShape shape = new b2CircleShape();
+            shape.m_radius = m_radius;
+            m_character    = body_.CreateFixture(shape, 20.0f);
+
+            body_.SetLinearVelocity(b2Vec2(0.0f, -50.0f));
+
+            m_state = e_unknown;
         }
     }
 
@@ -86,26 +90,43 @@ class ConveyorBelt : Test
         b2Fixture* fixtureA = contact.GetFixtureA();
         b2Fixture* fixtureB = contact.GetFixtureB();
 
-        if (fixtureA == m_platform)
+        if (fixtureA != m_platform && fixtureA != m_character)
         {
-            contact.SetTangentSpeed(5.0f);
+            return;
         }
 
-        if (fixtureB == m_platform)
+        if (fixtureB != m_platform && fixtureB != m_character)
         {
-            contact.SetTangentSpeed(-5.0f);
+            return;
+        }
+
+        b2Vec2 position = m_character.GetBody().GetPosition();
+
+        if (position.y < m_top + m_radius - 3.0f * b2_linearSlop)
+        {
+            contact.SetEnabled(false);
         }
     }
 
     override void Step(Settings* settings)
     {
         super.Step(settings);
-    }
 
-    b2Fixture* m_platform;
+        g_debugDraw.DrawString(5, m_textLine, "Press: (c) create a shape, (d) destroy a shape.");
+        m_textLine += DRAW_STRING_NEW_LINE;
+
+        b2Vec2 v = m_character.GetBody().GetLinearVelocity();
+        g_debugDraw.DrawString(5, m_textLine, format("Character Linear Velocity: %f", v.y));
+        m_textLine += DRAW_STRING_NEW_LINE;
+    }
 
     static Test Create()
     {
         return new typeof(this);
     }
+
+    float32 m_radius = 0, m_top = 0, m_bottom = 0;
+    State m_state;
+    b2Fixture* m_platform;
+    b2Fixture* m_character;
 }

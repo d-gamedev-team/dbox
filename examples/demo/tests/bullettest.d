@@ -97,7 +97,7 @@ class BulletTest : Test
 
     override void Step(Settings* settings)
     {
-        Test.Step(settings);
+        super.Step(settings);
 
         if (b2_gjkCalls > 0)
         {

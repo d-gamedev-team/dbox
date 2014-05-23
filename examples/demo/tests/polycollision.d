@@ -15,11 +15,10 @@
  * misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
  */
-module tests.distancetest;
+module tests.polycollision;
 
 import core.stdc.math;
 
-import std.algorithm;
 import std.string;
 import std.typecons;
 
@@ -30,7 +29,7 @@ import dbox;
 import framework.debug_draw;
 import framework.test;
 
-class DistanceTest : Test
+class PolyCollision : Test
 {
     this()
     {
@@ -38,17 +37,15 @@ class DistanceTest : Test
         m_polygonB = new b2PolygonShape();
 
         {
-            m_transformA.SetIdentity();
-            m_transformA.p.Set(0.0f, -0.2f);
-            m_polygonA.SetAsBox(10.0f, 0.2f);
+            m_polygonA.SetAsBox(0.2f, 0.4f);
+            m_transformA.Set(b2Vec2(0.0f, 0.0f), 0.0f);
         }
 
         {
-            m_positionB.Set(12.017401f, 0.13678508f);
-            m_angleB = -0.0109265f;
+            m_polygonB.SetAsBox(0.5f, 0.5f);
+            m_positionB.Set(19.345284f, 1.5632932f);
+            m_angleB = 1.9160721f;
             m_transformB.Set(m_positionB, m_angleB);
-
-            m_polygonB.SetAsBox(2.0f, 0.1f);
         }
     }
 
@@ -56,21 +53,13 @@ class DistanceTest : Test
     {
         super.Step(settings);
 
-        b2DistanceInput input;
-        input.proxyA.Set(m_polygonA, 0);
-        input.proxyB.Set(m_polygonB, 0);
-        input.transformA = m_transformA;
-        input.transformB = m_transformB;
-        input.useRadii   = true;
-        b2SimplexCache cache;
-        cache.count = 0;
-        b2DistanceOutput output;
-        b2Distance(&output, &cache, &input);
+        b2Manifold manifold;
+        b2CollidePolygons(&manifold, m_polygonA, m_transformA, m_polygonB, m_transformB);
 
-        g_debugDraw.DrawString(5, m_textLine, format("distance = %g", output.distance));
-        m_textLine += DRAW_STRING_NEW_LINE;
+        b2WorldManifold worldManifold;
+        worldManifold.Initialize(&manifold, m_transformA, m_polygonA.m_radius, m_transformB, m_polygonB.m_radius);
 
-        g_debugDraw.DrawString(5, m_textLine, format("iterations = %d", output.iterations));
+        g_debugDraw.DrawString(5, m_textLine, format("point count = %d", manifold.pointCount));
         m_textLine += DRAW_STRING_NEW_LINE;
 
         {
@@ -92,14 +81,10 @@ class DistanceTest : Test
             g_debugDraw.DrawPolygon(v.ptr, m_polygonB.m_count, color);
         }
 
-        b2Vec2 x1 = output.pointA;
-        b2Vec2 x2 = output.pointB;
-
-        b2Color c1 = b2Color(1.0f, 0.0f, 0.0f);
-        g_debugDraw.DrawPoint(x1, 4.0f, c1);
-
-        b2Color c2 = b2Color(1.0f, 1.0f, 0.0f);
-        g_debugDraw.DrawPoint(x2, 4.0f, c2);
+        for (int32 i = 0; i < manifold.pointCount; ++i)
+        {
+            g_debugDraw.DrawPoint(worldManifold.points[i], 4.0f, b2Color(0.9f, 0.3f, 0.3f));
+        }
     }
 
     override void Keyboard(int key)
@@ -137,16 +122,17 @@ class DistanceTest : Test
         m_transformB.Set(m_positionB, m_angleB);
     }
 
+    b2PolygonShape m_polygonA;
+    b2PolygonShape m_polygonB;
+
+    b2Transform m_transformA;
+    b2Transform m_transformB;
+
+    b2Vec2  m_positionB;
+    float32 m_angleB = 0;
+
     static Test Create()
     {
         return new typeof(this);
     }
-
-    b2Vec2  m_positionB;
-    float32 m_angleB;
-
-    b2Transform m_transformA;
-    b2Transform m_transformB;
-    b2PolygonShape m_polygonA;
-    b2PolygonShape m_polygonB;
 }

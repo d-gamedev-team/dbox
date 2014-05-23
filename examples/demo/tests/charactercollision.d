@@ -236,11 +236,12 @@ class CharacterCollision : Test
 
     override void Step(Settings* settings)
     {
+        super.Step(settings);
+
         b2Vec2 v = m_character.GetLinearVelocity();
         v.x = -5.0f;
         m_character.SetLinearVelocity(v);
 
-        Test.Step(settings);
         g_debugDraw.DrawString(5, m_textLine, "This tests various character collision shapes.");
         m_textLine += DRAW_STRING_NEW_LINE;
         g_debugDraw.DrawString(5, m_textLine, "Limitation: square and hexagon can snag on aligned boxes.");

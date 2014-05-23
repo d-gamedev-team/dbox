@@ -128,6 +128,8 @@ class Confined : Test
 
     override void Step(Settings* settings)
     {
+        super.Step(settings);
+
         bool sleeping = true;
 
         for (b2Body* b = m_world.GetBodyList(); b; b = b.GetNext())
@@ -152,8 +154,6 @@ class Confined : Test
         // {
         // CreateCircle();
         // }
-
-        Test.Step(settings);
 
         for (b2Body* b = m_world.GetBodyList(); b; b = b.GetNext())
         {

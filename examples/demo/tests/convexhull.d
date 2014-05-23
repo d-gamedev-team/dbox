@@ -83,7 +83,7 @@ class ConvexHull : Test
 
     override void Step(Settings* settings)
     {
-        Test.Step(settings);
+        super.Step(settings);
 
         auto shape = new b2PolygonShape();
         shape.Set(m_points[0 .. m_count]);

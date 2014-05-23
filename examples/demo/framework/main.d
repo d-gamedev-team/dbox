@@ -17,7 +17,7 @@
  */
 module framework.main;
 
-enum entryTestName = "mobile";
+enum entryTestName = "Polygon Shapes";
 
 import std.algorithm;
 import std.exception;
@@ -91,6 +91,20 @@ void sCreateUI()
         fprintf(stderr.getFP(), "Could not init GUI renderer.\n");
         assert(false);
     }
+}
+
+void choosePrevTest()
+{
+    --testSelection;
+    if (testSelection < 0)
+        testSelection = g_testEntries.length - 1;
+}
+
+void chooseNextTest()
+{
+    ++testSelection;
+    if (testSelection == g_testEntries.length)
+        testSelection = 0;
 }
 
 //
@@ -211,25 +225,11 @@ extern(C) void sKeyCallback(GLFWwindow*, int key, int scancode, int action, int 
                 break;
 
             case GLFW_KEY_LEFT_BRACKET:
-
-                // Switch to previous test
-                --testSelection;
-
-                if (testSelection < 0)
-                {
-                    testSelection = g_testEntries.length - 1;
-                }
+                choosePrevTest();
                 break;
 
             case GLFW_KEY_RIGHT_BRACKET:
-
-                // Switch to next test
-                ++testSelection;
-
-                if (testSelection == g_testEntries.length)
-                {
-                    testSelection = 0;
-                }
+                chooseNextTest();
                 break;
 
             case GLFW_KEY_TAB:
@@ -380,51 +380,59 @@ void sInterface()
 
         imguiLabel("Test");
 
-        if (imguiButton(entry.name, Enabled.yes))
+        if (imguiButton(entry.name))
         {
             ui.chooseTest = !ui.chooseTest;
         }
 
         imguiSeparatorLine();
 
-        imguiSlider("Vel Iters", &settings.velocityIterations, 0, 50, 1, Enabled.yes);
-        imguiSlider("Pos Iters", &settings.positionIterations, 0, 50, 1, Enabled.yes);
-        imguiSlider("Hertz", &settings.hz, 5.0f, 120.0f, 5.0f, Enabled.yes);
+        if (imguiButton("Previous test"))
+            choosePrevTest();
 
-        imguiCheck("Sleep", &settings.enableSleep, Enabled.yes);
-
-        imguiCheck("Warm Starting", &settings.enableWarmStarting, Enabled.yes);
-
-        imguiCheck("Time of Impact", &settings.enableContinuous, Enabled.yes);
-
-        imguiCheck("Sub-Stepping", &settings.enableSubStepping, Enabled.yes);
+        if (imguiButton("Next test"))
+            chooseNextTest();
 
         imguiSeparatorLine();
 
-        imguiCheck("Shapes", &settings.drawShapes, Enabled.yes);
+        imguiSlider("Vel Iters", &settings.velocityIterations, 0, 50, 1);
+        imguiSlider("Pos Iters", &settings.positionIterations, 0, 50, 1);
+        imguiSlider("Hertz", &settings.hz, 5.0f, 120.0f, 5.0f);
 
-        imguiCheck("Joints", &settings.drawJoints, Enabled.yes);
+        imguiCheck("Sleep", &settings.enableSleep);
 
-        imguiCheck("AABBs", &settings.drawAABBs, Enabled.yes);
+        imguiCheck("Warm Starting", &settings.enableWarmStarting);
 
-        imguiCheck("Contact Points", &settings.drawContactPoints, Enabled.yes);
+        imguiCheck("Time of Impact", &settings.enableContinuous);
 
-        imguiCheck("Contact Normals", &settings.drawContactNormals, Enabled.yes);
+        imguiCheck("Sub-Stepping", &settings.enableSubStepping);
 
-        imguiCheck("Contact Impulses", &settings.drawContactImpulse, Enabled.yes);
+        imguiSeparatorLine();
 
-        imguiCheck("Friction Impulses", &settings.drawFrictionImpulse, Enabled.yes);
+        imguiCheck("Shapes", &settings.drawShapes);
 
-        imguiCheck("Center of Masses", &settings.drawCOMs, Enabled.yes);
+        imguiCheck("Joints", &settings.drawJoints);
 
-        imguiCheck("Statistics", &settings.drawStats, Enabled.yes);
+        imguiCheck("AABBs", &settings.drawAABBs);
 
-        imguiCheck("Profile", &settings.drawProfile, Enabled.yes);
+        imguiCheck("Contact Points", &settings.drawContactPoints);
 
-        if (imguiButton(settings.pause ? "Resume" : "Pause", Enabled.yes))
+        imguiCheck("Contact Normals", &settings.drawContactNormals);
+
+        imguiCheck("Contact Impulses", &settings.drawContactImpulse);
+
+        imguiCheck("Friction Impulses", &settings.drawFrictionImpulse);
+
+        imguiCheck("Center of Masses", &settings.drawCOMs);
+
+        imguiCheck("Statistics", &settings.drawStats);
+
+        imguiCheck("Profile", &settings.drawProfile);
+
+        if (imguiButton(settings.pause ? "Resume" : "Pause"))
             settings.pause = !settings.pause;
 
-        if (imguiButton("Single Step", Enabled.yes))
+        if (imguiButton("Single Step"))
         {
             if (!settings.pause)
                 settings.pause = true;
@@ -432,10 +440,10 @@ void sInterface()
             settings.singleStep = !settings.singleStep;
         }
 
-        if (imguiButton("Restart", Enabled.yes))
+        if (imguiButton("Restart"))
             sRestart();
 
-        if (imguiButton("Quit", Enabled.yes))
+        if (imguiButton("Quit"))
             glfwSetWindowShouldClose(mainWindow, GL_TRUE);
 
         imguiEndScrollArea();
@@ -453,7 +461,7 @@ void sInterface()
 
         for (int i = 0; i < g_testEntries.length; ++i)
         {
-            if (imguiItem(g_testEntries[i].name, Enabled.yes))
+            if (imguiItem(g_testEntries[i].name))
             {
                 testSelection = i;
                 entry         = &g_testEntries[i];

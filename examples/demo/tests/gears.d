@@ -158,7 +158,7 @@ class Gears : Test
 
     override void Step(Settings* settings)
     {
-        Test.Step(settings);
+        super.Step(settings);
 
         float32 ratio = 0, value = 0;
 
