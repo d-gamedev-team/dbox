@@ -58,7 +58,7 @@ import tests.pulleys;
 import tests.pyramid;
 import tests.raycast;
 import tests.revolute;
-//~ import tests.ropejoint;
+import tests.ropejoint;
 //~ import tests.sensortest;
 //~ import tests.shapeediting;
 //~ import tests.slidercrank;
@@ -110,7 +110,7 @@ shared static this()
         TestEntry("Pulleys", &Pulleys.Create),
         TestEntry("Polygon Shapes", &PolyShapes.Create),
         //~ TestEntry("Web", &Web.Create),
-        //~ TestEntry("RopeJoint", &RopeJoint.Create),
+        TestEntry("RopeJoint", &RopeJoint.Create),
         TestEntry("Pinball", &Pinball.Create),
         TestEntry("Bullet Test", &BulletTest.Create),
         TestEntry("Confined", &Confined.Create),  // broken

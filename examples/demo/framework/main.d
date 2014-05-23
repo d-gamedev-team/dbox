@@ -17,7 +17,7 @@
  */
 module framework.main;
 
-enum entryTestName = "revolute";
+enum entryTestName = "ropejoint";
 
 import std.algorithm;
 import std.exception;
