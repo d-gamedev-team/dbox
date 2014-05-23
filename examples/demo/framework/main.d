@@ -17,7 +17,7 @@
  */
 module framework.main;
 
-enum entryTestName = "slider crank";
+enum entryTestName = "sphere stack";
 
 import std.algorithm;
 import std.exception;
