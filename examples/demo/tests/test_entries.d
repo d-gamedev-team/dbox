@@ -67,7 +67,7 @@ import tests.theojansen;
 import tests.tiles;
 import tests.timeofimpact;
 import tests.tumbler;
-//~ import tests.varyingfriction;
+import tests.varyingfriction;
 //~ import tests.varyingrestitution;
 import tests.verticalstack;
 //~ import tests.web;
@@ -128,7 +128,7 @@ shared static this()
         TestEntry("Dominos", &Dominos.Create),
         TestEntry("Dynamic Tree", &DynamicTreeTest.Create),
         TestEntry("Sensor Test", &SensorTest.Create),
-        //~ TestEntry("Varying Friction", &VaryingFriction.Create),
+        TestEntry("Varying Friction", &VaryingFriction.Create),
         TestEntry("Performance: Add Pair Stress Test", &AddPair.Create),
     ];
 
