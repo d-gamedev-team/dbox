@@ -540,7 +540,6 @@ class Test : b2ContactListener
         m_world.ShiftOrigin(newOrigin);
     }
 
-
     void Keyboard(int key)
     {
         B2_NOT_USED(key);

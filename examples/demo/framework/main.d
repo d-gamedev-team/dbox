@@ -52,7 +52,7 @@ enum BLUE   = RGBA(  0,   0, 255, 255);
 enum WHITE  = RGBA(255, 255, 255, 255);
 enum SILVER = RGBA(220, 220, 220, 255);
 
-const entryTestName = "convex hull";
+const entryTestName = "distance test";
 
 //
 struct UIState
@@ -103,7 +103,7 @@ extern(C) void sResizeWindow(GLFWwindow*, int width, int height)
 //
 extern(C) void sKeyCallback(GLFWwindow*, int key, int scancode, int action, int mods)
 {
-    if (action == GLFW_PRESS)
+    if (action == GLFW_PRESS || action == GLFW_REPEAT)
     {
         switch (key)
         {
