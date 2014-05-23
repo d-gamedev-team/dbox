@@ -57,7 +57,7 @@ import tests.prismatic;
 import tests.pulleys;
 import tests.pyramid;
 import tests.raycast;
-//~ import tests.revolute;
+import tests.revolute;
 //~ import tests.ropejoint;
 //~ import tests.sensortest;
 //~ import tests.shapeediting;
@@ -106,7 +106,7 @@ shared static this()
         //~ TestEntry("Shape Editing", shapeEditing.Create),
         TestEntry("Car", &Car.Create),  // broken
         TestEntry("Prismatic", &Prismatic.Create),
-        //~ TestEntry("Revolute", &Revolute.Create),
+        TestEntry("Revolute", &Revolute.Create),
         TestEntry("Pulleys", &Pulleys.Create),
         TestEntry("Polygon Shapes", &PolyShapes.Create),
         //~ TestEntry("Web", &Web.Create),

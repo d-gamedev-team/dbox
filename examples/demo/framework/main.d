@@ -17,7 +17,7 @@
  */
 module framework.main;
 
-enum entryTestName = "ray-cast";
+enum entryTestName = "revolute";
 
 import std.algorithm;
 import std.exception;

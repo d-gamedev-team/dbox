@@ -439,7 +439,6 @@ class RayCast : Test
         return new typeof(this);
     }
 
-
     int32 m_bodyIndex;
     b2Body* m_bodies[e_maxBodies];
     int32 m_userData[e_maxBodies];
