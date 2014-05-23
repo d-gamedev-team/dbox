@@ -100,7 +100,8 @@ class ShapeEditing : Test
 
     override void Step(Settings* settings)
     {
-        Test.Step(settings);
+        super.Step(settings);
+
         g_debugDraw.DrawString(5, m_textLine, "Press: (c) create a shape, (d) destroy a shape.");
         m_textLine += DRAW_STRING_NEW_LINE;
         g_debugDraw.DrawString(5, m_textLine, format("sensor = %d", m_sensor));

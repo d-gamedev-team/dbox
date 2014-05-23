@@ -70,7 +70,7 @@ import tests.tumbler;
 import tests.varyingfriction;
 import tests.varyingrestitution;
 import tests.verticalstack;
-//~ import tests.web;
+import tests.web;
 
 TestEntry[] g_testEntries;
 
@@ -109,7 +109,7 @@ shared static this()
         TestEntry("Revolute", &Revolute.Create),
         TestEntry("Pulleys", &Pulleys.Create),
         TestEntry("Polygon Shapes", &PolyShapes.Create),
-        //~ TestEntry("Web", &Web.Create),
+        TestEntry("Web", &Web.Create),
         TestEntry("RopeJoint", &RopeJoint.Create),
         TestEntry("Pinball", &Pinball.Create),
         TestEntry("Bullet Test", &BulletTest.Create),

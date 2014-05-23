@@ -17,7 +17,7 @@
  */
 module framework.main;
 
-enum entryTestName = "Varying Restitution";
+enum entryTestName = "web";
 
 import std.algorithm;
 import std.exception;
@@ -371,7 +371,7 @@ void sInterface()
 
     if (ui.showMenu)
     {
-        bool over = imguiBeginScrollArea("Testbed Controls", g_camera.m_width - menuWidth - 10, 10, menuWidth, g_camera.m_height - 20, &ui.scrollarea1);
+        bool over = imguiBeginScrollArea("Test Controls", g_camera.m_width - menuWidth - 10, 10, menuWidth, g_camera.m_height - 20, &ui.scrollarea1);
 
         if (over)
             ui.mouseOverMenu = true;
@@ -488,7 +488,7 @@ void runTests()
         glfwTerminate();
 
     char title[64];
-    sprintf(title.ptr, "Box2D Testbed Version %d.%d.%d", b2_version.major, b2_version.minor, b2_version.revision);
+    sprintf(title.ptr, "dbox Test Version %d.%d.%d", b2_version.major, b2_version.minor, b2_version.revision);
 
     auto window = createWindow("dbox", WindowMode.windowed, winSize.width, winSize.height);
     mainWindow = window.window;
