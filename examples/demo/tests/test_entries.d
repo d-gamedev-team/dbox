@@ -39,7 +39,7 @@ import tests.convexhull;
 import tests.conveyorbelt;
 import tests.distancetest;
 import tests.dominos;
-//~ import tests.dumpshell;
+import tests.dumpshell;
 //~ import tests.dynamictreetest;
 //~ import tests.edgeshapes;
 //~ import tests.edgetest;
@@ -88,7 +88,7 @@ shared static this()
         TestEntry("Convex Hull", &ConvexHull.Create),
         //~ TestEntry("Tumbler", &Tumbler.Create),
         //~ TestEntry("Ray-Cast", &RayCast.Create),
-        //~ TestEntry("Dump Shell", &DumpShell.Create),
+        TestEntry("Dump Shell", &DumpShell.Create),
         TestEntry("Apply Force", &ApplyForce.Create),
         TestEntry("Continuous Test", &ContinuousTest.Create),
         //~ TestEntry("Time of Impact", &TimeOfImpact.Create),
