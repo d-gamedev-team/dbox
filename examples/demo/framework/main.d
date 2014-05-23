@@ -17,7 +17,7 @@
  */
 module framework.main;
 
-enum entryTestName = "Sensor Test";
+enum entryTestName = "Shape Editing";
 
 import std.algorithm;
 import std.exception;

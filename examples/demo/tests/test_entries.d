@@ -60,7 +60,7 @@ import tests.raycast;
 import tests.revolute;
 import tests.ropejoint;
 import tests.sensortest;
-//~ import tests.shapeediting;
+import tests.shapeediting;
 //~ import tests.slidercrank;
 //~ import tests.spherestack;
 //~ import tests.theojansen;
@@ -103,7 +103,7 @@ shared static this()
         TestEntry("Character Collision", &CharacterCollision.Create),
         TestEntry("Edge Test", &EdgeTest.Create),
         TestEntry("Body Types", &BodyTypes.Create),
-        //~ TestEntry("Shape Editing", shapeEditing.Create),
+        TestEntry("Shape Editing", &ShapeEditing.Create),
         TestEntry("Car", &Car.Create),  // broken
         TestEntry("Prismatic", &Prismatic.Create),
         TestEntry("Revolute", &Revolute.Create),
