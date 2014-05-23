@@ -55,8 +55,8 @@ import tests.polycollision;
 import tests.polyshapes;
 import tests.prismatic;
 import tests.pulleys;
-//~ import tests.pyramid;
-//~ import tests.raycast;
+import tests.pyramid;
+import tests.raycast;
 //~ import tests.revolute;
 //~ import tests.ropejoint;
 //~ import tests.sensortest;
@@ -87,7 +87,7 @@ shared static this()
         //~ TestEntry("Sphere Stack", &SphereStack.Create),
         TestEntry("Convex Hull", &ConvexHull.Create),
         //~ TestEntry("Tumbler", &Tumbler.Create),
-        //~ TestEntry("Ray-Cast", &RayCast.Create),
+        TestEntry("Ray-Cast", &RayCast.Create),
         TestEntry("Dump Shell", &DumpShell.Create),
         TestEntry("Apply Force", &ApplyForce.Create),
         TestEntry("Continuous Test", &ContinuousTest.Create),
@@ -114,7 +114,7 @@ shared static this()
         TestEntry("Pinball", &Pinball.Create),
         TestEntry("Bullet Test", &BulletTest.Create),
         TestEntry("Confined", &Confined.Create),  // broken
-        //~ TestEntry("Pyramid", &Pyramid.Create),
+        TestEntry("Pyramid", &Pyramid.Create),
         //~ TestEntry("Theo Jansen's Walker", &TheoJansen.Create),
         TestEntry("Edge Shapes", &EdgeShapes.Create),
         TestEntry("PolyCollision", &PolyCollision.Create),
