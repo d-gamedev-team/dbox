@@ -30,7 +30,7 @@ import tests.cantilever;
 import tests.car;
 import tests.continuoustest;
 import tests.chain;
-//~ import tests.charactercollision;
+import tests.charactercollision;
 //~ import tests.collisionfiltering;
 //~ import tests.collisionprocessing;
 //~ import tests.compoundshapes;
@@ -100,7 +100,7 @@ shared static this()
         //~ TestEntry("Gears", &Gears.Create),
         //~ TestEntry("Varying Restitution", &VaryingRestitution.Create),
         TestEntry("Cantilever", &Cantilever.Create),
-        //~ TestEntry("Character Collision", &CharacterCollision.Create),
+        TestEntry("Character Collision", &CharacterCollision.Create),
         //~ TestEntry("Edge Test", &EdgeTest.Create),
         TestEntry("Body Types", &BodyTypes.Create),
         //~ TestEntry("Shape Editing", shapeEditing.Create),

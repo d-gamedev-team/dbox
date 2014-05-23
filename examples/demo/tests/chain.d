@@ -33,7 +33,7 @@ class Chain : Test
 {
     this()
     {
-         b2Body* ground = null;
+        b2Body* ground = null;
         {
             b2BodyDef bd;
             ground = m_world.CreateBody(&bd);
