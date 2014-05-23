@@ -61,7 +61,7 @@ import tests.revolute;
 import tests.ropejoint;
 import tests.sensortest;
 import tests.shapeediting;
-//~ import tests.slidercrank;
+import tests.slidercrank;
 //~ import tests.spherestack;
 //~ import tests.theojansen;
 import tests.tiles;
@@ -83,7 +83,7 @@ shared static this()
         TestEntry("Heavy on Light Two", &HeavyOnLightTwo.Create),
         TestEntry("Vertical Stack", &VerticalStack.Create),
         TestEntry("Basic Slider Crank", &BasicSliderCrank.Create),
-        //~ TestEntry("Slider Crank", &SliderCrank.Create),
+        TestEntry("Slider Crank", &SliderCrank.Create),
         //~ TestEntry("Sphere Stack", &SphereStack.Create),
         TestEntry("Convex Hull", &ConvexHull.Create),
         //~ TestEntry("Tumbler", &Tumbler.Create),
