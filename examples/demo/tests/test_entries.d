@@ -27,8 +27,8 @@ import tests.breakable;
 import tests.bridge;
 import tests.bullettest;
 import tests.cantilever;
-//~ import tests.car;
-//~ import tests.continuoustest;
+import tests.car;
+import tests.continuoustest;
 //~ import tests.chain;
 //~ import tests.charactercollision;
 //~ import tests.collisionfiltering;
@@ -90,7 +90,7 @@ shared static this()
         //~ TestEntry("Ray-Cast", &RayCast.Create),
         //~ TestEntry("Dump Shell", &DumpShell.Create),
         TestEntry("Apply Force", &ApplyForce.Create),
-        //~ TestEntry("Continuous Test", &ContinuousTest.Create),
+        TestEntry("Continuous Test", &ContinuousTest.Create),
         //~ TestEntry("Time of Impact", &TimeOfImpact.Create),
         //~ TestEntry("Motor Joint", &MotorJoint.Create),
         //~ TestEntry("One-Sided Platform", &OneSidedPlatform.Create),
@@ -104,7 +104,7 @@ shared static this()
         //~ TestEntry("Edge Test", &EdgeTest.Create),
         TestEntry("Body Types", &BodyTypes.Create),
         //~ TestEntry("Shape Editing", shapeEditing.Create),
-        //~ TestEntry("Car", &Car.Create),
+        TestEntry("Car", &Car.Create),
         //~ TestEntry("Prismatic", &Prismatic.Create),
         //~ TestEntry("Revolute", &Revolute.Create),
         //~ TestEntry("Pulleys", &Pulleys.Create),
