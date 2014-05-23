@@ -46,7 +46,7 @@ import tests.edgetest;
 import tests.gears;
 import tests.heavyonlight;
 import tests.heavyonlighttwo;
-//~ import tests.mobile;
+import tests.mobile;
 //~ import tests.mobilebalanced;
 //~ import tests.motorjoint;
 //~ import tests.onesidedplatform;
@@ -96,7 +96,7 @@ shared static this()
         //~ TestEntry("Time of Impact", &TimeOfImpact.Create),
         //~ TestEntry("Motor Joint", &MotorJoint.Create),
         //~ TestEntry("One-Sided Platform", &OneSidedPlatform.Create),
-        //~ TestEntry("Mobile", &Mobile.Create),
+        TestEntry("Mobile", &Mobile.Create),
         //~ TestEntry("MobileBalanced", &MobileBalanced.Create),
         TestEntry("Conveyor Belt", &ConveyorBelt.Create),
         TestEntry("Gears", &Gears.Create),

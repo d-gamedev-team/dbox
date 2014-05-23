@@ -17,7 +17,7 @@
  */
 module framework.main;
 
-enum entryTestName = "Heavy on Light Two";
+enum entryTestName = "mobile";
 
 import std.algorithm;
 import std.exception;
