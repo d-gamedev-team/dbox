@@ -29,7 +29,7 @@ import tests.bullettest;
 import tests.cantilever;
 import tests.car;
 import tests.continuoustest;
-//~ import tests.chain;
+import tests.chain;
 //~ import tests.charactercollision;
 //~ import tests.collisionfiltering;
 //~ import tests.collisionprocessing;
@@ -120,7 +120,7 @@ shared static this()
         //~ TestEntry("PolyCollision", &PolyCollision.Create),
         TestEntry("Bridge", &Bridge.Create),
         TestEntry("Breakable", &Breakable.Create),
-        //~ TestEntry("Chain", &Chain.Create),
+        TestEntry("Chain", &Chain.Create),
         //~ TestEntry("Collision Filtering", &CollisionFiltering.Create),
         //~ TestEntry("Collision Processing", &CollisionProcessing.Create),
         //~ TestEntry("Compound Shapes", &CompoundShapes.Create),
