@@ -35,7 +35,7 @@ struct b2Color
         a = ai;
     }
 
-    float32 r, g, b, a = 1.0f;
+    float32 r = 0, g = 0, b = 0, a = 1.0f;
 }
 
 /// Implement and register this class with a b2World* to provide debug drawing of physics
