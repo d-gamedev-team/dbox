@@ -68,8 +68,8 @@ struct UIState
 GLFWwindow* mainWindow;
 UIState ui;
 
-size_t testIndex;
-size_t testSelection;
+sizediff_t testIndex;
+sizediff_t testSelection;
 TestEntry* entry;
 Test test;
 Settings settings;
