@@ -26,7 +26,20 @@ $ dub run dbox:hello_world
 $ dub run dbox:demo
 ```
 
-Note: You will need to install the [glfw] shared library in order to run the demo.
+## Runtime Requirements
+
+### Windows and Linux
+
+You will need to install the [glfw] shared library in order to run the demo.
+
+### OSX
+
+You can try installing the [glfw] v3 library via the brew package manager:
+
+```
+brew tap homebrew/versions
+brew install glfw3
+```
 
 ## Documentation
 
