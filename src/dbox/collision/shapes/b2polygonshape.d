@@ -502,6 +502,7 @@ class b2PolygonShape : b2Shape
         return true;
     }
 
+    ///
     static b2Vec2 ComputeCentroid(const(b2Vec2)* vs, int32 count)
     {
         assert(count >= 3);
