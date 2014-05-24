@@ -30,9 +30,13 @@
 
     "mainSourceFile": "demo.d",
 
-    "libs-posix": [
+    "libs-linux": [
         "dl",
         "glfw",
+    ],
+
+    "libs-osx": [
+        "glfw3",
     ],
 
     "dependencies": {
