@@ -176,7 +176,18 @@ void b2Free(void* mem)
 void b2Log(const(char)* str, ...)
 {
     va_list args;
-    va_start(args, str);
+
+    version (X86)
+        va_start(args, str);
+    else
+    version (Win64)
+        va_start(args, str);
+    else
+    version (X86_64)
+        va_start(args, __va_argsave);
+    else
+        static assert(0, "Platform not supported.");
+
     vprintf(str, args);
     va_end(args);
 }
