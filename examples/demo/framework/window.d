@@ -83,21 +83,26 @@ Window createWindow(string windowName, WindowMode windowMode = WindowMode.window
     // turn v-sync off.
     glfwSwapInterval(0);
 
-    // ensure the debug output extension is supported
-    enforce(GL_ARB_debug_output || GL_KHR_debug);
+    version(OSX){
+        // GL_ARM_debug_output and GL_KHR_debug are not supported under OS X 10.9.3
+    }
+    else {
+        // ensure the debug output extension is supported
+        enforce(GL_ARB_debug_output || GL_KHR_debug);
 
-    // cast: workaround for 'nothrow' propagation bug (haven't been able to reduce it)
-    auto hookDebugCallback = GL_ARB_debug_output ? glDebugMessageCallbackARB
-                                                 : cast(typeof(glDebugMessageCallbackARB))glDebugMessageCallback;
+        // cast: workaround for 'nothrow' propagation bug (haven't been able to reduce it)
+        auto hookDebugCallback = GL_ARB_debug_output ? glDebugMessageCallbackARB
+                                                     : cast(typeof(glDebugMessageCallbackARB))glDebugMessageCallback;
 
 
-    // hook the debug callback
-    // cast: when using derelict it assumes its nothrow
-    hookDebugCallback(cast(GLDEBUGPROCARB)&glErrorCallback, null);
+        // hook the debug callback
+        // cast: when using derelict it assumes its nothrow
+        hookDebugCallback(cast(GLDEBUGPROCARB)&glErrorCallback, null);
 
-    // enable proper stack tracing support (otherwise we'd get random failures at runtime)
-    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
-
+        // enable proper stack tracing support (otherwise we'd get random failures at runtime)
+        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
+    }
+    
     // finally show the window
     glfwShowWindow(window.window);
 
