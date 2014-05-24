@@ -83,10 +83,12 @@ Window createWindow(string windowName, WindowMode windowMode = WindowMode.window
     // turn v-sync off.
     glfwSwapInterval(0);
 
-    version(OSX){
+    version (OSX)
+    {
         // GL_ARM_debug_output and GL_KHR_debug are not supported under OS X 10.9.3
     }
-    else {
+    else
+    {
         // ensure the debug output extension is supported
         enforce(GL_ARB_debug_output || GL_KHR_debug);
 
@@ -102,7 +104,7 @@ Window createWindow(string windowName, WindowMode windowMode = WindowMode.window
         // enable proper stack tracing support (otherwise we'd get random failures at runtime)
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
     }
-    
+
     // finally show the window
     glfwShowWindow(window.window);
 
