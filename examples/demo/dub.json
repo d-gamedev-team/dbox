@@ -30,6 +30,11 @@
 
     "mainSourceFile": "demo.d",
 
+    "libs-posix": [
+        "dl",
+        "glfw",
+    ],
+
     "dependencies": {
         "dbox": {"path": "../../", "version": "~master"},
         "glfw-drey": ">=0.0.2",
