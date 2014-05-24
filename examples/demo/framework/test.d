@@ -330,7 +330,7 @@ class Test : b2ContactListener
         m_bomb      = m_world.CreateBody(&bd);
         m_bomb.SetLinearVelocity(velocity);
 
-        b2CircleShape circle;
+        b2CircleShape circle = new b2CircleShape();
         circle.m_radius = 0.3f;
 
         b2FixtureDef fd;
