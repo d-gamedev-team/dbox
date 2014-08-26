@@ -12,7 +12,7 @@ Homepage: https://github.com/d-gamedev-team/dbox
 
 ## Supported compiler versions
 
-Compilers based on the **v2.065+** front-end can be used to build and run dbox.
+Compilers based on the **v2.066** front-end can be used to build and run dbox.
 
 ## Examples
 
