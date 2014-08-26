@@ -26,7 +26,7 @@
 
     "dependencies": {
         "glad-drey": ">=0.0.2",
-        "dimgui": ">=0.1.1-alpha",
+        "dimgui": ">=0.1.7-alpha",
     },
 
     "subPackages": [
