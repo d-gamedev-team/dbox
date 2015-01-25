@@ -569,7 +569,7 @@ void runTests()
         frameTime = alpha * frameTime + (1.0 - alpha) * (time2 - time1);
         time1     = time2;
 
-        char buffer[32];
+        char buffer[32] = 0;
         snprintf(buffer.ptr, 32, "%.1f ms", 1000.0 * frameTime);
         addGfxCmdText(5, 5, TextAlign.left, buffer, WHITE);
 
