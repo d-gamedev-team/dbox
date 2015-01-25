@@ -344,12 +344,29 @@ void sRestart()
     test  = entry.createFcn();
 }
 
-//
+double LastTime = 0;
+double Accumulator = 0;
+
 void sSimulate()
 {
-    glEnable(GL_DEPTH_TEST);
-    test.Step(&settings);
+    double time = glfwGetTime();
+    double dt   = time - LastTime;
 
+    if (dt > 0.2)
+        dt = 0.2;
+
+    double fixed_dt = 0.01;
+
+    for (Accumulator += dt; Accumulator > fixed_dt; Accumulator -= fixed_dt)
+    {
+        test.Step(&settings);
+    }
+
+    test.Draw(&settings);
+
+    LastTime = time;
+
+    glEnable(GL_DEPTH_TEST);
     test.DrawTitle(entry.name);
     glDisable(GL_DEPTH_TEST);
 
@@ -399,6 +416,12 @@ void sInterface()
         imguiSlider("Vel Iters", &settings.velocityIterations, 0, 50, 1);
         imguiSlider("Pos Iters", &settings.positionIterations, 0, 50, 1);
         imguiSlider("Hertz", &settings.hz, 5.0f, 120.0f, 5.0f);
+
+        imguiSeparatorLine();
+
+        imguiCheck("V-Sync", &settings.enableVSync);
+
+        imguiSeparatorLine();
 
         imguiCheck("Sleep", &settings.enableSleep);
 

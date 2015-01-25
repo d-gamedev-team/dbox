@@ -81,7 +81,7 @@ Window createWindow(string windowName, WindowMode windowMode = WindowMode.window
     enforce(GLVersion.major >= 3);
 
     // turn v-sync off.
-    glfwSwapInterval(0);
+    glfwSwapInterval(1);
 
     version (OSX)
     {

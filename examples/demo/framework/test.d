@@ -84,6 +84,7 @@ struct Settings
     bool enableContinuous = true;
     bool enableSubStepping;
     bool enableSleep = true;
+    bool enableVSync;
     bool pause;
     bool singleStep;
 }
@@ -348,21 +349,10 @@ class Test : b2ContactListener
         m_bomb.CreateFixture(&fd);
     }
 
-    void Step(Settings* settings)
+    void Draw(Settings* settings)
     {
-        float32 timeStep = settings.hz > 0.0f ? 1.0f / settings.hz : cast(float32)0.0f;
-
         if (settings.pause)
         {
-            if (settings.singleStep)
-            {
-                settings.singleStep = 0;
-            }
-            else
-            {
-                timeStep = 0.0f;
-            }
-
             g_debugDraw.DrawString(5, m_textLine, "****PAUSED****");
             m_textLine += DRAW_STRING_NEW_LINE;
         }
@@ -374,22 +364,12 @@ class Test : b2ContactListener
         flags += settings.drawCOMs * b2Draw.e_centerOfMassBit;
         g_debugDraw.SetFlags(flags);
 
-        m_world.SetAllowSleeping(settings.enableSleep);
-        m_world.SetWarmStarting(settings.enableWarmStarting);
-        m_world.SetContinuousPhysics(settings.enableContinuous);
-        m_world.SetSubStepping(settings.enableSubStepping);
+        glfwSwapInterval(settings.enableVSync ? 1 : 0);
 
         m_pointCount = 0;
 
-        m_world.Step(timeStep, cast(int)settings.velocityIterations, cast(int)settings.positionIterations);
-
         m_world.DrawDebugData();
         g_debugDraw.Flush();
-
-        if (timeStep > 0.0f)
-        {
-            ++m_stepCount;
-        }
 
         if (settings.drawStats)
         {
@@ -407,27 +387,6 @@ class Test : b2ContactListener
             m_textLine += DRAW_STRING_NEW_LINE;
         }
 
-        // Track maximum profile times
-        {
-            auto p = m_world.GetProfile();
-            m_maxProfile.step          = b2Max(m_maxProfile.step, p.step);
-            m_maxProfile.collide       = b2Max(m_maxProfile.collide, p.collide);
-            m_maxProfile.solve         = b2Max(m_maxProfile.solve, p.solve);
-            m_maxProfile.solveInit     = b2Max(m_maxProfile.solveInit, p.solveInit);
-            m_maxProfile.solveVelocity = b2Max(m_maxProfile.solveVelocity, p.solveVelocity);
-            m_maxProfile.solvePosition = b2Max(m_maxProfile.solvePosition, p.solvePosition);
-            m_maxProfile.solveTOI      = b2Max(m_maxProfile.solveTOI, p.solveTOI);
-            m_maxProfile.broadphase    = b2Max(m_maxProfile.broadphase, p.broadphase);
-
-            m_totalProfile.step          += p.step;
-            m_totalProfile.collide       += p.collide;
-            m_totalProfile.solve         += p.solve;
-            m_totalProfile.solveInit     += p.solveInit;
-            m_totalProfile.solveVelocity += p.solveVelocity;
-            m_totalProfile.solvePosition += p.solvePosition;
-            m_totalProfile.solveTOI      += p.solveTOI;
-            m_totalProfile.broadphase    += p.broadphase;
-        }
 
         if (settings.drawProfile)
         {
@@ -532,6 +491,90 @@ class Test : b2ContactListener
                     g_debugDraw.DrawSegment(p1, p2, b2Color(0.9f, 0.9f, 0.3f));
                 }
             }
+        }
+    }
+
+    void Step(Settings* settings)
+    {
+        float32 timeStep = settings.hz > 0.0f ? 1.0f / settings.hz : cast(float32)0.0f;
+
+        if (settings.pause)
+        {
+            if (settings.singleStep)
+            {
+                settings.singleStep = 0;
+            }
+            else
+            {
+                timeStep = 0.0f;
+            }
+
+            //g_debugDraw.DrawString(5, m_textLine, "****PAUSED****");
+            //m_textLine += DRAW_STRING_NEW_LINE;
+        }
+
+        //uint32 flags = 0;
+        //flags += settings.drawShapes * b2Draw.e_shapeBit;
+        //flags += settings.drawJoints * b2Draw.e_jointBit;
+        //flags += settings.drawAABBs * b2Draw.e_aabbBit;
+        //flags += settings.drawCOMs * b2Draw.e_centerOfMassBit;
+        //g_debugDraw.SetFlags(flags);
+
+        //glfwSwapInterval(settings.enableVSync ? 1 : 0);
+
+        m_world.SetAllowSleeping(settings.enableSleep);
+        m_world.SetWarmStarting(settings.enableWarmStarting);
+        m_world.SetContinuousPhysics(settings.enableContinuous);
+        m_world.SetSubStepping(settings.enableSubStepping);
+
+        //m_pointCount = 0;
+
+        m_world.Step(timeStep, cast(int)settings.velocityIterations, cast(int)settings.positionIterations);
+
+        //m_world.DrawDebugData();
+        //g_debugDraw.Flush();
+
+        if (timeStep > 0.0f)
+        {
+            ++m_stepCount;
+        }
+
+        //if (settings.drawStats)
+        //{
+        //    int32 bodyCount    = m_world.GetBodyCount();
+        //    int32 contactCount = m_world.GetContactCount();
+        //    int32 jointCount   = m_world.GetJointCount();
+        //    g_debugDraw.DrawString(5, m_textLine, format("bodies/contacts/joints = %d/%d/%d", bodyCount, contactCount, jointCount));
+        //    m_textLine += DRAW_STRING_NEW_LINE;
+
+        //    int32 proxyCount = m_world.GetProxyCount();
+        //    int32 height     = m_world.GetTreeHeight();
+        //    int32 balance    = m_world.GetTreeBalance();
+        //    float32 quality  = m_world.GetTreeQuality();
+        //    g_debugDraw.DrawString(5, m_textLine, format("proxies/height/balance/quality = %d/%d/%d/%g", proxyCount, height, balance, quality));
+        //    m_textLine += DRAW_STRING_NEW_LINE;
+        //}
+
+        // Track maximum profile times
+        {
+            auto p = m_world.GetProfile();
+            m_maxProfile.step          = b2Max(m_maxProfile.step, p.step);
+            m_maxProfile.collide       = b2Max(m_maxProfile.collide, p.collide);
+            m_maxProfile.solve         = b2Max(m_maxProfile.solve, p.solve);
+            m_maxProfile.solveInit     = b2Max(m_maxProfile.solveInit, p.solveInit);
+            m_maxProfile.solveVelocity = b2Max(m_maxProfile.solveVelocity, p.solveVelocity);
+            m_maxProfile.solvePosition = b2Max(m_maxProfile.solvePosition, p.solvePosition);
+            m_maxProfile.solveTOI      = b2Max(m_maxProfile.solveTOI, p.solveTOI);
+            m_maxProfile.broadphase    = b2Max(m_maxProfile.broadphase, p.broadphase);
+
+            m_totalProfile.step          += p.step;
+            m_totalProfile.collide       += p.collide;
+            m_totalProfile.solve         += p.solve;
+            m_totalProfile.solveInit     += p.solveInit;
+            m_totalProfile.solveVelocity += p.solveVelocity;
+            m_totalProfile.solvePosition += p.solvePosition;
+            m_totalProfile.solveTOI      += p.solveTOI;
+            m_totalProfile.broadphase    += p.broadphase;
         }
     }
 
