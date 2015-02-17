@@ -140,7 +140,7 @@ class Test : b2ContactListener
     {
         b2Vec2 gravity;
         gravity.Set(0.0f, -10.0f);
-        m_world      = new b2World(gravity);
+        m_world      = b2World(gravity);
         m_bomb       = null;
         m_textLine   = 30;
         m_mouseJoint = null;
@@ -608,7 +608,7 @@ protected:
     int32 m_pointCount;
     DestructionListener m_destructionListener;
     int32 m_textLine;
-    b2World* m_world;
+    b2World m_world;
     b2Body * m_bomb;
     b2MouseJoint m_mouseJoint;
     b2Vec2 m_bombSpawnPoint;
