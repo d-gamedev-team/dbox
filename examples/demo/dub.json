@@ -41,8 +41,6 @@
 
     "dependencies": {
         "dbox": {"path": "../../", "version": "~master"},
-        "glfw-drey": ">=0.0.2",
-        "glwtf-drey": ">=0.0.1",
-        "dimgui": ">=0.1.4-alpha",
+        "dimgui": ">=1.0.0"
     },
 }
