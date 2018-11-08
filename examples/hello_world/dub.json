@@ -29,8 +29,6 @@
     "mainSourceFile": "hello_world.d",
 
     "dependencies": {
-        "dbox": {"path": "../../", "version": "~master"},
-        "glfw-drey": ">=0.0.2",
-        "glwtf-drey": ">=0.0.1",
+        "dbox": {"path": "../../", "version": "~master"}
     },
 }

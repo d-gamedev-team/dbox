@@ -75,6 +75,8 @@ Test test;
 Settings settings;
 bool moveCamera;
 b2Vec2 lastp;
+// Scaling for high-resolution displays.
+double mouseXToWindowFactor = 0, mouseYToWindowFactor = 0;
 
 //
 void sCreateUI()
@@ -113,6 +115,8 @@ extern(C) void sResizeWindow(GLFWwindow*, int width, int height)
 {
     g_camera.m_width  = width;
     g_camera.m_height = height;
+    mouseXToWindowFactor = 0;
+    mouseYToWindowFactor = 0;
 }
 
 //
@@ -561,7 +565,7 @@ void runTests()
 
     while (!glfwWindowShouldClose(mainWindow))
     {
-        glfwGetWindowSize(mainWindow, &g_camera.m_width, &g_camera.m_height);
+        glfwGetFramebufferSize(mainWindow, &g_camera.m_width, &g_camera.m_height);
         glViewport(0, 0, g_camera.m_width, g_camera.m_height);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -572,6 +576,21 @@ void runTests()
 
         double xd, yd;
         glfwGetCursorPos(mainWindow, &xd, &yd);
+        // Scale the cursor position for high-resolution displays.
+        if (mouseXToWindowFactor == 0) // need to initialize
+        {
+            int virtualWindowWidth, virtualWindowHeight;
+            glfwGetWindowSize(mainWindow, &virtualWindowWidth, &virtualWindowHeight);
+            if (virtualWindowWidth != 0 && virtualWindowHeight != 0)
+            {
+                int frameBufferWidth, frameBufferHeight;
+                glfwGetFramebufferSize(mainWindow, &frameBufferWidth, &frameBufferHeight);
+                mouseXToWindowFactor = double(frameBufferWidth) / virtualWindowWidth;
+                mouseYToWindowFactor = double(frameBufferHeight) / virtualWindowHeight;
+            }
+        }
+        xd *= mouseXToWindowFactor;
+        yd *= mouseYToWindowFactor;
         int mousex = cast(int)xd;
         int mousey = cast(int)yd;
 

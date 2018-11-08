@@ -319,7 +319,8 @@ private:
 
     void Query()
     {
-        m_tree.Query(this, m_queryAABB);
+        auto callback = this;
+        m_tree.Query(callback, m_queryAABB);
 
         for (int32 i = 0; i < e_actorCount; ++i)
         {
@@ -341,7 +342,8 @@ private:
         b2RayCastInput input = m_rayCastInput;
 
         // Ray cast against the dynamic tree.
-        m_tree.RayCast(this, input);
+        auto callback = this;
+        m_tree.RayCast(callback, input);
 
         // Brute force ray cast.
         Actor* bruteActor = null;
