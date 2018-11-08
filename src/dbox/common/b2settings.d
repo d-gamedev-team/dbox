@@ -177,16 +177,23 @@ void b2Log(const(char)* str, ...)
 {
     va_list args;
 
-    version (X86)
+    static if (__VERSION__ <= 2071)
+    {
+        version (X86)
+            va_start(args, str);
+        else
+        version (Win64)
+            va_start(args, str);
+        else
+        version (X86_64)
+            va_start(args, __va_argsave);
+        else
+            static assert(0, "Platform not supported.");
+    }
+    else
+    {
         va_start(args, str);
-    else
-    version (Win64)
-        va_start(args, str);
-    else
-    version (X86_64)
-        va_start(args, __va_argsave);
-    else
-        static assert(0, "Platform not supported.");
+    }
 
     vprintf(str, args);
     va_end(args);
